@@ -69,14 +69,10 @@ class DequantizeAndGatherKCacheBenchmark(base.Benchmark):
     def get_input_iter(self, dtype):
         _ = dtype
         for batch, seq_len, gather_len, dim, nope_dim, rope_dim in self.shapes:
-            scale_slots = (nope_dim + 63) // 64 + (
-                1 if nope_dim % 64 == 0 else 0
-            )
+            scale_slots = (nope_dim + 63) // 64 + (1 if nope_dim % 64 == 0 else 0)
             block_size = 64
             token_data_size = nope_dim + rope_dim * 2
-            block_stride = (
-                block_size * token_data_size + block_size * scale_slots
-            )
+            block_stride = block_size * token_data_size + block_size * scale_slots
             num_blocks = batch * ((seq_len + block_size - 1) // block_size)
             out = torch.empty(
                 (batch, gather_len, dim), device="cuda", dtype=torch.bfloat16
@@ -84,9 +80,7 @@ class DequantizeAndGatherKCacheBenchmark(base.Benchmark):
             k_cache = torch.zeros(
                 (num_blocks, block_stride), device="cuda", dtype=torch.uint8
             )
-            seq_lens = torch.full(
-                (batch,), seq_len, device="cuda", dtype=torch.int32
-            )
+            seq_lens = torch.full((batch,), seq_len, device="cuda", dtype=torch.int32)
             gather_lens = torch.full(
                 (batch,), gather_len, device="cuda", dtype=torch.int32
             )

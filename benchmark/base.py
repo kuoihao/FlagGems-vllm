@@ -91,17 +91,13 @@ class Benchmark:
         # Validate user-specified metrics
         if user_desired_metrics:
             invalid_metrics = [
-                metric
-                for metric in user_desired_metrics
-                if metric not in self.metrics
+                metric for metric in user_desired_metrics if metric not in self.metrics
             ]
             if invalid_metrics:
                 raise ValueError(
                     f"Invalid metrics: {', '.join(invalid_metrics)} for operation: '{self.op_name}'"
                 )
-            unsatisfied_metrics = check_metric_dependencies(
-                user_desired_metrics
-            )
+            unsatisfied_metrics = check_metric_dependencies(user_desired_metrics)
             if unsatisfied_metrics:
                 raise ValueError(
                     f"Unsatisfied metric dependencies: {', '.join(unsatisfied_metrics)}"
@@ -128,9 +124,7 @@ class Benchmark:
             dtype in self.dtypes for dtype in user_desired_dtypes
         ):
             invalid_dtypes = [
-                dtype
-                for dtype in user_desired_dtypes
-                if dtype not in self.dtypes
+                dtype for dtype in user_desired_dtypes if dtype not in self.dtypes
             ]
             raise ValueError(
                 f"Given dtype(s) '{', '.join(str(dtype) for dtype in invalid_dtypes)}'"
@@ -144,9 +138,7 @@ class Benchmark:
         # Validate user-spicified shapes files
 
         if not os.path.isfile(shape_file_path):
-            raise FileNotFoundError(
-                f"Shape file '{shape_file_path}' does not exist."
-            )
+            raise FileNotFoundError(f"Shape file '{shape_file_path}' does not exist.")
 
         try:
             with open(shape_file_path, "r") as file:
@@ -177,9 +169,7 @@ class Benchmark:
                 if self.op_name in ["isin", "nonzero"]:
                     # isin oom  # nonzero oot
                     self.shapes = [
-                        shape
-                        for shape in self.shapes
-                        if math.prod(shape) < 1024 * 1024
+                        shape for shape in self.shapes if math.prod(shape) < 1024 * 1024
                     ]
 
             # merge shapes from subclass If subclass has `set_more_shapes`,
@@ -198,16 +188,12 @@ class Benchmark:
 
                 # self.shapes = additional_shapes
                 if additional_shapes:
-                    self.shapes = list(
-                        dict.fromkeys(self.shapes + additional_shapes)
-                    )
+                    self.shapes = list(dict.fromkeys(self.shapes + additional_shapes))
 
                 if vendor_name == "enflame":
                     if self.op_name in ["isin"]:
                         self.shapes = [
-                            shape
-                            for shape in self.shapes
-                            if math.prod(shape) < 2**28
+                            shape for shape in self.shapes if math.prod(shape) < 2**28
                         ]
         except yaml.YAMLError as e:
             raise ValueError(
@@ -232,9 +218,7 @@ class Benchmark:
             return None
 
         parsed_args = [deep_parse(arg) for arg in args]
-        parsed_kwargs = {
-            key: deep_parse(value) for key, value in kwargs.items()
-        }
+        parsed_kwargs = {key: deep_parse(value) for key, value in kwargs.items()}
         if parsed_args and parsed_kwargs:
             return parsed_args, parsed_kwargs
         return parsed_args if parsed_args else parsed_kwargs
@@ -268,9 +252,7 @@ class Benchmark:
             out = fn()
             dout = torch.randn_like(out)
             # fn = lambda: out.backward(dout, retain_graph=True)
-            xs = list(
-                filter(lambda x: torch.is_tensor(x) and x.requires_grad, args)
-            )
+            xs = list(filter(lambda x: torch.is_tensor(x) and x.requires_grad, args))
             fn = lambda: torch.autograd.grad(
                 (out,), xs, grad_outputs=(dout,), retain_graph=True
             )
@@ -427,9 +409,7 @@ class Benchmark:
                         metric.gbps_base = self.get_gbps(
                             args, latency=metric.latency_base
                         )
-                        metric.gbps = self.get_gbps(
-                            args, latency=metric.latency
-                        )
+                        metric.gbps = self.get_gbps(args, latency=metric.latency)
 
                     if "tflops" in self.to_bench_metrics:
                         metric.tflops = (
@@ -496,9 +476,7 @@ class GenericBenchmarkFilterShapes(GenericBenchmark):
     def set_more_shapes(self):
         shapes = super().set_more_shapes()
         if self.exclude_dims is not None:
-            return [
-                shape for shape in shapes if len(shape) != self.exclude_dims
-            ]
+            return [shape for shape in shapes if len(shape) != self.exclude_dims]
         return shapes
 
 
@@ -552,9 +530,7 @@ class UnaryReductionBenchmark(Benchmark):
 
     def get_gbps(self, args, latency):
         inp = args[0]
-        io_amount = sum(
-            [shape_utils.size_in_bytes(item) for item in [inp, inp]]
-        )
+        io_amount = sum([shape_utils.size_in_bytes(item) for item in [inp, inp]])
         return io_amount * 1e-9 / (latency * 1e-3)
 
     def set_more_shapes(self):
@@ -671,17 +647,13 @@ class BlasBenchmark(Benchmark):
         # shape(m,k)(k,n)
         # total_flops mxnx2k
         if self.op_name == "mm":
-            total_flops = (
-                args[0].shape[0] * args[0].shape[1] * args[1].shape[1] * 2
-            )
+            total_flops = args[0].shape[0] * args[0].shape[1] * args[1].shape[1] * 2
 
         # shape(m,n)(n,p)
         # total_flops mxpx(2n+1)
         elif self.op_name == "addmm":
             total_flops = (
-                args[0].shape[0]
-                * args[1].shape[1]
-                * (args[1].shape[0] * 2 + 1)
+                args[0].shape[0] * args[1].shape[1] * (args[1].shape[0] * 2 + 1)
             )
         # total_flops bxnxpx2m
         elif self.op_name == "bmm":
@@ -716,10 +688,7 @@ class BinaryPointwiseBenchmark(Benchmark):
     def get_tflops(self, op, *args, **kwargs):
         shape1 = list(args[0].shape)
         shape2 = list(args[0].shape)
-        return (
-            torch.tensor(shape1).prod().item()
-            + torch.tensor(shape2).prod().item()
-        )
+        return torch.tensor(shape1).prod().item() + torch.tensor(shape2).prod().item()
 
 
 class ScalarBinaryPointwiseBenchmark(Benchmark):
@@ -803,9 +772,7 @@ class MarginRankingLossBenchmark(GenericBenchmark):
         super().set_shapes(shape_file_path)
         # Filter out shapes that would cause OOM with multiple tensors
         self.shapes = [
-            shape
-            for shape in self.shapes
-            if math.prod(shape) <= self.MAX_ELEMENTS
+            shape for shape in self.shapes if math.prod(shape) <= self.MAX_ELEMENTS
         ]
 
 
@@ -821,9 +788,7 @@ def generate_tensor_input(shape, dtype, device):
             device="cpu",
         ).to(device)
     elif dtype in consts.BOOL_DTYPES:
-        return torch.randint(0, 2, size=shape, dtype=dtype, device="cpu").to(
-            device
-        )
+        return torch.randint(0, 2, size=shape, dtype=dtype, device="cpu").to(device)
     elif dtype in consts.COMPLEX_DTYPES:
         return torch.randn(shape, dtype=dtype, device=device)
 

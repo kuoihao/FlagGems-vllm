@@ -90,9 +90,7 @@ def _torch_topk_ref(
     """Pure-PyTorch fallback reference using torch.topk."""
     seq_len = seq_lens[0].item()
     valid_logits = logits[:, :seq_len]
-    _, top_idx = torch.topk(
-        valid_logits, top_k, dim=1, largest=True, sorted=False
-    )
+    _, top_idx = torch.topk(valid_logits, top_k, dim=1, largest=True, sorted=False)
     indices.copy_(top_idx.to(torch.int32))
 
 
@@ -113,9 +111,7 @@ def test_top_k_per_row_decode(vocab_size, top_k):
     logits_ref = logits.clone()
     indices_ref = torch.zeros_like(indices)
 
-    top_k_per_row_decode(
-        logits, next_n, seq_lens, indices, num_rows, s0, s1, k
-    )
+    top_k_per_row_decode(logits, next_n, seq_lens, indices, num_rows, s0, s1, k)
     ref_fn(logits_ref, next_n, seq_lens, indices_ref, num_rows, s0, s1, k)
 
     vals_tri = _selected_values(logits, indices)
@@ -144,9 +140,7 @@ def test_top_k_per_row_decode_partial_seqlen(vocab_size, top_k, seq_len):
     logits_ref = logits.clone()
     indices_ref = torch.zeros_like(indices)
 
-    top_k_per_row_decode(
-        logits, next_n, seq_lens, indices, num_rows, s0, s1, k
-    )
+    top_k_per_row_decode(logits, next_n, seq_lens, indices, num_rows, s0, s1, k)
     ref_fn(logits_ref, next_n, seq_lens, indices_ref, num_rows, s0, s1, k)
 
     vals_tri = _selected_values(logits, indices)
@@ -162,9 +156,7 @@ def test_top_k_per_row_decode_indices_in_range():
     logits, next_n, seq_lens, indices, num_rows, s0, s1, k = _make_inputs(
         vocab_size, top_k, seq_len=seq_len
     )
-    top_k_per_row_decode(
-        logits, next_n, seq_lens, indices, num_rows, s0, s1, k
-    )
+    top_k_per_row_decode(logits, next_n, seq_lens, indices, num_rows, s0, s1, k)
     assert indices.min().item() >= 0
     assert indices.max().item() < seq_len
 
@@ -185,9 +177,7 @@ def test_top_k_per_row_decode_vs_vllm(vocab_size, top_k):
     logits_ref = logits.clone()
     indices_ref = torch.zeros_like(indices)
 
-    top_k_per_row_decode(
-        logits, next_n, seq_lens, indices, num_rows, s0, s1, k
-    )
+    top_k_per_row_decode(logits, next_n, seq_lens, indices, num_rows, s0, s1, k)
     _vllm_top_k_per_row_decode(
         logits_ref, next_n, seq_lens, indices_ref, num_rows, s0, s1, k
     )

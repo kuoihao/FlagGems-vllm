@@ -71,9 +71,7 @@ def compute_global_topk_indices_and_lens(
         )
     num_tokens, topk = topk_indices.shape
     global_indices = torch.empty_like(topk_indices, dtype=torch.int32)
-    lens = torch.empty(
-        (num_tokens,), device=topk_indices.device, dtype=torch.int32
-    )
+    lens = torch.empty((num_tokens,), device=topk_indices.device, dtype=torch.int32)
     with torch_device_fn.device(topk_indices.device):
         _compute_global_topk_indices_and_lens_kernel[(num_tokens,)](
             global_indices,

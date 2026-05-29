@@ -73,13 +73,7 @@ def test_fused_q_kv_rmsnorm_vllm_accuracy():
     eps = 1e-6
 
     q_out, kv_out = fused_q_kv_rmsnorm(qr, kv, q_weight, kv_weight, eps)
-    q_expected, kv_expected = vllm_fused_q_kv_rmsnorm(
-        qr, kv, q_weight, kv_weight, eps
-    )
+    q_expected, kv_expected = vllm_fused_q_kv_rmsnorm(qr, kv, q_weight, kv_weight, eps)
 
-    fg_testing.assert_close(
-        q_out, q_expected, dtype=torch.bfloat16, equal_nan=True
-    )
-    fg_testing.assert_close(
-        kv_out, kv_expected, dtype=torch.bfloat16, equal_nan=True
-    )
+    fg_testing.assert_close(q_out, q_expected, dtype=torch.bfloat16, equal_nan=True)
+    fg_testing.assert_close(kv_out, kv_expected, dtype=torch.bfloat16, equal_nan=True)

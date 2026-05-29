@@ -95,9 +95,7 @@ def solve_tril_16x16_kernel(
             boundary_check=(0, 1),
         )
     else:
-        desc_o.store(
-            [i_t * 16, 0], b_A.to(desc_o.dtype, fp_downcast_rounding="rtne")
-        )
+        desc_o.store([i_t * 16, 0], b_A.to(desc_o.dtype, fp_downcast_rounding="rtne"))
 
 
 @libentry()
@@ -545,9 +543,7 @@ def solve_tril(
 
     B, T, H, BT = A.shape
     chunk_indices = (
-        prepare_chunk_indices(cu_seqlens, BT)
-        if cu_seqlens is not None
-        else None
+        prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
     )
     NT = len(chunk_indices) if cu_seqlens is not None else triton.cdiv(T, BT)
 

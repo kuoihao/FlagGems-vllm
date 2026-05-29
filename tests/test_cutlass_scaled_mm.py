@@ -198,19 +198,12 @@ def test_cutlass_scaled_mm(p):
     if in_dtype == torch.int8:
         a = to_int8(torch.randn((M, K), device=flaggems_vllm.device))
         b = to_int8(
-            torch.randn((K, N), device=flaggems_vllm.device)
-            .t()
-            .contiguous()
-            .t()
-            * 5
+            torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t() * 5
         )
     else:
         a = to_fp8(torch.randn((M, K), device=flaggems_vllm.device))
         b = to_fp8(
-            torch.randn((K, N), device=flaggems_vllm.device)
-            .t()
-            .contiguous()
-            .t()
+            torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t()
         )
 
     a_scale_shape = kit.get_scale_shape(M, N, K, a_scale_category)

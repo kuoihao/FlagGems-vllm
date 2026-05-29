@@ -7,19 +7,19 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
-    hooks:
-      - id: black
-
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.0
     hooks:
       - id: flake8
+        args: ["--ignore=F405,E731,W503,E203,E704", --max-line-length=120]
 
-  # Optional: type checking
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
     hooks:
-      - id: mypy
-        args: [--no-strict-optional, --ignore-missing-imports]
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black

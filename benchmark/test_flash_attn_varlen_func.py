@@ -104,9 +104,7 @@ class FlashAttnVarlenBenchmark(base.Benchmark):
                 alibi,
                 soft_cap,
             )
-            for cu_seq_lens_q, seqused_k in zip(
-                all_cu_seq_lens_q, all_seqused_k
-            )
+            for cu_seq_lens_q, seqused_k in zip(all_cu_seq_lens_q, all_seqused_k)
         ]
 
         self.shapes = all_configs
@@ -163,13 +161,9 @@ class FlashAttnVarlenBenchmark(base.Benchmark):
             cu_query_lens = torch.tensor(
                 cu_query_lens, dtype=torch.int32, device=device
             )
-            seqused_k = torch.tensor(
-                seqused_k, dtype=torch.int32, device=device
-            )
+            seqused_k = torch.tensor(seqused_k, dtype=torch.int32, device=device)
 
-            max_num_blocks_per_seq = (
-                max_kv_len + block_size - 1
-            ) // block_size
+            max_num_blocks_per_seq = (max_kv_len + block_size - 1) // block_size
             block_tables = torch.randint(
                 0,
                 num_blocks,
@@ -258,9 +252,7 @@ def flash_attn_varlen_legacy(*args, **kwargs):
     ) = args
 
     k_flat = key_cache.reshape(-1, key_cache.shape[2], key_cache.shape[3])
-    v_flat = value_cache.reshape(
-        -1, value_cache.shape[2], value_cache.shape[3]
-    )
+    v_flat = value_cache.reshape(-1, value_cache.shape[2], value_cache.shape[3])
     cu_seqlens_k = torch.cat(
         [
             torch.zeros(1, dtype=torch.int32, device=seqused_k.device),
@@ -314,9 +306,7 @@ def test_flash_attn_varlen_func(monkeypatch):
         # iluvatar does not have updated vllm_flash_attn, use conversion wrapper
         flash_attn_varlen_func = flash_attn_varlen_legacy
     else:
-        from vllm.vllm_flash_attn.flash_attn_interface import (
-            flash_attn_varlen_func,
-        )
+        from vllm.vllm_flash_attn.flash_attn_interface import flash_attn_varlen_func
 
     bench = FlashAttnVarlenBenchmark(
         op_name="flash_attn_varlen_func",

@@ -20,9 +20,7 @@ def _is_equal(a, b):
     return False
 
 
-def tensor_cache(
-    fn: Callable[..., torch.Tensor]
-) -> Callable[..., torch.Tensor]:
+def tensor_cache(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
     """
     A decorator that caches the most recent result of a function with tensor inputs.
 
@@ -53,9 +51,7 @@ def tensor_cache(
                 if (
                     all(_is_equal(a, b) for a, b in zip(args, last_args))
                     and set(kwargs.keys()) == set(last_kwargs.keys())
-                    and all(
-                        _is_equal(v, last_kwargs[k]) for k, v in kwargs.items()
-                    )
+                    and all(_is_equal(v, last_kwargs[k]) for k, v in kwargs.items())
                 ):
                     return last_result
 
@@ -182,9 +178,7 @@ def cal_ks_ke_from_cu_seqlen_qk(
     n_seq = len(cu_seqlens_q) - 1
     assert n_seq > 0
     assert cu_seqlens_q.shape == (n_seq + 1,)
-    seq_idx = cal_seq_idx_from_cu_seqlens(
-        cu_seqlens_q.long(), seq_len * cp_size
-    )
+    seq_idx = cal_seq_idx_from_cu_seqlens(cu_seqlens_q.long(), seq_len * cp_size)
     qs = cu_seqlens_q.gather(0, seq_idx)
     pos = torch.arange(len(qs), dtype=qs.dtype, device=qs.device) - qs
     if offs_q is not None:
@@ -258,12 +252,8 @@ def generate_random_cu_seqlens(
 
     cu_seqlens_cumsum = torch.cumsum(cu_seqlens, dim=0)
     cu_seqlens_k_cumsum = torch.cumsum(cu_seqlens // kv_stride, dim=0)
-    cu_seqlens_qs = torch.cat(
-        [torch.tensor([0]).cuda(), cu_seqlens_cumsum[:-1]]
-    )
-    cu_seqlens_ks = torch.cat(
-        [torch.tensor([0]).cuda(), cu_seqlens_k_cumsum[:-1]]
-    )
+    cu_seqlens_qs = torch.cat([torch.tensor([0]).cuda(), cu_seqlens_cumsum[:-1]])
+    cu_seqlens_ks = torch.cat([torch.tensor([0]).cuda(), cu_seqlens_k_cumsum[:-1]])
     cu_seqlens_qe = cu_seqlens_cumsum.clone()
     cu_seqlens_ke = cu_seqlens_k_cumsum.clone()
 
@@ -285,9 +275,7 @@ def generate_random_cu_seqlens(
 
     assert per_cp_seqlen % 2 == 0
     per_chunk_seqlen = per_cp_seqlen // 2
-    slice_short = slice(
-        cp_rank * per_chunk_seqlen, (cp_rank + 1) * per_chunk_seqlen
-    )
+    slice_short = slice(cp_rank * per_chunk_seqlen, (cp_rank + 1) * per_chunk_seqlen)
     slice_long = slice(
         total_seqlen - (cp_rank + 1) * per_chunk_seqlen,
         total_seqlen - cp_rank * per_chunk_seqlen,
@@ -333,9 +321,7 @@ def assert_similar(x, y, eps=1e-8, name="tensor", raise_assert=True):
 
 if __name__ == "__main__":
     seq_len = 32768
-    cu_seqlens = torch.randint(
-        128, 4096, (1000,), dtype=torch.int32, device="cuda"
-    )
+    cu_seqlens = torch.randint(128, 4096, (1000,), dtype=torch.int32, device="cuda")
     last_idx = torch.where(cu_seqlens.cumsum(dim=0) >= seq_len)[0][0]
     cu_seqlens_cumsum = cu_seqlens[:last_idx].cumsum(dim=0)
     cu_seqlens_qs = torch.cat(
@@ -347,14 +333,11 @@ if __name__ == "__main__":
     cu_seqlens_qe = torch.cat(
         [
             cu_seqlens_cumsum,
-            torch.ones(1, dtype=torch.int32, device=cu_seqlens.device)
-            * seq_len,
+            torch.ones(1, dtype=torch.int32, device=cu_seqlens.device) * seq_len,
         ]
     )
 
     from tilelang.profiler import do_bench
 
-    fn = lambda: cal_seq_idx_for_q(
-        cu_seqlens_qs, cu_seqlens_qe, seq_len
-    )  # noqa: E731
+    fn = lambda: cal_seq_idx_for_q(cu_seqlens_qs, cu_seqlens_qe, seq_len)  # noqa: E731
     ms = do_bench(fn, warmup=25, rep=100)

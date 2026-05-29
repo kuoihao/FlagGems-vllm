@@ -91,13 +91,11 @@ def kernel_bucket_sort_topk(  # grid(B, BS)
     for s in range(TS):
         input_idx = s * BS + tl.arange(0, BS)
         input_mask = (
-            (input_idx < l_end_idx)
-            & (input_idx >= l_start_idx)
-            & (input_idx < S)
+            (input_idx < l_end_idx) & (input_idx >= l_start_idx) & (input_idx < S)
         )
-        input = tl.load(
-            s_base + input_idx, input_mask, other=float("-inf")
-        ).to(tl.float32)
+        input = tl.load(s_base + input_idx, input_mask, other=float("-inf")).to(
+            tl.float32
+        )
         inval_int16 = convert_to_uint16(input)
         s_histogram += inval_int16.to(tl.int32).histogram(HISTOGRAM_SIZE)
 
@@ -120,13 +118,11 @@ def kernel_bucket_sort_topk(  # grid(B, BS)
     for s in range(TS):
         input_idx = s * BS + tl.arange(0, BS)
         input_mask = (
-            (input_idx < l_end_idx)
-            & (input_idx >= l_start_idx)
-            & (input_idx < S)
+            (input_idx < l_end_idx) & (input_idx >= l_start_idx) & (input_idx < S)
         )
-        input = tl.load(
-            s_base + input_idx, input_mask, other=float("-inf")
-        ).to(tl.float32)
+        input = tl.load(s_base + input_idx, input_mask, other=float("-inf")).to(
+            tl.float32
+        )
         inval_int16 = convert_to_uint16(input)
         # inval_int16 = tl.where(input_mask, inval_int16, 0)
         # This method would slow down the speed, so using other=float("-inf") saves time.
@@ -182,9 +178,9 @@ def kernel_bucket_sort_topk(  # grid(B, BS)
                 s_input_ids_base + s_input_idx, s_input_idx_mask, other=-1
             )
             s_input_mask = s_input_idx_mask
-            s_input = tl.load(
-                s_base + input_idx, s_input_mask, other=padding_num
-            ).to(tl.float32)
+            s_input = tl.load(s_base + input_idx, s_input_mask, other=padding_num).to(
+                tl.float32
+            )
             inval_int32 = (
                 convert_to_uint32(s_input) >> (24 - round * 8)
             ) & 0xFF  # Ensure all bits except the last eight are zero
@@ -211,12 +207,10 @@ def kernel_bucket_sort_topk(  # grid(B, BS)
                 s_input_ids_base + s_input_idx, s_input_idx_mask, other=-1
             )
             s_input_mask = s_input_idx_mask
-            s_input = tl.load(
-                s_base + input_idx, s_input_mask, other=padding_num
-            ).to(tl.float32)
-            inval_int32 = (
-                convert_to_uint32(s_input) >> (24 - round * 8)
-            ) & 0xFF
+            s_input = tl.load(s_base + input_idx, s_input_mask, other=padding_num).to(
+                tl.float32
+            )
+            inval_int32 = (convert_to_uint32(s_input) >> (24 - round * 8)) & 0xFF
 
             over_thre = inval_int32.to(tl.int32) > l_threshold_bin_id
             cur_sum = over_thre.to(tl.int32).sum(-1)
@@ -263,9 +257,7 @@ def bucket_sort_topk_triton(inputs, starts, ends, topk):
     K = topk
     HISTOGRAM_SIZE = 256
     SMEM_INPUT_SIZE = 4096
-    indices = torch.full(
-        (B, topk), -1, dtype=torch.int32, device=inputs.device
-    )
+    indices = torch.full((B, topk), -1, dtype=torch.int32, device=inputs.device)
     s_input_idx = torch.zeros(
         B, SMEM_INPUT_SIZE, dtype=torch.int32, device=inputs.device
     )
@@ -355,9 +347,9 @@ def _tle_process_histogram_step(
     elif step_idx == 3:
         step1_threshold = tl.load(s_step_thresholds_ptr + 1)
         step2_threshold = tl.load(s_step_thresholds_ptr + 2)
-        logit_pattern = (
-            (step1_threshold.to(tl.uint32) & RADIX11_MASK) << 21
-        ) | ((step2_threshold.to(tl.uint32) & RADIX11_MASK) << 10)
+        logit_pattern = ((step1_threshold.to(tl.uint32) & RADIX11_MASK) << 21) | (
+            (step2_threshold.to(tl.uint32) & RADIX11_MASK) << 10
+        )
 
     n_tiles = tl.cdiv(seq_len, BLOCK_SIZE)
     n_vec_full = seq_len // (BLOCK_SIZE * VEC)
@@ -423,12 +415,8 @@ def _tle_process_histogram_step(
     else:
         for t in tl.range(0, n_tiles):
             offs = t * BLOCK_SIZE + lane
-            in_range = (
-                (offs < seq_len) & (offs >= row_start) & (offs < row_end)
-            )
-            x = tl.load(
-                row_ptr + offs * stride_xn, mask=in_range, other=float("-inf")
-            )
+            in_range = (offs < seq_len) & (offs >= row_start) & (offs < row_end)
+            x = tl.load(row_ptr + offs * stride_xn, mask=in_range, other=float("-inf"))
             key = _convert_to_trt_uint32(x)
             if step_idx == 0:
                 digit = _convert_to_trt_uint16_hi11(x)
@@ -470,9 +458,7 @@ def _tle_process_histogram_step(
         if not threshold_found:
             bins = round_idx * BLOCK_SIZE + lane
             counts = tl.load(hist_base_ptr + bins)
-            prefix_sum, counts_total = tle.cumsum(
-                counts, axis=0, reverse=False
-            )
+            prefix_sum, counts_total = tle.cumsum(counts, axis=0, reverse=False)
             prefix_sum = prefix_sum + last_value
             total_sum = last_value + counts_total
             next_prefix_sum = prefix_sum + counts
@@ -480,9 +466,7 @@ def _tle_process_histogram_step(
             threshold_bin = bins
             threshold_bin_size = next_prefix_sum - prefix_sum
             tl.store(threshold_bin_ptrs, threshold_bin, mask=threshold_mask)
-            tl.store(
-                final_bin_size_ptrs, threshold_bin_size, mask=threshold_mask
-            )
+            tl.store(final_bin_size_ptrs, threshold_bin_size, mask=threshold_mask)
             found_round = tl.reduce_or(threshold_mask, axis=0)
             threshold_found = found_round
             last_value = total_sum
@@ -492,9 +476,7 @@ def _tle_process_histogram_step(
     tl.store(s_step_thresholds_ptr + step_idx, threshold_bin_idx)
 
     use_final = (
-        (step_idx < 3)
-        & (threshold_bin_idx >= 0)
-        & (final_bin_size <= FINAL_SORT_ITEMS)
+        (step_idx < 3) & (threshold_bin_idx >= 0) & (final_bin_size <= FINAL_SORT_ITEMS)
     )
     if use_final:
         tl.store(s_final_cnt_ptr, 0)
@@ -643,12 +625,8 @@ def _tle_process_histogram_step(
     else:
         for t in tl.range(0, n_tiles):
             offs = t * BLOCK_SIZE + lane
-            in_range = (
-                (offs < seq_len) & (offs >= row_start) & (offs < row_end)
-            )
-            x = tl.load(
-                row_ptr + offs * stride_xn, mask=in_range, other=float("-inf")
-            )
+            in_range = (offs < seq_len) & (offs >= row_start) & (offs < row_end)
+            x = tl.load(row_ptr + offs * stride_xn, mask=in_range, other=float("-inf"))
             key = _convert_to_trt_uint32(x)
             if step_idx == 0:
                 digit = _convert_to_trt_uint16_hi11(x)
@@ -798,9 +776,7 @@ def _tle_final_select_radix(
             counts = tl.load(radix_count_vec_ptr)
             prefix_sum, _ = tle.cumsum(counts, axis=0, reverse=False)
             next_prefix_sum = prefix_sum + counts
-            threshold_mask = (prefix_sum < k_to_find) & (
-                next_prefix_sum >= k_to_find
-            )
+            threshold_mask = (prefix_sum < k_to_find) & (next_prefix_sum >= k_to_find)
             threshold_init = tl.full((), RADIX_SIZE_FINAL, dtype=tl.int32)
             threshold_bin = tl.min(
                 tl.where(threshold_mask, bins, threshold_init), axis=0
@@ -1061,9 +1037,7 @@ def kernel_tle_bucket_sort_topk(
                         tle.gpu.local_ptr(s_histogram, (FINAL_SORT_ITEMS + j,))
                     )
                     logit_j = logit_j_bits.to(tl.float32, bitcast=True)
-                    better = (logit_i < logit_j) | (
-                        (logit_i == logit_j) & (pos < j)
-                    )
+                    better = (logit_i < logit_j) | ((logit_i == logit_j) & (pos < j))
                     out_rank = out_rank + (valid & better).to(tl.int32)
                 dst_pos = base_idx + out_rank
                 take = valid & (dst_pos < K)

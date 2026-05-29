@@ -56,9 +56,7 @@ class GroupedTopKBenchmark(base.Benchmark):
     def grouped_topk_input_fn(self, config, dtype, device):
         num_tokens, num_experts, n_group, topk_group, topk = config
 
-        scores = torch.randn(
-            num_tokens, num_experts, device=device, dtype=dtype
-        )
+        scores = torch.randn(num_tokens, num_experts, device=device, dtype=dtype)
         bias = torch.randn(num_experts, device=device, dtype=dtype)
 
         yield (
@@ -74,9 +72,7 @@ class GroupedTopKBenchmark(base.Benchmark):
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk"
-)
+@pytest.mark.skipif(not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk")
 @pytest.mark.skipif(
     utils.SkipVersion("vllm", "<0.9"),
     reason="The version prior to 0.9 does not include the grouped_topk kernel.",
@@ -90,9 +86,7 @@ class GroupedTopKBenchmark(base.Benchmark):
 @pytest.mark.skipif(vendor_name == "iluvatar", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "mthreads", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "hygon", reason="#2891: RuntimeError")
-@pytest.mark.skipif(
-    flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError"
-)
+@pytest.mark.skipif(flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError")
 def test_grouped_topk_no_renorm():
     bench = GroupedTopKBenchmark(
         op_name="grouped_topk",
@@ -107,9 +101,7 @@ def test_grouped_topk_no_renorm():
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk"
-)
+@pytest.mark.skipif(not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk")
 @pytest.mark.skipif(
     utils.SkipVersion("vllm", "<0.9"),
     reason="The version prior to 0.9 does not include the grouped_topk kernel.",
@@ -123,9 +115,7 @@ def test_grouped_topk_no_renorm():
 @pytest.mark.skipif(vendor_name == "iluvatar", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "mthreads", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "hygon", reason="#2891: RuntimeError")
-@pytest.mark.skipif(
-    flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError"
-)
+@pytest.mark.skipif(flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError")
 def test_grouped_topk_score_0():
     bench = GroupedTopKBenchmark(
         op_name="grouped_topk",
@@ -140,9 +130,7 @@ def test_grouped_topk_score_0():
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk"
-)
+@pytest.mark.skipif(not HAS_VLLM, reason="Skipped due to missing vLLM grouped_topk")
 @pytest.mark.skipif(
     utils.SkipVersion("vllm", "<0.9"),
     reason="The version prior to 0.9 does not include the grouped_topk kernel.",
@@ -156,9 +144,7 @@ def test_grouped_topk_score_0():
 @pytest.mark.skipif(vendor_name == "iluvatar", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "mthreads", reason="#2891: Not working")
 @pytest.mark.skipif(vendor_name == "hygon", reason="#2891: RuntimeError")
-@pytest.mark.skipif(
-    flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError"
-)
+@pytest.mark.skipif(flaggems_vllm.vendor_name == "cambricon", reason="#2891: TypeError")
 def test_grouped_topk_score_1():
     bench = GroupedTopKBenchmark(
         op_name="grouped_topk",

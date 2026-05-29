@@ -69,12 +69,8 @@ def triton_sparse_mla_fwd(
     kv_base = kv + i_b * stride_kvb + i_g * stride_kvg
     tkv_base = kv_base + D * stride_kvd
     t_base = indices + i_b * stride_tb + i_sq * stride_tm + i_g * stride_tg
-    o_base = (
-        output + i_b * stride_ob + i_sq * stride_om + i_gbh * (BH * stride_oh)
-    )
-    l_base = (
-        lse + i_b * stride_lb + i_sq * stride_lm + i_gbh * (BH * stride_lh)
-    )
+    o_base = output + i_b * stride_ob + i_sq * stride_om + i_gbh * (BH * stride_oh)
+    l_base = lse + i_b * stride_lb + i_sq * stride_lm + i_gbh * (BH * stride_lh)
 
     offs_h = tl.arange(0, BH)
     offs_d = tl.arange(0, DP)
@@ -90,9 +86,7 @@ def triton_sparse_mla_fwd(
     q_msk = mask_h[:, None] & mask_d[None, :]
     q_blk = tl.load(q_ptr, q_msk, other=0.0).to(tl.float16)
 
-    tq_ptr = (
-        tq_base + offs_h[:, None] * stride_qh + offs_td[None, :] * stride_qd
-    )
+    tq_ptr = tq_base + offs_h[:, None] * stride_qh + offs_td[None, :] * stride_qd
     tq_msk = mask_h[:, None] & mask_td[None, :]
     tq_blk = tl.load(tq_ptr, tq_msk, other=0.0).to(tl.float16)
 
@@ -116,24 +110,16 @@ def triton_sparse_mla_fwd(
 
         if tl.max(mask_ids, axis=0) > 0:
             kv_ptr = (
-                kv_base
-                + offs_d[:, None] * stride_kvd
-                + kv_ids[None, :] * stride_kvn
+                kv_base + offs_d[:, None] * stride_kvd + kv_ids[None, :] * stride_kvn
             )
             kv_msk = mask_d[:, None] & mask_ids[None, :]
-            kv_blk = tl.load(kv_ptr, kv_msk, other=0.0).to(
-                tl.float16
-            )  # [DP, BK]
+            kv_blk = tl.load(kv_ptr, kv_msk, other=0.0).to(tl.float16)  # [DP, BK]
 
             tkv_ptr = (
-                tkv_base
-                + offs_td[:, None] * stride_kvd
-                + kv_ids[None, :] * stride_kvn
+                tkv_base + offs_td[:, None] * stride_kvd + kv_ids[None, :] * stride_kvn
             )
             tkv_msk = mask_td[:, None] & mask_ids[None, :]
-            tkv_blk = tl.load(tkv_ptr, tkv_msk, other=0.0).to(
-                tl.float16
-            )  # [TDP, BK]
+            tkv_blk = tl.load(tkv_ptr, tkv_msk, other=0.0).to(tl.float16)  # [TDP, BK]
 
             qk = tl.dot(q_blk, kv_blk, out_dtype=tl.float16)
             qk = tl.dot(tq_blk, tkv_blk, qk, out_dtype=tl.float16) * log_scale
@@ -161,9 +147,7 @@ def triton_sparse_mla_fwd(
     # o_msk &= tl.zeros_like(o_msk)
     tl.store(o_ptr, out_vals.to(q_blk.dtype), o_msk)
 
-    fin_log = max_log + tl.math.log2(
-        sum_exp.to(tl.float32)
-    )  # return lse / ln2
+    fin_log = max_log + tl.math.log2(sum_exp.to(tl.float32))  # return lse / ln2
     # fin_log *= 0.69314718
     # fin_log = max_log + tl.math.log(sum_exp.to(tl.float32))
     # fin_log *= 1.44269504 # return lse / ln2
@@ -218,22 +202,13 @@ if HAS_TLE:
     ):
         i_b, i_sq, i_gbh = tl.program_id(0), tl.program_id(1), tl.program_id(2)
         i_g, i_bh = i_gbh // G, i_gbh % G
-        q_base = (
-            q + i_b * stride_qb + i_sq * stride_qm + i_gbh * (BH * stride_qh)
-        )
+        q_base = q + i_b * stride_qb + i_sq * stride_qm + i_gbh * (BH * stride_qh)
         tq_base = q_base + D * stride_qd
         kv_base = kv + i_b * stride_kvb + i_g * stride_kvg
         tkv_base = kv_base + D * stride_kvd
         t_base = indices + i_b * stride_tb + i_sq * stride_tm + i_g * stride_tg
-        o_base = (
-            output
-            + i_b * stride_ob
-            + i_sq * stride_om
-            + i_gbh * (BH * stride_oh)
-        )
-        l_base = (
-            lse + i_b * stride_lb + i_sq * stride_lm + i_gbh * (BH * stride_lh)
-        )
+        o_base = output + i_b * stride_ob + i_sq * stride_om + i_gbh * (BH * stride_oh)
+        l_base = lse + i_b * stride_lb + i_sq * stride_lm + i_gbh * (BH * stride_lh)
 
         offs_h = tl.arange(0, BH)
         offs_d = tl.arange(0, DP)
@@ -245,17 +220,11 @@ if HAS_TLE:
         mask_td = offs_td < TD
         mask_od = mask_d
 
-        q_ptr = (
-            q_base + offs_h[:, None] * stride_qh + offs_d[None, :] * stride_qd
-        )
+        q_ptr = q_base + offs_h[:, None] * stride_qh + offs_d[None, :] * stride_qd
         q_msk = mask_h[:, None] & mask_d[None, :]
         q_blk = tl.load(q_ptr, q_msk, other=0.0)
 
-        tq_ptr = (
-            tq_base
-            + offs_h[:, None] * stride_qh
-            + offs_td[None, :] * stride_qd
-        )
+        tq_ptr = tq_base + offs_h[:, None] * stride_qh + offs_td[None, :] * stride_qd
         tq_msk = mask_h[:, None] & mask_td[None, :]
         tq_blk = tl.load(tq_ptr, tq_msk, other=0.0)
 
@@ -299,23 +268,17 @@ if HAS_TLE:
 
                 new_max = tl.maximum(max_prev, tl.max(qk, axis=1))
                 alpha = tl.math.exp2((max_prev - new_max) * log_scale)
-                exp_qk = tl.math.exp2(
-                    qk * log_scale - new_max[:, None] * log_scale
-                )
+                exp_qk = tl.math.exp2(qk * log_scale - new_max[:, None] * log_scale)
                 sum_qk = tl.sum(exp_qk, axis=1)
                 sum_exp = sum_exp * alpha + sum_qk
                 acc = acc * alpha[:, None]
                 exp_qk = exp_qk.to(tl.bfloat16)
-                acc = tl.dot(
-                    exp_qk, tl.trans(kv_blk), acc, out_dtype=tl.float32
-                )
+                acc = tl.dot(exp_qk, tl.trans(kv_blk), acc, out_dtype=tl.float32)
 
                 max_prev = new_max
 
         out_vals = acc / sum_exp[:, None]
-        o_ptr = (
-            o_base + offs_h[:, None] * stride_oh + offs_od[None, :] * stride_od
-        )
+        o_ptr = o_base + offs_h[:, None] * stride_oh + offs_od[None, :] * stride_od
         o_msk = mask_h[:, None] & mask_od
         tl.store(o_ptr, out_vals.to(q_blk.dtype), o_msk)
 

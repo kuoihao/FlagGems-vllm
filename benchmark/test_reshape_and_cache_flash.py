@@ -46,9 +46,7 @@ def test_reshape_and_cache_flash():
         ) = shape
         num_slots = block_size * num_blocks
         slot_mapping_lst = random.sample(range(num_slots), num_tokens)
-        slot_mapping = torch.tensor(
-            slot_mapping_lst, dtype=torch.long, device=device
-        )
+        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
         qkv = torch.randn(
             num_tokens, 3, num_heads, head_size, dtype=dtype, device=device
         )

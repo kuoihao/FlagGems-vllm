@@ -69,9 +69,7 @@ def torch_flash_attention_supports_alibi(device: str) -> bool:
         k = torch.randn((1, 16, 1, 64), device=device, dtype=torch.float16)
         v = torch.randn((1, 16, 1, 64), device=device, dtype=torch.float16)
         scale = float(1.0 / math.sqrt(64))
-        alibi_slopes = (
-            torch.ones((1, 1), device=device, dtype=torch.float32) * 0.3
-        )
+        alibi_slopes = torch.ones((1, 1), device=device, dtype=torch.float32) * 0.3
         torch.ops.aten._flash_attention_forward(
             q,
             k,
@@ -299,22 +297,15 @@ def flash_attention_forward_input_fn(config, dtype, device):
         )
     if use_alibi:
         extra_kwargs["alibi_slopes"] = (
-            torch.ones(batch, num_head, device=device, dtype=torch.float32)
-            * 0.3
+            torch.ones(batch, num_head, device=device, dtype=torch.float32) * 0.3
         )
 
     yield q, k, v, scale, is_causal, dropout_p, return_debug_mask, extra_kwargs
 
 
-@pytest.mark.skipif(
-    utils.SkipVersion("torch", "<2.4"), reason="Low Pytorch Version."
-)
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
-@pytest.mark.skipif(
-    flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode"
-)
+@pytest.mark.skipif(utils.SkipVersion("torch", "<2.4"), reason="Low Pytorch Version.")
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
+@pytest.mark.skipif(flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode")
 @pytest.mark.flash_attention_forward
 def test_flash_attention_forward():
     bench = FlashAttentionForwardBenchmark(

@@ -22,9 +22,7 @@ except ImportError:
 
 @pytest.mark.geglu
 @pytest.mark.skipif(not TE_AVAILABLE, reason="TransformerEngine not installed")
-@pytest.mark.skipif(
-    TE_OP is None, reason="'geglu' not found in TransformerEngine"
-)
+@pytest.mark.skipif(TE_OP is None, reason="'geglu' not found in TransformerEngine")
 @pytest.mark.skipif(GEMS_OP is None, reason="'geglu' not found in FlagGems")
 def test_geglu():
     bench = base.TexGluForwardBenchmark(

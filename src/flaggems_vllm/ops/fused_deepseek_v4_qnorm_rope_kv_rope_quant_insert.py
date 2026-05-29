@@ -24,15 +24,11 @@ def fused_qnorm_rope_kv_insert_kernel(
     HALF_ROPE_DIM: tl.constexpr = 32
     QUANT_BLOCK: tl.constexpr = 64
     NUM_QUANT_BLOCKS: tl.constexpr = NOPE_DIM // QUANT_BLOCK  # 7
-    SCALE_BYTES_PER_TOKEN: tl.constexpr = (
-        NUM_QUANT_BLOCKS + 1
-    )  # 8 (7 real + 1 pad)
+    SCALE_BYTES_PER_TOKEN: tl.constexpr = NUM_QUANT_BLOCKS + 1  # 8 (7 real + 1 pad)
     TOKEN_DATA_BYTES: tl.constexpr = NOPE_DIM + 2 * ROPE_DIM  # 576
     FP8_MAX: tl.constexpr = 448.0
 
-    pid = tl.program_id(0).to(
-        tl.int64
-    )  # grid = (num_tokens * (num_heads + 1),)
+    pid = tl.program_id(0).to(tl.int64)  # grid = (num_tokens * (num_heads + 1),)
     blocks_per_token = num_heads + 1
     token_idx = pid // blocks_per_token
     if token_idx >= num_tokens:
@@ -59,9 +55,7 @@ def fused_qnorm_rope_kv_insert_kernel(
         rsqrt = tl.rsqrt(variance + eps)
         q_blk = q_blk * rsqrt
         # store q nope
-        tl.store(
-            q_base + offset, q_blk.to(tl.bfloat16), mask=mask_nope
-        )  # [NOPE_DIM]
+        tl.store(q_base + offset, q_blk.to(tl.bfloat16), mask=mask_nope)  # [NOPE_DIM]
         qkv_blk_rope = q_blk_rope * rsqrt
     else:
         # load kv rope

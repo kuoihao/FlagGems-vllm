@@ -108,9 +108,7 @@ def test_accuracy_bincount_all_zeros():
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 def test_accuracy_bincount_weights_edge_cases(dtype):
     """Test bincount with edge case weights."""
-    inp = torch.tensor(
-        [0, 1, 2, 1, 0], dtype=torch.int64, device=flaggems_vllm.device
-    )
+    inp = torch.tensor([0, 1, 2, 1, 0], dtype=torch.int64, device=flaggems_vllm.device)
     weights = torch.tensor(
         [1.0, 2.0, 3.0, 4.0, 5.0], dtype=dtype, device=flaggems_vllm.device
     )

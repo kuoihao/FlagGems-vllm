@@ -19,9 +19,7 @@ BS_LIST = [32, 64] if check_shared_mem() else [16, 32]
 @libentry()
 @triton.heuristics({"IS_VARLEN": lambda args: args["cu_seqlens"] is not None})
 @libtuner(
-    configs=[
-        triton.Config({}, num_warps=num_warps) for num_warps in [1, 2, 4, 8]
-    ],
+    configs=[triton.Config({}, num_warps=num_warps) for num_warps in [1, 2, 4, 8]],
     key=["B", "H", "BT", "IS_VARLEN", "REVERSE"],
 )
 @triton.jit(do_not_specialize=["T"])
@@ -61,12 +59,8 @@ def chunk_local_cumsum_scalar_kernel(
             o + bos * H + i_h * T, (T,), (1,), (i_t * BT,), (BT,), (0,)
         )
     else:
-        p_s = tl.make_block_ptr(
-            s + bos * H + i_h, (T,), (H,), (i_t * BT,), (BT,), (0,)
-        )
-        p_o = tl.make_block_ptr(
-            o + bos * H + i_h, (T,), (H,), (i_t * BT,), (BT,), (0,)
-        )
+        p_s = tl.make_block_ptr(s + bos * H + i_h, (T,), (H,), (i_t * BT,), (BT,), (0,))
+        p_o = tl.make_block_ptr(o + bos * H + i_h, (T,), (H,), (i_t * BT,), (BT,), (0,))
     # [BT]
     b_s = tl.load(p_s, boundary_check=(0,)).to(tl.float32)
     b_o = tl.cumsum(b_s, axis=0)
@@ -179,9 +173,7 @@ def chunk_local_cumsum_scalar(
     ), "chunk_size must be a power of 2"
     BT = chunk_size
     chunk_indices = (
-        prepare_chunk_indices(cu_seqlens, BT)
-        if cu_seqlens is not None
-        else None
+        prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
     )
     NT = triton.cdiv(T, BT) if cu_seqlens is None else len(chunk_indices)
     g_org, g = g, torch.empty_like(g, dtype=output_dtype or g.dtype)

@@ -18,9 +18,7 @@ def _as_cache_2d(k_cache: torch.Tensor) -> torch.Tensor:
         if k_cache.is_contiguous():
             return k_cache.view(k_cache.shape[0], -1)
         return k_cache.contiguous().view(k_cache.shape[0], -1)
-    raise ValueError(
-        f"k_cache must be 2D or 3D, got shape={tuple(k_cache.shape)}"
-    )
+    raise ValueError(f"k_cache must be 2D or 3D, got shape={tuple(k_cache.shape)}")
 
 
 @triton.jit
@@ -61,25 +59,19 @@ def _dequantize_and_gather_k_cache_kernel(
         physical_block = tl.load(
             block_table_ptr + req_idx * max_blocks_per_seq + block_in_seq
         )
-        cache_block = (
-            k_cache_ptr + physical_block.to(tl.int64) * cache_block_stride
-        )
+        cache_block = k_cache_ptr + physical_block.to(tl.int64) * cache_block_stride
         token_data = cache_block + pos_in_block * token_data_size
         scale_base = (
             cache_block
             + cache_block_size * token_data_size
             + pos_in_block * scale_slots
         )
-        out_row = (
-            out_ptr + req_idx * out_stride0 + (offset + local_i) * out_stride1
-        )
+        out_row = out_ptr + req_idx * out_stride0 + (offset + local_i) * out_stride1
 
         for qblock in tl.static_range(0, scale_slots):
             qoffs = qblock * quant_block + tl.arange(0, quant_block)
             qmask = qoffs < nope_dim
-            x_u8 = tl.load(token_data + qoffs, mask=qmask, other=0).to(
-                tl.uint8
-            )
+            x_u8 = tl.load(token_data + qoffs, mask=qmask, other=0).to(tl.uint8)
             x_fp8 = x_u8.to(tl.float8e4nv, bitcast=True).to(tl.float32)
             encoded = tl.load(scale_base + qblock)
             scale = tl.exp2(encoded.to(tl.float32) - 127.0)

@@ -18,8 +18,7 @@ def get_device_id() -> int:
         return torch_device_fn.current_device()
     except Exception:
         warnings.warn(
-            "[device_info] Failed to get current"
-            " device, fallback to device_id=0."
+            "[device_info] Failed to get current" " device, fallback to device_id=0."
         )
         return 0
 
@@ -89,8 +88,7 @@ def get_device_info() -> DeviceInfo:
         l2_cache_size = 40 * 1024 * 1024
     if sm_count is None:
         warnings.warn(
-            "[device_info] Failed to get sm_count,"
-            " fallback to 108 (A100 default)."
+            "[device_info] Failed to get sm_count," " fallback to 108 (A100 default)."
         )
         # default sm_count to 108 for A100
         sm_count = 108

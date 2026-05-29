@@ -44,9 +44,7 @@ def _pack_seq_kernel(
     x_row_ptr = x_ptr + in_row[:, None] * D + off_d[None, :]
 
     # out_ptr: row-major [B, Lmax, D]
-    out_row_ptr = (
-        out_ptr + (pid_b * Lmax + off_t)[:, None] * D + off_d[None, :]
-    )
+    out_row_ptr = out_ptr + (pid_b * Lmax + off_t)[:, None] * D + off_d[None, :]
 
     # Initialize with PAD. PAD_IS_UINT8 selects the pad tensor's dtype so
     # integer-typed outputs (e.g. MXFP4 packed nibbles, ue8m0 scale bytes)

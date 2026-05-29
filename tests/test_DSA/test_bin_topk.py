@@ -91,9 +91,7 @@ def make_topk_input(
 def reference_topk_implementation(inputs, starts, ends, topk):
     """Reference implementation - using torch.topk"""
     batch_size, seq_len = inputs.shape
-    ref_indices = torch.zeros(
-        batch_size, topk, dtype=torch.int32, device=inputs.device
-    )
+    ref_indices = torch.zeros(batch_size, topk, dtype=torch.int32, device=inputs.device)
 
     for i in range(batch_size):
         start = starts[i].item()
@@ -121,9 +119,7 @@ def debug_topk_results(actual, expected, inputs, test_name=""):
         expected_set = set(expected[i].cpu().numpy())
         intersection = actual_set & expected_set
         print(f"Batch {i}:")
-        print(
-            f"  Actual indices: {sorted(actual_set)[:m]}..."
-        )  # Only show first 10
+        print(f"  Actual indices: {sorted(actual_set)[:m]}...")  # Only show first 10
         print(f"  Expected indices: {sorted(expected_set)[:m]}...")
         print(
             f"  Intersection: {len(intersection)}/{len(expected_set)} = {len(intersection) / len(expected_set):.4f}"
@@ -139,9 +135,7 @@ def debug_topk_results(actual, expected, inputs, test_name=""):
         print(f"  Expected top values: {np.sort(expected_values)[-m:][::-1]}")
 
 
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA device required"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA device required")
 @pytest.mark.skipif(not HAS_TLE, reason="TLE bucket_sort_topk is unavailable")
 @pytest.mark.bucket_sort_topk
 @pytest.mark.parametrize(
@@ -309,9 +303,7 @@ def test_bucket_sort_topk_variable_length():
     starts = torch.zeros(batch_size, dtype=torch.int32, device=device)
 
     # Each batch uses different sequence length
-    ends = torch.tensor(
-        [100, 500, 800, 1024], dtype=torch.int32, device=device
-    )
+    ends = torch.tensor([100, 500, 800, 1024], dtype=torch.int32, device=device)
 
     # Reference implementation
     ref_indices = reference_topk_implementation(
@@ -337,9 +329,7 @@ def test_bucket_sort_topk_correctness():
     topk = 2048
 
     # torch.manual_seed(1)
-    inputs = torch.randn(
-        batch_size, seq_len, dtype=torch.float32, device=device
-    )
+    inputs = torch.randn(batch_size, seq_len, dtype=torch.float32, device=device)
     starts = torch.zeros(batch_size, dtype=torch.int32, device=device)
     ends = torch.ones(batch_size, dtype=torch.int32, device=device) * seq_len
 

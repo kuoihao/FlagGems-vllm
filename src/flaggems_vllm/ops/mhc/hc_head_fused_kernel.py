@@ -51,28 +51,20 @@ def _hc_head_fused_kernel(
         h_off = h_start + tl.arange(0, BLOCK_H)
         h_mask = h_off < H
 
-        r0 = tl.load(
-            residual_ptr + x_base + 0 * H + h_off, mask=h_mask, other=0.0
-        ).to(tl.float32)
-        r1 = tl.load(
-            residual_ptr + x_base + 1 * H + h_off, mask=h_mask, other=0.0
-        ).to(tl.float32)
+        r0 = tl.load(residual_ptr + x_base + 0 * H + h_off, mask=h_mask, other=0.0).to(
+            tl.float32
+        )
+        r1 = tl.load(residual_ptr + x_base + 1 * H + h_off, mask=h_mask, other=0.0).to(
+            tl.float32
+        )
         sqr_acc += r0 * r0 + r1 * r1
 
-        fn00 = tl.load(
-            fn_ptr + 0 * fn_stride_m + 0 * H + h_off, mask=h_mask, other=0.0
-        )
-        fn01 = tl.load(
-            fn_ptr + 0 * fn_stride_m + 1 * H + h_off, mask=h_mask, other=0.0
-        )
+        fn00 = tl.load(fn_ptr + 0 * fn_stride_m + 0 * H + h_off, mask=h_mask, other=0.0)
+        fn01 = tl.load(fn_ptr + 0 * fn_stride_m + 1 * H + h_off, mask=h_mask, other=0.0)
         mix_acc0 += r0 * fn00 + r1 * fn01
 
-        fn10 = tl.load(
-            fn_ptr + 1 * fn_stride_m + 0 * H + h_off, mask=h_mask, other=0.0
-        )
-        fn11 = tl.load(
-            fn_ptr + 1 * fn_stride_m + 1 * H + h_off, mask=h_mask, other=0.0
-        )
+        fn10 = tl.load(fn_ptr + 1 * fn_stride_m + 0 * H + h_off, mask=h_mask, other=0.0)
+        fn11 = tl.load(fn_ptr + 1 * fn_stride_m + 1 * H + h_off, mask=h_mask, other=0.0)
         mix_acc1 += r0 * fn10 + r1 * fn11
 
         if HC > 2:
@@ -175,12 +167,12 @@ def _hc_head_fused_kernel(
     for h_start in range(0, H, BLOCK_H):
         h_off = h_start + tl.arange(0, BLOCK_H)
         h_mask = h_off < H
-        r0 = tl.load(
-            residual_ptr + x_base + 0 * H + h_off, mask=h_mask, other=0.0
-        ).to(tl.float32)
-        r1 = tl.load(
-            residual_ptr + x_base + 1 * H + h_off, mask=h_mask, other=0.0
-        ).to(tl.float32)
+        r0 = tl.load(residual_ptr + x_base + 0 * H + h_off, mask=h_mask, other=0.0).to(
+            tl.float32
+        )
+        r1 = tl.load(residual_ptr + x_base + 1 * H + h_off, mask=h_mask, other=0.0).to(
+            tl.float32
+        )
         acc = pre_mix0 * r0 + pre_mix1 * r1
         if HC > 2:
             r2 = tl.load(
@@ -207,16 +199,14 @@ def hc_head_fused_kernel_ref(
     """Pure PyTorch reference implementation for correctness testing."""
     if hs_flat.shape[0] == 0:
         return out
-    x = hs_flat.reshape(hs_flat.shape[0], hc_mult * hidden_size).to(
-        torch.float32
-    )
+    x = hs_flat.reshape(hs_flat.shape[0], hc_mult * hidden_size).to(torch.float32)
     mixes = torch.matmul(x, fn.t())
     sqrsum = x.square().sum(dim=-1, keepdim=True)
     rsqrt = torch.rsqrt(sqrsum / (hc_mult * hidden_size) + rms_eps)
     pre_mix = torch.sigmoid(mixes * rsqrt * hc_scale[0] + hc_base) + hc_eps
-    result = torch.sum(
-        pre_mix.unsqueeze(-1) * hs_flat.to(torch.float32), dim=1
-    ).to(out.dtype)
+    result = torch.sum(pre_mix.unsqueeze(-1) * hs_flat.to(torch.float32), dim=1).to(
+        out.dtype
+    )
     out.copy_(result)
     return out
 

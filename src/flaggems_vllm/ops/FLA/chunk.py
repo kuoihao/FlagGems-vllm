@@ -46,9 +46,7 @@ def chunk_gated_delta_rule_fwd(
     v_contiguous = v.is_contiguous()
     g_contiguous = g.is_contiguous()
     beta_contiguous = beta.is_contiguous()
-    initial_state_contiguous = (
-        initial_state is None or initial_state.is_contiguous()
-    )
+    initial_state_contiguous = initial_state is None or initial_state.is_contiguous()
     cu_seqlens_contiguous = cu_seqlens is None or cu_seqlens.is_contiguous()
     if not (
         q_contiguous

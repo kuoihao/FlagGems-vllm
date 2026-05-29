@@ -25,9 +25,7 @@ def test_weight_norm(shape, dtype, dim):
         torch.mlu.manual_seed_all(42)
 
     dim = dim % len(shape)
-    v = torch.randn(
-        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
-    )
+    v = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
     g = torch.randn(
         [1 if i != dim else shape[i] for i in range(v.ndim)],
         dtype=dtype,
@@ -40,9 +38,7 @@ def test_weight_norm(shape, dtype, dim):
     ref_g = utils.to_reference(g, True)
     ref_w_out = torch._weight_norm(ref_v, ref_g, dim)
     res_w_out = flaggems_vllm.weight_norm(v, g, dim)
-    utils.gems_assert_close(
-        res_w_out, ref_w_out, dtype, reduce_dim=reduce_size
-    )
+    utils.gems_assert_close(res_w_out, ref_w_out, dtype, reduce_dim=reduce_size)
 
     res_w_grad = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device)
     ref_w_grad = utils.to_reference(res_w_grad, True)

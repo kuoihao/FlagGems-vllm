@@ -7,9 +7,7 @@ from flaggems_vllm.ops.topk_softplus_sqrt import topk_softplus_sqrt
 from . import base
 
 try:
-    from vllm._custom_ops import (
-        topk_hash_softplus_sqrt as _vllm_topk_softplus_sqrt,
-    )
+    from vllm._custom_ops import topk_hash_softplus_sqrt as _vllm_topk_softplus_sqrt
 
     HAS_VLLM = True
 except ImportError:
@@ -78,18 +76,13 @@ def _torch_topk_softplus_sqrt_ref(
 
     topk_weights.copy_(top_weights.to(torch.float32))
     topk_indices.copy_(top_ids.to(torch.int32))
-    tei = (
-        torch.arange(num_tokens, device=gating_output.device).unsqueeze(1)
-        * topk
-    )
+    tei = torch.arange(num_tokens, device=gating_output.device).unsqueeze(1) * topk
     tei = tei + torch.arange(topk, device=gating_output.device).unsqueeze(0)
     token_expert_indices.copy_(tei.to(torch.int32))
 
 
 _baseline_op = (
-    _vllm_topk_softplus_sqrt_wrapper
-    if HAS_VLLM
-    else _torch_topk_softplus_sqrt_ref
+    _vllm_topk_softplus_sqrt_wrapper if HAS_VLLM else _torch_topk_softplus_sqrt_ref
 )
 
 

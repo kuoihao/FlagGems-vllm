@@ -32,9 +32,7 @@ def torch_moe_align_block_size(
         topk_ids.numel(), device=topk_ids.device, dtype=torch.int32
     )
     flattened_expert_ids = topk_ids.flatten()
-    sorted_expert_ids, sort_indices = torch.sort(
-        flattened_expert_ids, stable=True
-    )
+    sorted_expert_ids, sort_indices = torch.sort(flattened_expert_ids, stable=True)
     sorted_token_indices = flattened_token_indices[sort_indices]
 
     expert_token_counts = torch.zeros(
@@ -65,9 +63,7 @@ def torch_moe_align_block_size(
 
     # max_num_blocks = (max_num_tokens_padded + block_size - 1) // block_size
     max_num_blocks = max_num_tokens_padded // block_size
-    expert_ids = torch.zeros(
-        max_num_blocks, dtype=torch.int32, device=topk_ids.device
-    )
+    expert_ids = torch.zeros(max_num_blocks, dtype=torch.int32, device=topk_ids.device)
 
     current_pos = 0
     current_block = 0
@@ -80,20 +76,18 @@ def torch_moe_align_block_size(
         num_expert_tokens = expert_tokens.shape[0]
 
         if num_expert_tokens > 0:
-            in_sorted_token_ids[
-                current_pos : current_pos + num_expert_tokens
-            ] = expert_tokens
-
-            expert_blocks_needed = (
-                expert_padded_counts[expert_id] // block_size
+            in_sorted_token_ids[current_pos : current_pos + num_expert_tokens] = (
+                expert_tokens
             )
+
+            expert_blocks_needed = expert_padded_counts[expert_id] // block_size
 
             expert_id_new = expert_id
             if expert_map is not None:
                 expert_id_new = expert_map[expert_id]
-            expert_ids[
-                current_block : current_block + expert_blocks_needed
-            ] = expert_id_new
+            expert_ids[current_block : current_block + expert_blocks_needed] = (
+                expert_id_new
+            )
 
             current_pos += expert_padded_counts[expert_id]
             current_block += expert_blocks_needed
@@ -122,18 +116,12 @@ def torch_moe_align_block_size(
         (16384, 10),
     ],
 )
-def test_accuracy_moe_align_block_size(
-    num_experts, block_size, topk_ids_shape
-):
+def test_accuracy_moe_align_block_size(num_experts, block_size, topk_ids_shape):
     device = flaggems_vllm.device
     dtype = torch.int32
-    topk_ids = torch.randint(
-        0, num_experts, topk_ids_shape, dtype=dtype, device=device
-    )
+    topk_ids = torch.randint(0, num_experts, topk_ids_shape, dtype=dtype, device=device)
     max_num_tokens_padded = topk_ids.numel() + num_experts * (block_size - 1)
-    sorted_ids = torch.empty(
-        (max_num_tokens_padded,), dtype=dtype, device=device
-    )
+    sorted_ids = torch.empty((max_num_tokens_padded,), dtype=dtype, device=device)
     max_num_m_blocks = max_num_tokens_padded // block_size
     expert_ids = torch.empty((max_num_m_blocks,), dtype=dtype, device=device)
     num_tokens_post_pad = torch.empty(1, dtype=dtype, device=device)
@@ -214,9 +202,7 @@ def test_accuracy_moe_align_block_size(
             total_tokens,
         )
 
-        assert set(golden_expert_tokens.keys()) == set(
-            actual_expert_tokens.keys()
-        ), (
+        assert set(golden_expert_tokens.keys()) == set(actual_expert_tokens.keys()), (
             f"Expert IDs mismatch: golden={set(golden_expert_tokens.keys())}, "
             f"actual={set(actual_expert_tokens.keys())}"
         )

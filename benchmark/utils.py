@@ -47,9 +47,7 @@ def generate_tensor_input(shape, dtype, device):
         ).to(device)
 
     if dtype in consts.BOOL_DTYPES:
-        return torch.randint(0, 2, size=shape, dtype=dtype, device="cpu").to(
-            device
-        )
+        return torch.randint(0, 2, size=shape, dtype=dtype, device="cpu").to(device)
 
     if dtype in consts.COMPLEX_DTYPES:
         return torch.randn(shape, dtype=dtype, device=device)

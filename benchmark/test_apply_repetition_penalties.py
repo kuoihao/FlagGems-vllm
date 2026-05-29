@@ -30,15 +30,11 @@ class RepetitionPenaltyBenchmark(base.Benchmark):
             num_seqs, _ = shape
             yield (
                 torch.randn(shape, dtype=dtype, device=self.device),
-                torch.randint(
-                    0, 2, shape, dtype=torch.bool, device=self.device
+                torch.randint(0, 2, shape, dtype=torch.bool, device=self.device),
+                torch.randint(0, 2, shape, dtype=torch.bool, device=self.device),
+                torch.empty(num_seqs, dtype=dtype, device=self.device).uniform_(
+                    1.0, 2.0
                 ),
-                torch.randint(
-                    0, 2, shape, dtype=torch.bool, device=self.device
-                ),
-                torch.empty(
-                    num_seqs, dtype=dtype, device=self.device
-                ).uniform_(1.0, 2.0),
             )
 
     def set_gems(self, gems_op):
@@ -55,13 +51,9 @@ UNSUPPORTED_VENDORS = {
 }
 
 
-@pytest.mark.skipif(
-    utils.SkipVersion("vllm", "<0.4"), reason="vLLM <0.4 not supported"
-)
+@pytest.mark.skipif(utils.SkipVersion("vllm", "<0.4"), reason="vLLM <0.4 not supported")
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
-@pytest.mark.skipif(
-    vendor_name in UNSUPPORTED_VENDORS, reason="Vendor not supported"
-)
+@pytest.mark.skipif(vendor_name in UNSUPPORTED_VENDORS, reason="Vendor not supported")
 @pytest.mark.apply_repetition_penalties
 def test_apply_repetition_penalties():
     vllm_ops = pytest.importorskip("vllm._custom_ops")

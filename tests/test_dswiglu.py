@@ -19,9 +19,7 @@ def generate_input(
     return torch.randn(shape, dtype=dtype, device=device).contiguous()
 
 
-def filter_valid_shapes(
-    shapes: list[tuple[int, ...]]
-) -> list[tuple[int, ...]]:
+def filter_valid_shapes(shapes: list[tuple[int, ...]]) -> list[tuple[int, ...]]:
     valid_shapes = []
     for shape in shapes:
         if not shape:
@@ -48,14 +46,10 @@ def test_dswiglu(shape: tuple[int, ...], dtype: torch.dtype):
     grad_shape[-1] = grad_shape[-1] // 2
     grad_output = generate_input(tuple(grad_shape), dtype, device)
 
-    te_grad_input = tex.dswiglu(grad_output, input_tensor, quantizer=None).to(
-        device
-    )
+    te_grad_input = tex.dswiglu(grad_output, input_tensor, quantizer=None).to(device)
     te_grad_input = utils.to_reference(te_grad_input)
 
     with flaggems_vllm.use_gems():
-        fg_grad_input = flaggems_vllm.dswiglu(
-            grad_output, input_tensor, quantizer=None
-        )
+        fg_grad_input = flaggems_vllm.dswiglu(grad_output, input_tensor, quantizer=None)
 
     utils.gems_assert_close(fg_grad_input, te_grad_input, dtype)

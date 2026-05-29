@@ -73,9 +73,7 @@ class FusedMoEFP8Benchmark(base.Benchmark):
         device = flaggems_vllm.device
         fp8_dtype = torch.float8_e4m3fn
 
-        hidden_states = torch.randn(
-            num_tokens, hidden_size, device=device, dtype=dtype
-        )
+        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 
         # Generate FP8 weights one expert at a time to avoid OOM on large E.
         w1_fp8 = torch.empty(
@@ -112,21 +110,17 @@ class FusedMoEFP8Benchmark(base.Benchmark):
 
         # Synthetic per-expert scales (representative of real quantization)
         w1_scale = (
-            torch.rand(num_experts, device=device, dtype=torch.float32) * 0.01
-            + 0.001
+            torch.rand(num_experts, device=device, dtype=torch.float32) * 0.01 + 0.001
         )
         w2_scale = (
-            torch.rand(num_experts, device=device, dtype=torch.float32) * 0.01
-            + 0.001
+            torch.rand(num_experts, device=device, dtype=torch.float32) * 0.01 + 0.001
         )
 
         # Routing
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(
-            torch.softmax(gating, dim=-1), topk, dim=-1
-        )
+        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(dtype)
 

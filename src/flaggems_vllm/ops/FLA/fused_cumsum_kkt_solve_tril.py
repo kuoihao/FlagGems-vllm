@@ -365,9 +365,7 @@ def chunk_gated_delta_rule_fused_cumsum_kkt_solve_tril_kernel(
             boundary_check=(0, 1),
         )
     else:
-        desc_o = make_tensor_descriptor(
-            A_inv_base, [T, BT], [H * BT, 1], [16, 16]
-        )
+        desc_o = make_tensor_descriptor(A_inv_base, [T, BT], [H * BT, 1], [16, 16])
         desc_o.store(
             [i_t * BT + 0, 0],
             b_Ai_11.to(desc_o.dtype, fp_downcast_rounding="rtne"),
@@ -425,9 +423,7 @@ def chunk_gated_delta_rule_fused_cumsum_kkt_solve_tril(
     BT = chunk_size
     output_dtype = output_dtype or k.dtype
     chunk_indices = (
-        prepare_chunk_indices(cu_seqlens, BT)
-        if cu_seqlens is not None
-        else None
+        prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
     )
     NT = triton.cdiv(T, BT) if cu_seqlens is None else len(chunk_indices)
 

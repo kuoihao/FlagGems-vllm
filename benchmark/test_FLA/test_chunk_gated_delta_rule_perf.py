@@ -20,9 +20,7 @@ def _install_triton_allocator():
         return
 
     def _alloc(size: int, _alignment: int, _stream: int | None):
-        return torch.empty(
-            (size,), dtype=torch.uint8, device=flaggems_vllm.device
-        )
+        return torch.empty((size,), dtype=torch.uint8, device=flaggems_vllm.device)
 
     triton.set_allocator(_alloc)
     _TRITON_ALLOCATOR_READY = True
@@ -43,9 +41,7 @@ def _recurrent_wrapper(
     use_qk_l2norm_in_kernel=False,
 ):
     if BT != 64:
-        raise ValueError(
-            "chunk gated delta rule benchmark supports only BT=64"
-        )
+        raise ValueError("chunk gated delta rule benchmark supports only BT=64")
     if head_first:
         q = q.transpose(1, 2)
         k = k.transpose(1, 2)
@@ -79,9 +75,7 @@ def _recurrent_wrapper(
         cu_seqlens_recurrent = cu_seqlens
         ssm_state_indices = None
     if initial_state is None:
-        initial_state = q.new_zeros(
-            v.shape[0], v.shape[2], k.shape[-1], v.shape[-1]
-        )
+        initial_state = q.new_zeros(v.shape[0], v.shape[2], k.shape[-1], v.shape[-1])
     o, final_state = flaggems_vllm.ops_recurrent_gated_delta_rule_fwd(
         q=q_recurrent,
         k=k_recurrent,
@@ -120,9 +114,9 @@ class ChunkGatedDeltaRuleBenchmark(Benchmark):
             dim=-1,
             eps=1e-6,
         ).to(dtype)
-        v = (
-            0.125 * torch.randn(B, T, H, V, device=device, dtype=torch.float32)
-        ).to(dtype)
+        v = (0.125 * torch.randn(B, T, H, V, device=device, dtype=torch.float32)).to(
+            dtype
+        )
         beta = (
             torch.empty(B, T, H, device=device, dtype=torch.float32)
             .uniform_(-2.0, 2.0)

@@ -28,11 +28,7 @@ from flaggems_vllm.ops.mhc.hc_split_sinkhorn import (
     hc_split_sinkhorn,
     mhc_split_sinkhorn_torch_ref,
 )
-from flaggems_vllm.ops.mhc.mhc_bwd import (
-    mhc_bwd,
-    mhc_bwd_ref,
-    sinkhorn_forward,
-)
+from flaggems_vllm.ops.mhc.mhc_bwd import mhc_bwd, mhc_bwd_ref, sinkhorn_forward
 from flaggems_vllm.ops.mhc.mhc_post import mhc_post, mhc_post_ref
 from flaggems_vllm.ops.mhc.mhc_pre import mhc_pre, mhc_pre_ref
 
@@ -42,12 +38,8 @@ def generate_mhc_post_data(
 ):
     torch.manual_seed(42)
     x = torch.randn((n, h), dtype=torch.bfloat16, device=device)
-    residual = torch.randn(
-        (n, hc_mult, h), dtype=torch.bfloat16, device=device
-    )
-    post_layer_mix = torch.randn(
-        (n, hc_mult, 1), dtype=torch.float32, device=device
-    )
+    residual = torch.randn((n, hc_mult, h), dtype=torch.bfloat16, device=device)
+    post_layer_mix = torch.randn((n, hc_mult, 1), dtype=torch.float32, device=device)
     comb_res_mix = torch.randn(
         (n, hc_mult, hc_mult), dtype=torch.float32, device=device
     )
@@ -91,14 +83,10 @@ def generate_mhc_split_sinkhorn_data(
 ):
     torch.manual_seed(42)
     mix_hc = (2 + hc_mult) * hc_mult
-    mixes = torch.randn(
-        (batch, seqlen, mix_hc), dtype=torch.float32, device=device
-    )
+    mixes = torch.randn((batch, seqlen, mix_hc), dtype=torch.float32, device=device)
     hc_scale = torch.randn((3,), dtype=torch.float32, device=device) * 0.1
     hc_base = torch.randn((mix_hc,), dtype=torch.float32, device=device) * 0.1
-    return dict(
-        mixes=mixes, hc_scale=hc_scale, hc_base=hc_base, hc_mult=hc_mult
-    )
+    return dict(mixes=mixes, hc_scale=hc_scale, hc_base=hc_base, hc_mult=hc_mult)
 
 
 MHC_SPLIT_SINKHORN_CONFIGS = [
@@ -154,16 +142,12 @@ def generate_mhc_pre_data(
     hc_mult3 = hc_mult * 2 + hc_mult * hc_mult
 
     residual = (
-        torch.randn(
-            (n, hc_mult, hidden_size), dtype=torch.float, device=device
-        )
+        torch.randn((n, hc_mult, hidden_size), dtype=torch.float, device=device)
         .mul(1 + torch.arange(hc_mult, device=device).mul(0.01).view(1, -1, 1))
         .bfloat16()
     )
     fn = (
-        torch.randn(
-            (hc_mult3, hc_mult, hidden_size), dtype=torch.float, device=device
-        )
+        torch.randn((hc_mult3, hc_mult, hidden_size), dtype=torch.float, device=device)
         * 1e-4
         * (1 + torch.arange(hc_mult, device=device).mul(0.01).view(1, -1, 1))
     ).flatten(1, 2)
@@ -194,17 +178,12 @@ def test_mhc_pre_vs_ref(n, hidden_size, hc_mult):
     data = generate_mhc_pre_data(n, hc_mult, hidden_size)
     post_triton, comb_triton, li_triton = mhc_pre(**data)
     data_cpu = {
-        k: v.cpu() if isinstance(v, torch.Tensor) else v
-        for k, v in data.items()
+        k: v.cpu() if isinstance(v, torch.Tensor) else v for k, v in data.items()
     }
     post_ref, comb_ref, li_ref = mhc_pre_ref(**data_cpu)
 
-    torch.testing.assert_close(
-        post_triton.cpu(), post_ref, rtol=1e-2, atol=1e-2
-    )
-    torch.testing.assert_close(
-        comb_triton.cpu(), comb_ref, rtol=1e-2, atol=1e-2
-    )
+    torch.testing.assert_close(post_triton.cpu(), post_ref, rtol=1e-2, atol=1e-2)
+    torch.testing.assert_close(comb_triton.cpu(), comb_ref, rtol=1e-2, atol=1e-2)
     torch.testing.assert_close(li_triton.cpu(), li_ref, rtol=1e-2, atol=1e-2)
 
 
@@ -282,9 +261,7 @@ def generate_hc_head_fused_data(
     device: str = flaggems_vllm.device,
 ):
     torch.manual_seed(42)
-    hs_flat = torch.randn(
-        (n, hc_mult, hidden_size), dtype=dtype, device=device
-    )
+    hs_flat = torch.randn((n, hc_mult, hidden_size), dtype=dtype, device=device)
     fn = torch.randn(
         (hc_mult, hc_mult * hidden_size), dtype=torch.float32, device=device
     )
@@ -313,9 +290,7 @@ def generate_hc_head_fused_data(
 def test_hc_head_fused_kernel_vs_ref(n, hidden_size, hc_mult):
     dtype = torch.bfloat16
     data = generate_hc_head_fused_data(n, hidden_size, hc_mult, dtype=dtype)
-    data_ref = generate_hc_head_fused_data(
-        n, hidden_size, hc_mult, dtype=dtype
-    )
+    data_ref = generate_hc_head_fused_data(n, hidden_size, hc_mult, dtype=dtype)
 
     out_triton = hc_head_fused_kernel(**data)
     out_ref = hc_head_fused_kernel_ref(**data_ref)
@@ -349,9 +324,7 @@ def _hc_head_fused_kernel_ref(
 def test_hc_head_fused_kernel_vs_vllm(n, hidden_size, hc_mult):
     dtype = torch.bfloat16
     data = generate_hc_head_fused_data(n, hidden_size, hc_mult, dtype=dtype)
-    data_ref = generate_hc_head_fused_data(
-        n, hidden_size, hc_mult, dtype=dtype
-    )
+    data_ref = generate_hc_head_fused_data(n, hidden_size, hc_mult, dtype=dtype)
 
     out_triton = hc_head_fused_kernel(**data)
     out_ref = _hc_head_fused_kernel_ref(**data_ref)

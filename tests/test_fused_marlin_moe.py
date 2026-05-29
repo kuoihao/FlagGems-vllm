@@ -15,10 +15,7 @@ import pytest
 import torch
 
 import flaggems_vllm
-from flaggems_vllm.ops.fused_marlin_moe import (
-    QUANT_TYPE_UINT4B8,
-    fused_marlin_moe,
-)
+from flaggems_vllm.ops.fused_marlin_moe import QUANT_TYPE_UINT4B8, fused_marlin_moe
 
 # -----------------------------------------------------------------------------
 # Local GPTQ uint4b8 quantization helper (self-contained, no vllm dependency).
@@ -113,9 +110,7 @@ def _quantize_moe_weight(w_fp, group_size):
         in_dim % group_size == 0
     ), f"in_dim={in_dim} not divisible by group_size={group_size}"
 
-    w_q = torch.empty(
-        E, out_dim, in_dim // 2, device=w_fp.device, dtype=torch.uint8
-    )
+    w_q = torch.empty(E, out_dim, in_dim // 2, device=w_fp.device, dtype=torch.uint8)
     w_ref = torch.empty_like(w_fp)
     scales = torch.empty(
         E,
@@ -155,9 +150,7 @@ def _make_inputs(
         w1_scale, w2_scale     3D scales matching w1_q/w2_q
     """
     torch.manual_seed(0)
-    hidden_states = torch.randn(
-        num_tokens, hidden_size, device=device, dtype=dtype
-    )
+    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 
     # Match vLLM's magnitude (test_moe_vllm.py line 569-570): /10 keeps the
     # quantization grid well-conditioned for INT4.
@@ -185,12 +178,8 @@ def _make_inputs(
     w1_q, w1_ref, w1_scale = _quantize_moe_weight(w1_fp, GROUP_SIZE)
     w2_q, w2_ref, w2_scale = _quantize_moe_weight(w2_fp, GROUP_SIZE)
 
-    gating = torch.randn(
-        num_tokens, num_experts, device=device, dtype=torch.float32
-    )
-    topk_weights, topk_ids = torch.topk(
-        torch.softmax(gating, dim=-1), topk, dim=-1
-    )
+    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
+    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -207,9 +196,7 @@ def _make_inputs(
     )
 
 
-def _reference_swiglu_moe(
-    hidden_states, w1_ref, w2_ref, topk_weights, topk_ids
-):
+def _reference_swiglu_moe(hidden_states, w1_ref, w2_ref, topk_weights, topk_ids):
     """Naive but obviously-correct SwiGLU MoE reference, using dequantized weights."""
     M, _ = hidden_states.shape
     _, two_N, _ = w1_ref.shape

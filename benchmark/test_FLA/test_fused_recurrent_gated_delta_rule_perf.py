@@ -137,9 +137,7 @@ class FusedRecurrentGatedDeltaRuleBenchmark(Benchmark):
         )
         beta = torch.rand(B, T, HV_local, device=device, dtype=dtype).sigmoid()
         cu_seqlens = torch.arange(T + 1, device=device, dtype=torch.long)
-        initial_state = torch.zeros(
-            (1024, HV_local, K, V), device=device, dtype=dtype
-        )
+        initial_state = torch.zeros((1024, HV_local, K, V), device=device, dtype=dtype)
         ssm_state_indices = torch.zeros(T, device=device, dtype=torch.long)
         scale = 0.08838834764831845
 

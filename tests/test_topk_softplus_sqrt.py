@@ -31,9 +31,7 @@ HASH_TOPK_LIST = [6, 8, 16] if not cfg.QUICK_MODE else [6, 8]
 HASH_RSF_LIST = [1.0, 2.5] if not cfg.QUICK_MODE else [1.0]
 
 try:
-    from vllm._custom_ops import (
-        topk_hash_softplus_sqrt as vllm_topk_softplus_sqrt,
-    )
+    from vllm._custom_ops import topk_hash_softplus_sqrt as vllm_topk_softplus_sqrt
 
     HAS_VLLM = True
 except ImportError:
@@ -62,9 +60,7 @@ def _torch_topk_softplus_sqrt_reference(
         assert input_ids is not None
         topk_ids = tid2eid[input_ids.long()]
     else:
-        topk_ids = torch.topk(scores_for_choice, k=topk, dim=-1, sorted=True)[
-            1
-        ]
+        topk_ids = torch.topk(scores_for_choice, k=topk, dim=-1, sorted=True)[1]
 
     topk_weights = original_scores.gather(1, topk_ids.long())
     if renormalize:
@@ -93,9 +89,7 @@ def _check_topk_results(
 
 
 @pytest.mark.topk_softplus_sqrt
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.parametrize("num_tokens", NUM_TOKENS_LIST)
 @pytest.mark.parametrize("num_experts", NUM_EXPERTS_LIST)
 @pytest.mark.parametrize("topk", TOPK_LIST)
@@ -108,12 +102,8 @@ def test_topk_softplus_sqrt(
     """Test topk_softplus_sqrt in standard mode (with bias) against PyTorch reference."""
     torch.manual_seed(0)
 
-    gating_output = torch.randn(
-        (num_tokens, num_experts), dtype=dtype, device=device
-    )
-    correction_bias = torch.randn(
-        (num_experts,), dtype=torch.float32, device=device
-    )
+    gating_output = torch.randn((num_tokens, num_experts), dtype=dtype, device=device)
+    correction_bias = torch.randn((num_experts,), dtype=torch.float32, device=device)
 
     ref_weights, ref_ids = _torch_topk_softplus_sqrt_reference(
         gating_output,
@@ -125,9 +115,7 @@ def test_topk_softplus_sqrt(
     ref_weights = utils.to_reference(ref_weights)
     ref_ids = utils.to_reference(ref_ids)
 
-    res_weights = torch.empty(
-        (num_tokens, topk), dtype=torch.float32, device=device
-    )
+    res_weights = torch.empty((num_tokens, topk), dtype=torch.float32, device=device)
     res_ids = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
     res_tei = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
 
@@ -146,9 +134,7 @@ def test_topk_softplus_sqrt(
 
 
 @pytest.mark.topk_softplus_sqrt
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.parametrize("num_tokens", HASH_NUM_TOKENS_LIST)
 @pytest.mark.parametrize("num_experts", HASH_NUM_EXPERTS_LIST)
 @pytest.mark.parametrize("topk", HASH_TOPK_LIST)
@@ -162,9 +148,7 @@ def test_topk_softplus_sqrt_hash(
     torch.manual_seed(0)
 
     vocab_size = 1024
-    gating_output = torch.randn(
-        (num_tokens, num_experts), dtype=dtype, device=device
-    )
+    gating_output = torch.randn((num_tokens, num_experts), dtype=dtype, device=device)
     tid2eid = torch.stack(
         [torch.randperm(num_experts)[:topk] for _ in range(vocab_size)]
     ).to(device=device, dtype=torch.int32)
@@ -183,9 +167,7 @@ def test_topk_softplus_sqrt_hash(
     ref_weights = utils.to_reference(ref_weights)
     ref_ids = utils.to_reference(ref_ids)
 
-    res_weights = torch.empty(
-        (num_tokens, topk), dtype=torch.float32, device=device
-    )
+    res_weights = torch.empty((num_tokens, topk), dtype=torch.float32, device=device)
     res_ids = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
     res_tei = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
 
@@ -205,39 +187,25 @@ def test_topk_softplus_sqrt_hash(
 
 
 @pytest.mark.topk_softplus_sqrt
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("num_tokens", [1, 10, 128])
 @pytest.mark.parametrize("num_experts", [256])
 @pytest.mark.parametrize("topk", [6])
 @pytest.mark.parametrize("renormalize", [True, False])
-def test_topk_softplus_sqrt_vs_vllm(
-    num_tokens, num_experts, topk, renormalize
-):
+def test_topk_softplus_sqrt_vs_vllm(num_tokens, num_experts, topk, renormalize):
     """Test topk_softplus_sqrt against vLLM CUDA kernel."""
     torch.manual_seed(0)
 
     dtype = torch.bfloat16
     routed_scaling_factor = 1.0
-    gating_output = torch.randn(
-        (num_tokens, num_experts), dtype=dtype, device=device
-    )
-    correction_bias = torch.randn(
-        (num_experts,), dtype=torch.float32, device=device
-    )
+    gating_output = torch.randn((num_tokens, num_experts), dtype=dtype, device=device)
+    correction_bias = torch.randn((num_experts,), dtype=torch.float32, device=device)
 
     # vLLM CUDA kernel
-    vllm_weights = torch.empty(
-        (num_tokens, topk), dtype=torch.float32, device=device
-    )
-    vllm_ids = torch.empty(
-        (num_tokens, topk), dtype=torch.int32, device=device
-    )
-    vllm_tei = torch.empty(
-        (num_tokens, topk), dtype=torch.int32, device=device
-    )
+    vllm_weights = torch.empty((num_tokens, topk), dtype=torch.float32, device=device)
+    vllm_ids = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
+    vllm_tei = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
     vllm_topk_softplus_sqrt(
         vllm_weights,
         vllm_ids,
@@ -253,9 +221,7 @@ def test_topk_softplus_sqrt_vs_vllm(
     vllm_ids = utils.to_reference(vllm_ids)
 
     # FlagGems Triton kernel
-    res_weights = torch.empty(
-        (num_tokens, topk), dtype=torch.float32, device=device
-    )
+    res_weights = torch.empty((num_tokens, topk), dtype=torch.float32, device=device)
     res_ids = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
     res_tei = torch.empty((num_tokens, topk), dtype=torch.int32, device=device)
 

@@ -30,21 +30,16 @@ def torch_sparse_attention(q, kv, attn_sink, topk_idxs, softmax_scale):
     topk = topk_idxs.shape[-1]
 
     kv_expanded = kv[:, None, :, :].expand(batch, seq_len, -1, dim)
-    idx_expanded = (
-        topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
-    )
+    idx_expanded = topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
     gathered_kv = torch.gather(kv_expanded, 2, idx_expanded)
 
     scores = (
-        torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float())
-        * softmax_scale
+        torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float()) * softmax_scale
     )
     sink = attn_sink[None, None, :, None].expand(batch, seq_len, heads, 1)
     attn = torch.softmax(torch.cat([scores, sink], dim=-1), dim=-1)
 
-    out = torch.einsum(
-        "bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float()
-    )
+    out = torch.einsum("bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float())
     return out.to(q.dtype)
 
 
@@ -57,19 +52,13 @@ class SparseAttentionBenchmark(base.Benchmark):
         return None
 
     def get_input_iter(self, dtype):
-        for seed, (batch, seq_len, kv_len, topk, heads, dim) in enumerate(
-            self.shapes
-        ):
+        for seed, (batch, seq_len, kv_len, topk, heads, dim) in enumerate(self.shapes):
             torch.manual_seed(2026 + seed)
             q = torch.randn(
                 (batch, seq_len, heads, dim), dtype=dtype, device=self.device
             )
-            kv = torch.randn(
-                (batch, kv_len, dim), dtype=dtype, device=self.device
-            )
-            attn_sink = torch.zeros(
-                (heads,), dtype=torch.float32, device=self.device
-            )
+            kv = torch.randn((batch, kv_len, dim), dtype=dtype, device=self.device)
+            attn_sink = torch.zeros((heads,), dtype=torch.float32, device=self.device)
             topk_idxs = torch.randint(
                 0,
                 kv_len,
@@ -81,9 +70,7 @@ class SparseAttentionBenchmark(base.Benchmark):
 
 
 @pytest.mark.skip(reason="The test case fails with many exceptions: #2669")
-@pytest.mark.skipif(
-    flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode"
-)
+@pytest.mark.skipif(flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode")
 @pytest.mark.sparse_attn_triton
 def test_sparse_attn_triton():
     bench = SparseAttentionBenchmark(

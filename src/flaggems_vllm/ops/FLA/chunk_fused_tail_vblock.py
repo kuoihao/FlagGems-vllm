@@ -21,11 +21,7 @@ def can_use_fused_tail_vblock(
     chunk_size: int,
     cu_seqlens: torch.Tensor | None,
 ) -> bool:
-    if (
-        cu_seqlens is not None
-        or initial_state is None
-        or not output_final_state
-    ):
+    if cu_seqlens is not None or initial_state is None or not output_final_state:
         return False
     if q.ndim != 4 or k.ndim != 4 or w.ndim != 4 or u.ndim != 4 or g.ndim != 3:
         return False
@@ -104,16 +100,12 @@ def _chunk_gated_delta_rule_fused_tail_vblock_kernel(
         )
         g_vec = tl.load(g + (i_b * T + t) * H + i_h).to(tl.float32)
 
-        residual = u_block.to(tl.float32) - tl.dot(
-            w_block, h_acc.to(w_block.dtype)
-        )
+        residual = u_block.to(tl.float32) - tl.dot(w_block, h_acc.to(w_block.dtype))
 
         q_h = tl.dot(q_block, h_acc.to(q_block.dtype))
         qk = tl.dot(q_block, k_t_block).to(tl.float32)
         causal = offs_t[:, None] >= offs_t[None, :]
-        qk = tl.where(
-            causal, qk * tl.exp(g_vec[:, None] - g_vec[None, :]), 0.0
-        )
+        qk = tl.where(causal, qk * tl.exp(g_vec[:, None] - g_vec[None, :]), 0.0)
         out = (
             q_h * tl.exp(g_vec)[:, None]
             + tl.dot(qk.to(u_block.dtype), residual.to(u_block.dtype))
@@ -124,9 +116,7 @@ def _chunk_gated_delta_rule_fused_tail_vblock_kernel(
             mask=v_mask[None, :],
         )
 
-        g_last = tl.load(g + (i_b * T + ((i_t + 1) * BT - 1)) * H + i_h).to(
-            tl.float32
-        )
+        g_last = tl.load(g + (i_b * T + ((i_t + 1) * BT - 1)) * H + i_h).to(tl.float32)
         residual_for_state = residual * tl.exp(g_last - g_vec)[:, None]
         h_acc = h_acc * tl.exp(g_last) + tl.dot(
             k_t_block, residual_for_state.to(k_t_block.dtype)

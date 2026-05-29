@@ -736,9 +736,7 @@ def per_token_group_quant_fp8(
 
     if column_major_scales:
         shape = (x.shape[-1] // group_size,) + x.shape[:-1]
-        x_s = torch.empty(shape, device=x.device, dtype=torch.float32).permute(
-            -1, -2
-        )
+        x_s = torch.empty(shape, device=x.device, dtype=torch.float32).permute(-1, -2)
     else:
         shape = x.shape[:-1] + (x.shape[-1] // group_size,)
         x_s = torch.empty(shape, device=x.device, dtype=torch.float32)

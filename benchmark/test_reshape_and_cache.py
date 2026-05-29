@@ -46,9 +46,7 @@ def test_reshape_and_cache():
         ) = shape
         num_slots = block_size * num_blocks
         slot_mapping_lst = random.sample(range(num_slots), num_tokens)
-        slot_mapping = torch.tensor(
-            slot_mapping_lst, dtype=torch.long, device=device
-        )
+        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
 
         qkv = torch.randn(
             num_tokens, 3, num_heads, head_size, dtype=dtype, device=device
@@ -65,16 +63,12 @@ def test_reshape_and_cache():
             x,
         )
         key_caches: list[torch.Tensor] = []
-        key_cache = torch.empty(
-            size=key_cache_shape, dtype=dtype, device=device
-        )
+        key_cache = torch.empty(size=key_cache_shape, dtype=dtype, device=device)
         key_cache.uniform_(-scale, scale)
         key_caches.append(key_cache)
         value_cache_shape = (num_blocks, num_heads, head_size, block_size)
         value_caches: list[torch.Tensor] = []
-        value_cache = torch.empty(
-            size=value_cache_shape, dtype=dtype, device=device
-        )
+        value_cache = torch.empty(size=value_cache_shape, dtype=dtype, device=device)
         value_cache.uniform_(-scale, scale)
         value_caches.append(value_cache)
 

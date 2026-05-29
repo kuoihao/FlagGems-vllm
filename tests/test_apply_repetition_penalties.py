@@ -63,12 +63,8 @@ def test_apply_repetition_penalty(shape, penalty, dtype, mask_mode):
     logits_ori = logits.clone()
 
     if mask_mode == "random":
-        prompt_mask = torch.randint(
-            0, 2, shape, dtype=torch.bool, device=device
-        )
-        output_mask = torch.randint(
-            0, 2, shape, dtype=torch.bool, device=device
-        )
+        prompt_mask = torch.randint(0, 2, shape, dtype=torch.bool, device=device)
+        output_mask = torch.randint(0, 2, shape, dtype=torch.bool, device=device)
     else:
         prompt_mask = torch.zeros(shape, dtype=torch.bool, device=device)
         output_mask = torch.zeros(shape, dtype=torch.bool, device=device)

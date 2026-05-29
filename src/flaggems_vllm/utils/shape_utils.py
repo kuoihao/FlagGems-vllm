@@ -8,9 +8,7 @@ import triton
 import triton.language as tl
 
 from flaggems_vllm.utils import triton_lang_extension as tle
-from flaggems_vllm.utils.codegen_config_utils import (
-    get_heuristics_for_num_warps,
-)
+from flaggems_vllm.utils.codegen_config_utils import get_heuristics_for_num_warps
 
 Shape = Tuple[int]
 Stride = Tuple[int]
@@ -99,18 +97,14 @@ def broadcast_shapes(  # type: ignore[return-value]
     return shape
 
 
-def broadcasted_stride(
-    shape: Shape, stride: Stride, new_shape: Shape
-) -> Stride:
+def broadcasted_stride(shape: Shape, stride: Stride, new_shape: Shape) -> Stride:
     assert broadcastable_to(shape, new_shape)
     r1 = len(shape)
     r2 = len(new_shape)
     d = r2 - r1
     new_stride = [0 for _ in range(r2)]
     for i in range(r1):
-        new_stride[d + i] = (
-            0 if (shape[i] == 1 and new_shape[d + i] > 1) else stride[i]
-        )
+        new_stride[d + i] = 0 if (shape[i] == 1 and new_shape[d + i] > 1) else stride[i]
     return tuple(new_stride)  # type: ignore[return-value]
 
 
@@ -317,8 +311,7 @@ def check_tensor_attributes(data_list, is_tensor_list):
     # Check if both lists have the same length
     if len(data_list) != len(is_tensor_list):
         raise ValueError(
-            "Error: The lists of inputs and"
-            " is_tensor must have the same length."
+            "Error: The lists of inputs and" " is_tensor must have the same length."
         )
 
     for i, (data, is_tensor) in enumerate(zip(data_list, is_tensor_list)):

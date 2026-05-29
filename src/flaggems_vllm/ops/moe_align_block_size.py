@@ -60,9 +60,7 @@ def _block_mesh(num_blocks: int):
 
 @lru_cache(maxsize=1)
 def _block_cluster_mesh_8():
-    return tle.device_mesh(
-        {"block_cluster": [("cluster_x", TLE_CLUSTER_SIZE)]}
-    )
+    return tle.device_mesh({"block_cluster": [("cluster_x", TLE_CLUSTER_SIZE)]})
 
 
 def _supports_tle_cluster_remote() -> bool:
@@ -84,9 +82,7 @@ def _install_triton_default_allocator(device: torch.device) -> None:
     _TRITON_ALLOCATOR_INSTALLED = True
 
 
-def _pick_tle_fused_launch_params(
-    numel: int, num_experts: int
-) -> "tuple[int, int]":
+def _pick_tle_fused_launch_params(numel: int, num_experts: int) -> "tuple[int, int]":
     if num_experts >= 256:
         if numel >= 32768:
             return 4096, 4
@@ -164,9 +160,7 @@ def moe_align_block_size_tle_atomic_fused_coop(
             numel,
             mask=offs < numel_sorted_token_ids,
         )
-    for base in range(
-        pid * BLOCK_TOKENS, numel_expert_ids, NUM_BLOCKS * BLOCK_TOKENS
-    ):
+    for base in range(pid * BLOCK_TOKENS, numel_expert_ids, NUM_BLOCKS * BLOCK_TOKENS):
         offs = base + token_offsets
         tl.store(expert_ids_ptr + offs, 0, mask=offs < numel_expert_ids)
     if pid == 0:
@@ -186,9 +180,7 @@ def moe_align_block_size_tle_atomic_fused_coop(
     for base in range(pid * BLOCK_TOKENS, numel, NUM_BLOCKS * BLOCK_TOKENS):
         offs = base + token_offsets
         mask = offs < numel
-        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(
-            tl.int32
-        )
+        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(tl.int32)
         count_ptrs = tle.gpu.local_ptr(local_counts, (expert_id,))
         tl.atomic_add(count_ptrs, 1, mask=mask, sem="relaxed", scope="cta")
 
@@ -204,9 +196,7 @@ def moe_align_block_size_tle_atomic_fused_coop(
     tle.distributed_barrier(mesh)
 
     if pid == 0:
-        total_counts = tl.load(
-            cumsum_ptr + expert_offsets, mask=expert_mask, other=0
-        )
+        total_counts = tl.load(cumsum_ptr + expert_offsets, mask=expert_mask, other=0)
         aligned_counts = tl.cdiv(total_counts, block_size) * block_size
         expert_starts = tl.cumsum(aligned_counts, axis=0) - aligned_counts
         tl.store(cumsum_ptr + expert_offsets, expert_starts, mask=expert_mask)
@@ -221,12 +211,8 @@ def moe_align_block_size_tle_atomic_fused_coop(
         scope=tle.gpu.smem,
         nv_mma_shared_layout=False,
     )
-    expert_starts_ptrs = tle.gpu.local_ptr(
-        expert_starts_local, (expert_offsets,)
-    )
-    expert_starts_vals = tl.load(
-        cumsum_ptr + expert_offsets, mask=expert_mask, other=0
-    )
+    expert_starts_ptrs = tle.gpu.local_ptr(expert_starts_local, (expert_offsets,))
+    expert_starts_vals = tl.load(cumsum_ptr + expert_offsets, mask=expert_mask, other=0)
     tl.store(expert_starts_ptrs, expert_starts_vals, mask=expert_mask)
 
     total_tokens = tl.load(num_tokens_post_pad_ptr)
@@ -254,9 +240,7 @@ def moe_align_block_size_tle_atomic_fused_coop(
     for base in range(pid * BLOCK_TOKENS, numel, NUM_BLOCKS * BLOCK_TOKENS):
         offs = base + token_offsets
         mask = offs < numel
-        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(
-            tl.int32
-        )
+        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(tl.int32)
         count_ptrs = tle.gpu.local_ptr(local_counts, (expert_id,))
         rank_with_prefix = tl.atomic_add(
             count_ptrs, 1, mask=mask, sem="relaxed", scope="cta"
@@ -339,22 +323,16 @@ def moe_align_block_size_tle_cluster_fused(
     local_counts_ptrs = tle.gpu.local_ptr(local_counts, (expert_offsets,))
     tl.store(local_counts_ptrs, 0, mask=expert_mask)
 
-    for base in range(
-        cluster_rank * BLOCK_TOKENS, numel, CLUSTER_SIZE * BLOCK_TOKENS
-    ):
+    for base in range(cluster_rank * BLOCK_TOKENS, numel, CLUSTER_SIZE * BLOCK_TOKENS):
         offs = base + init_offsets
         mask = offs < numel
-        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(
-            tl.int32
-        )
+        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(tl.int32)
         count_ptrs = tle.gpu.local_ptr(local_counts, (expert_id,))
         tl.atomic_add(count_ptrs, 1, mask=mask, sem="relaxed", scope="cta")
 
     local_counts_vals = tl.load(local_counts_ptrs, mask=expert_mask, other=0)
     rank0_cumsum_remote = tle.remote(cumsum_local, 0, scope=mesh)
-    rank0_cumsum_remote_ptrs = tle.gpu.local_ptr(
-        rank0_cumsum_remote, (expert_offsets,)
-    )
+    rank0_cumsum_remote_ptrs = tle.gpu.local_ptr(rank0_cumsum_remote, (expert_offsets,))
     prefix_before = tl.atomic_add(
         rank0_cumsum_remote_ptrs,
         local_counts_vals,
@@ -378,9 +356,7 @@ def moe_align_block_size_tle_cluster_fused(
     tle.distributed_barrier(mesh)
 
     rank0_cumsum_remote = tle.remote(cumsum_local, 0, scope=mesh)
-    rank0_cumsum_remote_ptrs = tle.gpu.local_ptr(
-        rank0_cumsum_remote, (expert_offsets,)
-    )
+    rank0_cumsum_remote_ptrs = tle.gpu.local_ptr(rank0_cumsum_remote, (expert_offsets,))
     cumsum_vals = tl.load(rank0_cumsum_remote_ptrs, mask=expert_mask, other=0)
     tl.store(
         tle.gpu.local_ptr(cumsum_local, (expert_offsets,)),
@@ -407,14 +383,10 @@ def moe_align_block_size_tle_cluster_fused(
 
     tle.distributed_barrier(mesh)
 
-    for base in range(
-        cluster_rank * BLOCK_TOKENS, numel, CLUSTER_SIZE * BLOCK_TOKENS
-    ):
+    for base in range(cluster_rank * BLOCK_TOKENS, numel, CLUSTER_SIZE * BLOCK_TOKENS):
         offs = base + init_offsets
         mask = offs < numel
-        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(
-            tl.int32
-        )
+        expert_id = tl.load(topk_ids_ptr + offs, mask=mask, other=0).to(tl.int32)
         count_ptrs = tle.gpu.local_ptr(local_counts, (expert_id,))
         rank_with_prefix = tl.atomic_add(
             count_ptrs, 1, mask=mask, sem="relaxed", scope="cta"
@@ -537,9 +509,7 @@ def moe_align_block_size_stage4(
     token_idx_in_expert = tl.atomic_add(
         tokens_cnts_ptr + off_t + expert_id, 1, mask=mask
     )
-    rank_post_pad = token_idx_in_expert + tl.load(
-        cumsum_ptr + expert_id, mask=mask
-    )
+    rank_post_pad = token_idx_in_expert + tl.load(cumsum_ptr + expert_id, mask=mask)
     tl.store(sorted_token_ids_ptr + rank_post_pad, offset, mask=mask)
 
 
@@ -560,15 +530,11 @@ def moe_align_block_size_triton(
     block_size_sorted = triton.next_power_of_2(
         ceil_div(numel_sorted_token_ids, num_experts)
     )
-    block_size_expert = triton.next_power_of_2(
-        ceil_div(numel_expert_ids, num_experts)
-    )
+    block_size_expert = triton.next_power_of_2(ceil_div(numel_expert_ids, num_experts))
     block_expert_tle = triton.next_power_of_2(num_experts)
 
     if HAS_TLE and topk_ids.is_cuda and block_expert_tle <= 1024:
-        block_tokens_taf, _ = _pick_tle_atomic_fused_launch_params(
-            numel, num_experts
-        )
+        block_tokens_taf, _ = _pick_tle_atomic_fused_launch_params(numel, num_experts)
         experts_per_shard = ceil_div(num_experts, TLE_CLUSTER_SIZE)
         num_tokens = topk_ids.shape[0] if topk_ids.ndim > 1 else numel
 
@@ -650,9 +616,7 @@ def moe_align_block_size_triton(
 
     # The tensor needs to be padded before calculating IDs,
     # to prevent out-of-bounds address access.
-    cumsum = torch.zeros(
-        (num_experts + 1,), dtype=torch.int32, device=topk_ids.device
-    )
+    cumsum = torch.zeros((num_experts + 1,), dtype=torch.int32, device=topk_ids.device)
     tokens_cnts = torch.zeros(
         (num_experts + 1, num_experts),
         dtype=torch.int32,
@@ -715,9 +679,7 @@ def moe_align_block_size(
     expert_ids = torch.empty(
         (max_num_m_blocks,), dtype=torch.int32, device=topk_ids.device
     )
-    num_tokens_post_pad = torch.empty(
-        (1), dtype=torch.int32, device=topk_ids.device
-    )
+    num_tokens_post_pad = torch.empty((1), dtype=torch.int32, device=topk_ids.device)
 
     moe_align_block_size_triton(
         topk_ids,

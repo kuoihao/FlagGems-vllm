@@ -74,9 +74,7 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
             query_start_loc = torch.tensor(
                 query_start_values, device="cuda", dtype=torch.int32
             )
-            seq_lens = torch.tensor(
-                seq_lens_values, device="cuda", dtype=torch.int32
-            )
+            seq_lens = torch.tensor(seq_lens_values, device="cuda", dtype=torch.int32)
             gather_lens = torch.tensor(
                 gather_lens_values, device="cuda", dtype=torch.int32
             )
@@ -94,8 +92,7 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
 
 
 @pytest.mark.skipif(
-    (not torch.cuda.is_available())
-    or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
+    (not torch.cuda.is_available()) or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
     reason="requires cuda and vllm deepseek_v4_ops.combine_topk_swa_indices",
 )
 def test_combine_topk_swa_indices_benchmark():

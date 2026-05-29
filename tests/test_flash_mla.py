@@ -16,17 +16,13 @@ def cal_diff(x: torch.Tensor, y: torch.Tensor, name: str) -> None:
     x, y = x.double(), y.double()
     x = x.to(y.device)
     RMSE = ((x - y) * (x - y)).mean().sqrt().item()
-    cos_diff = 1 - 2 * (x * y).sum().item() / max(
-        (x * x + y * y).sum().item(), 1e-12
-    )
+    cos_diff = 1 - 2 * (x * y).sum().item() / max((x * x + y * y).sum().item(), 1e-12)
     amax_diff = (x - y).abs().max().item()
 
     assert cos_diff < 1e-5, f"{name}: {cos_diff=}, {RMSE=}, {amax_diff=}"
 
 
-def _scaled_dot_product_attention(
-    query, key, value, h_q, h_kv, is_causal=False
-):
+def _scaled_dot_product_attention(query, key, value, h_q, h_kv, is_causal=False):
     query = query.float()
     key = key.float()
     value = value.float()
@@ -36,12 +32,10 @@ def _scaled_dot_product_attention(
     if is_causal:
         s_q = query.shape[-2]
         s_k = key.shape[-2]
-        attn_bias = torch.zeros(
-            s_q, s_k, dtype=query.dtype, device=query.device
+        attn_bias = torch.zeros(s_q, s_k, dtype=query.dtype, device=query.device)
+        temp_mask = torch.ones(s_q, s_k, dtype=torch.bool, device=query.device).tril(
+            diagonal=s_k - s_q
         )
-        temp_mask = torch.ones(
-            s_q, s_k, dtype=torch.bool, device=query.device
-        ).tril(diagonal=s_k - s_q)
         attn_bias.masked_fill_(temp_mask.logical_not(), float("-inf"))
         attn_bias.to(query.dtype)
         attn_weight += attn_bias

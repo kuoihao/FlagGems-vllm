@@ -22,17 +22,11 @@ def native_per_token_group_quant_fp8(
     fp8_max = finfo.max
 
     x_ = x.reshape(x.numel() // group_size, group_size)
-    amax = (
-        x_.abs().max(dim=-1, keepdim=True)[0].clamp(min=eps).to(torch.float32)
-    )
-    x_s = amax * torch.tensor(
-        1.0 / fp8_max, dtype=torch.float32, device=x.device
-    )
+    amax = x_.abs().max(dim=-1, keepdim=True)[0].clamp(min=eps).to(torch.float32)
+    x_s = amax * torch.tensor(1.0 / fp8_max, dtype=torch.float32, device=x.device)
     if scale_ue8m0:
         min_val = torch.tensor(1e-10, dtype=x_s.dtype, device=x_s.device)
-        x_s = torch.exp2(
-            torch.ceil(torch.log2(torch.maximum(x_s.abs(), min_val)))
-        )
+        x_s = torch.exp2(torch.ceil(torch.log2(torch.maximum(x_s.abs(), min_val))))
     x_q = (x_ / x_s).clamp(min=fp8_min, max=fp8_max).to(dtype)
     x_q = x_q.reshape(x.shape)
     x_s = x_s.reshape(x.shape[:-1] + (x.shape[-1] // group_size,))
@@ -47,9 +41,7 @@ def native_per_token_group_quant_fp8(
 @pytest.mark.parametrize("d", utils.FP8_QUANT_SHAPES["D"])
 @pytest.mark.parametrize("num_tokens", utils.FP8_QUANT_SHAPES["NUM_TOKENS"])
 @pytest.mark.parametrize("scale_ue8m0", [True, False])
-def test_per_token_group_quant_fp8(
-    num_tokens, d, dtype, group_size, seed, scale_ue8m0
-):
+def test_per_token_group_quant_fp8(num_tokens, d, dtype, group_size, seed, scale_ue8m0):
     torch.manual_seed(seed)
 
     x = torch.rand(num_tokens, d, dtype=dtype, device=flaggems_vllm.device)

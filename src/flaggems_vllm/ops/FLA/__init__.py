@@ -3,9 +3,7 @@
 # the following copyright notice:
 # Copyright (c) 2023-2025, Songlin Yang, Yu Zhang
 from flaggems_vllm.ops.FLA.chunk import chunk_gated_delta_rule_fwd
-from flaggems_vllm.ops.FLA.fused_recurrent import (
-    fused_recurrent_gated_delta_rule_fwd,
-)
+from flaggems_vllm.ops.FLA.fused_recurrent import fused_recurrent_gated_delta_rule_fwd
 
 __all__ = [
     "chunk_gated_delta_rule_fwd",

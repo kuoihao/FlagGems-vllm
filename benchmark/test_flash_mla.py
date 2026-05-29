@@ -50,9 +50,7 @@ def test_flash_mla(monkeypatch):
         )
         yield q, block_table, blocked_k, max_seqlen_pad, block_size, b, s_q, cache_seqlens, h_q, h_kv, d, dv, causal
 
-    def scaled_dot_product_attention(
-        query, key, value, h_q, h_kv, is_causal=False
-    ):
+    def scaled_dot_product_attention(query, key, value, h_q, h_kv, is_causal=False):
         query = query.float()
         key = key.float()
         value = value.float()
@@ -62,9 +60,7 @@ def test_flash_mla(monkeypatch):
         if is_causal:
             s_q = query.shape[-2]
             s_k = key.shape[-2]
-            attn_bias = torch.zeros(
-                s_q, s_k, dtype=query.dtype, device=query.device
-            )
+            attn_bias = torch.zeros(s_q, s_k, dtype=query.dtype, device=query.device)
             temp_mask = torch.ones(
                 s_q, s_k, dtype=torch.bool, device=query.device
             ).tril(diagonal=s_k - s_q)

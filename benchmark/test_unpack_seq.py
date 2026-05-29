@@ -11,9 +11,7 @@ from . import base
 # =============================================================================
 
 try:
-    from vllm.v1.attention.ops.common import (
-        unpack_seq_triton as vllm_unpack_seq,
-    )
+    from vllm.v1.attention.ops.common import unpack_seq_triton as vllm_unpack_seq
 
     HAS_VLLM = True
 except ImportError:
@@ -108,9 +106,7 @@ class UnpackSeqFP8Benchmark(base.Benchmark):
         Lmax = max(lengths_list)
         device = flaggems_vllm.device
         lengths = torch.tensor(lengths_list, dtype=torch.int32, device=device)
-        packed = (
-            torch.randn(B, Lmax, D, dtype=torch.float32, device=device) * 0.1
-        )
+        packed = torch.randn(B, Lmax, D, dtype=torch.float32, device=device) * 0.1
         packed_fp8 = packed.to(FP8_DTYPE)
         yield packed_fp8, lengths
 

@@ -27,9 +27,7 @@ def topk_with_k2_triton(
     lane = tl.arange(0, BLOCK_SIZE)
     mask = lane < num_experts_per_group
 
-    scores_offset = (
-        token_id * stride_scores_token + group_id * num_experts_per_group
-    )
+    scores_offset = token_id * stride_scores_token + group_id * num_experts_per_group
     bias_offset = group_id * num_experts_per_group
 
     x = tl.load(
@@ -110,9 +108,7 @@ def group_idx_and_topk_triton(
     is_finite = (group_scores_f32 == group_scores_f32) & (
         group_scores_f32 != float("inf")
     )
-    group_scores_f32 = tl.where(
-        is_finite & valid_group, group_scores_f32, neg_inf
-    )
+    group_scores_f32 = tl.where(is_finite & valid_group, group_scores_f32, neg_inf)
 
     max_group_score = tl.max(group_scores_f32, axis=0)
     if_proceed = max_group_score != neg_inf
@@ -158,10 +154,7 @@ def group_idx_and_topk_triton(
 
     expert_in_group = expert_group[:, None] == group_offsets[None, :]
     expert_selected = (
-        tl.sum(
-            (expert_in_group & group_selected[None, :]).to(tl.int32), axis=1
-        )
-        > 0
+        tl.sum((expert_in_group & group_selected[None, :]).to(tl.int32), axis=1) > 0
     ) & valid_expert
 
     scored = tl.load(
@@ -202,9 +195,7 @@ def group_idx_and_topk_triton(
         ).to(tl.float32)
 
         topk_vals = tl.where(pos_range == i, selected_score, topk_vals)
-        topk_idx = tl.where(
-            pos_range == i, selected_idx.to(tl.int32), topk_idx
-        )
+        topk_idx = tl.where(pos_range == i, selected_idx.to(tl.int32), topk_idx)
 
         selection_scores = tl.where(
             expert_offsets == selected_idx, neg_inf, selection_scores

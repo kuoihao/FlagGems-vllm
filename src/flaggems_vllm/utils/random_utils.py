@@ -19,9 +19,7 @@ except AttributeError:
         # TODO: fix frontend issues and cleanup
         # conditions can be simplified
         # scale is ((2**23 - 1) / 2**23) * 2**(N_BITS - 1)
-        if tl.constexpr(x.dtype == tl.uint32) or tl.constexpr(
-            x.dtype == tl.int32
-        ):
+        if tl.constexpr(x.dtype == tl.uint32) or tl.constexpr(x.dtype == tl.int32):
             # maximum value such that
             # `MAX_INT * scale < 1.0`
             # (with float rounding)
@@ -29,8 +27,7 @@ except AttributeError:
             scale = 4.6566127342e-10
         else:
             tl.static_assert(
-                tl.constexpr(x.dtype == tl.uint64)
-                or tl.constexpr(x.dtype == tl.int64)
+                tl.constexpr(x.dtype == tl.uint64) or tl.constexpr(x.dtype == tl.int64)
             )
             x = x.to(tl.int64, bitcast=True)
             scale = 1.0842020432385337e-19

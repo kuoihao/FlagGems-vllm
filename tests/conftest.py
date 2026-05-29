@@ -113,9 +113,7 @@ def pytest_configure(config):
             for arg in config.invocation_params.args
         ]
         logging.basicConfig(
-            filename="result_{}.log".format("_".join(cmd_args)).replace(
-                "_-", "-"
-            ),
+            filename="result_{}.log".format("_".join(cmd_args)).replace("_-", "-"),
             filemode="w",
             level=logging.INFO,
             format="[%(levelname)s] %(message)s",
@@ -131,8 +129,7 @@ def pytest_runtest_teardown(item, nextitem):
         op_marks = [
             mark.name
             for mark in all_marks
-            if mark.name not in BUILTIN_MARKS
-            and mark.name not in REGISTERED_MARKS
+            if mark.name not in BUILTIN_MARKS and mark.name not in REGISTERED_MARKS
         ]
         if len(op_marks) > 0:
             params = str(item.callspec.params)
@@ -226,8 +223,7 @@ def pytest_collection_modifyitems(session, config, items):
             op_marks = [
                 mark.name
                 for mark in all_marks
-                if mark.name not in BUILTIN_MARKS
-                and mark.name not in REGISTERED_MARKS
+                if mark.name not in BUILTIN_MARKS and mark.name not in REGISTERED_MARKS
             ]
 
             data["marks"] = op_marks

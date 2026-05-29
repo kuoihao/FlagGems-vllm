@@ -89,9 +89,7 @@ FP8_QUANT_SHAPES = {
 }
 FUSED_INV_ROPE_FP8_QUANT_SHAPES = {
     "NUM_TOKENS": [7] if QUICK_MODE else [1, 7, 32, 128],
-    "NUM_HEADS_AND_GROUPS": (
-        [(64, 8)] if QUICK_MODE else [(32, 4), (64, 8), (128, 8)]
-    ),
+    "NUM_HEADS_AND_GROUPS": ([(64, 8)] if QUICK_MODE else [(32, 4), (64, 8), (128, 8)]),
     "OUTPUT_LAYOUT_NUM_TOKENS": [7] if QUICK_MODE else [1, 7, 32, 128],
     "OUTPUT_LAYOUT_NUM_HEADS_AND_GROUPS": (
         [(64, 8)] if QUICK_MODE else [(64, 8), (128, 8)]
@@ -102,9 +100,7 @@ FUSED_INV_ROPE_FP8_QUANT_SHAPES = {
     "SEEDS": [0, 42],
 }
 DISTRIBUTION_SHAPES = [(20, 320, 15)]
-REDUCTION_SHAPES = (
-    [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)]
-)
+REDUCTION_SHAPES = [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)]
 REDUCTION_SMALL_SHAPES = (
     [(1, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 2560, 3)]
 )
@@ -253,13 +249,9 @@ FLOAT_DTYPES = (
     else PRIMARY_FLOAT_DTYPES
 )
 
-ALL_FLOAT_DTYPES = (
-    FLOAT_DTYPES + [torch.float64] if fp64_is_supported else FLOAT_DTYPES
-)
+ALL_FLOAT_DTYPES = FLOAT_DTYPES + [torch.float64] if fp64_is_supported else FLOAT_DTYPES
 INT_DTYPES = [torch.int16, torch.int32]
-ALL_INT_DTYPES = (
-    INT_DTYPES + [torch.int64] if int64_is_supported else INT_DTYPES
-)
+ALL_INT_DTYPES = INT_DTYPES + [torch.int64] if int64_is_supported else INT_DTYPES
 BOOL_TYPES = [torch.bool]
 COMPLEX_DTYPES = [torch.complex32, torch.complex64]
 
@@ -281,26 +273,18 @@ def to_reference(inp, upcast=False):
                 torch.complex128 if fp64_is_supported else torch.complex64
             )
         else:
-            ref_inp = ref_inp.to(
-                torch.float64 if fp64_is_supported else torch.float32
-            )
+            ref_inp = ref_inp.to(torch.float64 if fp64_is_supported else torch.float32)
     return ref_inp
 
 
 def to_cpu(res, ref):
-    if (
-        TO_CPU
-        and isinstance(res, torch.Tensor)
-        and isinstance(ref, torch.Tensor)
-    ):
+    if TO_CPU and isinstance(res, torch.Tensor) and isinstance(ref, torch.Tensor):
         res = res.to("cpu")
         assert ref.device == torch.device("cpu")
     return res
 
 
-def gems_assert_close(
-    res, ref, dtype, equal_nan=False, reduce_dim=1, atol=1e-4
-):
+def gems_assert_close(res, ref, dtype, equal_nan=False, reduce_dim=1, atol=1e-4):
     res = to_cpu(res, ref)
     flaggems_vllm.testing.assert_close(
         res, ref, dtype, equal_nan=equal_nan, reduce_dim=reduce_dim, atol=atol

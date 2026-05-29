@@ -53,19 +53,13 @@ def test_instance_norm(
     weight = None
     bias = None
     if has_weight_bias:
-        weight = torch.randn(
-            size=(C,), dtype=dtype, device=device, requires_grad=True
-        )
-        bias = torch.randn(
-            size=(C,), dtype=dtype, device=device, requires_grad=True
-        )
+        weight = torch.randn(size=(C,), dtype=dtype, device=device, requires_grad=True)
+        bias = torch.randn(size=(C,), dtype=dtype, device=device, requires_grad=True)
 
     running_mean = None
     running_var = None
     if has_running_stats:
-        running_mean = torch.randn(
-            size=(C,), dtype=torch.float32, device=device
-        )
+        running_mean = torch.randn(size=(C,), dtype=torch.float32, device=device)
         r = torch.randn(size=(C,), dtype=torch.float32, device=device).abs()
         running_var = r + 1e-5
 
@@ -106,12 +100,8 @@ def test_instance_norm(
 
     utils.gems_assert_close(res_out, ref_out, dtype)
     if has_running_stats:
-        utils.gems_assert_close(
-            running_mean, ref_running_mean, running_mean.dtype
-        )
-        utils.gems_assert_close(
-            running_var, ref_running_var, running_var.dtype
-        )
+        utils.gems_assert_close(running_mean, ref_running_mean, running_mean.dtype)
+        utils.gems_assert_close(running_var, ref_running_var, running_var.dtype)
 
     out_grad = torch.randn_like(inp)
     ref_grad = utils.to_reference(out_grad, True)

@@ -20,9 +20,7 @@ def _get_fp8_dtype() -> torch.dtype:
         return torch.float8_e4m3fnuz
     if hasattr(torch, "float8_e4m3fn"):
         return torch.float8_e4m3fn
-    raise RuntimeError(
-        "float8_e4m3fn is required for indexer_k_quant_and_cache"
-    )
+    raise RuntimeError("float8_e4m3fn is required for indexer_k_quant_and_cache")
 
 
 def _is_fp8_fnuz(dtype: torch.dtype) -> bool:
@@ -46,9 +44,7 @@ def _indexer_k_quant_and_cache_kernel(
 ):
     tid = tl.program_id(0)
     quant_block_id = tl.program_id(1)
-    offsets = quant_block_id * QUANT_BLOCK_SIZE + tl.arange(
-        0, QUANT_BLOCK_SIZE
-    )
+    offsets = quant_block_id * QUANT_BLOCK_SIZE + tl.arange(0, QUANT_BLOCK_SIZE)
     mask = offsets < head_dim
 
     src_ptr = k_ptr + tid * head_dim
@@ -70,11 +66,7 @@ def _indexer_k_quant_and_cache_kernel(
         scale = tl.exp2(tl.ceil(tl.log2(scale)))
 
     fp8_val = (val.to(tl.float32) / scale).to(kv_cache_ptr.type.element_ty)
-    dst_ptr = (
-        kv_cache_ptr
-        + block_id * kv_cache_value_stride
-        + block_offset * head_dim
-    )
+    dst_ptr = kv_cache_ptr + block_id * kv_cache_value_stride + block_offset * head_dim
     tl.store(dst_ptr + offsets, fp8_val, mask=mask)
 
     dst_scale_ptr = (
@@ -104,9 +96,7 @@ def indexer_k_quant_and_cache(
     kv_cache_flat = kv_cache.view(num_blocks, -1)
     fp8_dtype = _get_fp8_dtype()
     kv_cache_value = kv_cache_flat[:, : block_size * head_dim].view(fp8_dtype)
-    kv_cache_scale = kv_cache_flat[:, block_size * head_dim :].view(
-        torch.float32
-    )
+    kv_cache_scale = kv_cache_flat[:, block_size * head_dim :].view(torch.float32)
     _indexer_k_quant_and_cache_kernel[(num_tokens, num_quant_blocks)](
         k,
         kv_cache_value,

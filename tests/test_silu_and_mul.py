@@ -30,9 +30,7 @@ def test_silu_and_mul(shape, dtype):
         ref_out, (ref_inp1, ref_inp2), ref_grad
     )
 
-    res_inp1_grad, res_inp2_grad = torch.autograd.grad(
-        res_out, (inp1, inp2), out_grad
-    )
+    res_inp1_grad, res_inp2_grad = torch.autograd.grad(res_out, (inp1, inp2), out_grad)
 
     utils.gems_assert_close(res_out, ref_out, dtype)
     utils.gems_assert_close(res_inp1_grad, ref_inp1_grad, dtype)

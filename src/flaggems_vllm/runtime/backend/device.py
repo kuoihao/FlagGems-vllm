@@ -105,11 +105,7 @@ class DeviceDetector(object):
 
     def _get_vendor_from_env(self):
         device_from_evn = os.environ.get("DNN_VENDOR")
-        return (
-            None
-            if device_from_evn not in self.vendor_list
-            else device_from_evn
-        )
+        return None if device_from_evn not in self.vendor_list else device_from_evn
 
     def _get_vendor_from_sys(self):
         vendor_infos = backend.get_vendor_infos()
@@ -119,9 +115,7 @@ class DeviceDetector(object):
             device_query_cmd = single_info.device_query_cmd
             try:
                 cmd_args = shlex.split(device_query_cmd)
-                result = subprocess.run(
-                    cmd_args, capture_output=True, text=True
-                )
+                result = subprocess.run(cmd_args, capture_output=True, text=True)
                 if result.returncode == 0:
                     result_single_info.put(single_info)
             except:  # noqa: E722

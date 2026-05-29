@@ -122,17 +122,13 @@ def flash_mla_attn_kernel(
         )
         kv_loc = kv_page_number * PAGE_SIZE + offs_n % PAGE_SIZE
         offs_v_c = kv_loc[:, None] * stride_kv_bs + offs_d_ckv[None, :]
-        v_c = tl.load(
-            Kv_cache + offs_v_c, mask=mask_kvsplit[:, None], other=0.0
-        )
+        v_c = tl.load(Kv_cache + offs_v_c, mask=mask_kvsplit[:, None], other=0.0)
         k_c = tl.trans(v_c)
 
         qk = tl.dot(q_nope, k_c)  # qk_nope
 
         offs_k_pe = kv_loc[None, :] * stride_kv_bs + offs_d_kpe[:, None]
-        k_pe = tl.load(
-            Kv_cache + offs_k_pe, mask=mask_kvsplit[None, :], other=0.0
-        )
+        k_pe = tl.load(Kv_cache + offs_k_pe, mask=mask_kvsplit[None, :], other=0.0)
 
         qk = tl.dot(q_pe, k_pe, acc=qk)  # qk_rope
         qk *= sm_scale
@@ -148,9 +144,7 @@ def flash_mla_attn_kernel(
         e_sum = e_sum * re_scale + tl.sum(p, 1)
 
     offs_o = (
-        cur_batch_id * stride_o_b
-        + cur_head[:, None] * stride_o_h
-        + offs_d_ckv[None, :]
+        cur_batch_id * stride_o_b + cur_head[:, None] * stride_o_h + offs_d_ckv[None, :]
     )
     if EVEN_H:
         tl.store(

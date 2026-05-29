@@ -19,9 +19,7 @@ def _coerce_triton_version(version: str) -> Version:
 
 def _triton_version_at_least(major: int, minor: int, patch: int = 0) -> bool:
     version = str(getattr(triton, "__version__", "0.0.0"))
-    return _coerce_triton_version(version) >= Version(
-        f"{major}.{minor}.{patch}"
-    )
+    return _coerce_triton_version(version) >= Version(f"{major}.{minor}.{patch}")
 
 
 def has_triton_tle(major: int = 0, minor: int = 0, patch: int = 0) -> bool:

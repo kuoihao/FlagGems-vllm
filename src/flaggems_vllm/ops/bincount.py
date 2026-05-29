@@ -161,9 +161,7 @@ def _fused_bincount_launch(
     if weights_contig is None:
         compute_dtype = torch.int64
 
-    output = torch.zeros(
-        pre_size, dtype=compute_dtype, device=input_contig.device
-    )
+    output = torch.zeros(pre_size, dtype=compute_dtype, device=input_contig.device)
 
     if weights_contig is None:
         fused_max_bincount_kernel[grid](
@@ -204,9 +202,7 @@ def _fused_bincount_launch(
     if needed_size <= pre_size:
         return output[:needed_size]
 
-    output = torch.zeros(
-        needed_size, dtype=compute_dtype, device=input_contig.device
-    )
+    output = torch.zeros(needed_size, dtype=compute_dtype, device=input_contig.device)
     if weights_contig is None:
         bincount_kernel[grid](
             input_contig,
@@ -243,17 +239,13 @@ def bincount(input, weights=None, minlength=0):
     assert minlength >= 0, "minlength must be non-negative"
 
     if weights is not None:
-        assert (
-            weights.shape == input.shape
-        ), "weights must have the same shape as input"
+        assert weights.shape == input.shape, "weights must have the same shape as input"
 
     n = input.numel()
 
     if n == 0:
         if weights is not None:
-            return torch.zeros(
-                minlength, dtype=weights.dtype, device=input.device
-            )
+            return torch.zeros(minlength, dtype=weights.dtype, device=input.device)
         return torch.zeros(minlength, dtype=torch.int64, device=input.device)
 
     input_contig = input.contiguous()

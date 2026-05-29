@@ -56,34 +56,22 @@ def apply_rotary_pos_emb_kernel(
     sin_ptr += pos_id * sin_stride_s
 
     # note: set TRITON_DEBUG=1 to enable this check
-    tl.device_assert(
-        pos_id < MAX_POSITION_EMBEDDINGS, "position id out of bound"
-    )
+    tl.device_assert(pos_id < MAX_POSITION_EMBEDDINGS, "position id out of bound")
 
     ordered_block = tl.arange(0, PADDED_HEAD_DIM)
     mask = ordered_block < HEAD_DIM
     if ROTARY_INTERLEAVED:
         odd_mask = ordered_block % 2 == 0
-        rotated_block = tl.where(
-            odd_mask, ordered_block + 1, ordered_block - 1
-        )
+        rotated_block = tl.where(odd_mask, ordered_block + 1, ordered_block - 1)
         sin_cos_block = ordered_block // 2
-        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
-        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
+        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
+        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
         sin = tl.where(odd_mask, -sin, sin)
     else:
         rotated_block = (ordered_block + HEAD_DIM // 2) % HEAD_DIM
         sin_cos_block = ordered_block % (HEAD_DIM // 2)
-        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
-        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
+        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
+        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
         sin = tl.where(rotated_block < HEAD_DIM // 2, sin, -sin)
 
     oq_ptr += s_id * oq_stride_s
@@ -149,34 +137,22 @@ def apply_rotary_pos_emb_inplace_kernel(
     sin_ptr += pos_id * sin_stride_s
 
     # note: set TRITON_DEBUG=1 to enable this check
-    tl.device_assert(
-        pos_id < MAX_POSITION_EMBEDDINGS, "position id out of bound"
-    )
+    tl.device_assert(pos_id < MAX_POSITION_EMBEDDINGS, "position id out of bound")
 
     ordered_block = tl.arange(0, PADDED_HEAD_DIM)
     mask = ordered_block < HEAD_DIM
     if ROTARY_INTERLEAVED:
         odd_mask = ordered_block % 2 == 0
-        rotated_block = tl.where(
-            odd_mask, ordered_block + 1, ordered_block - 1
-        )
+        rotated_block = tl.where(odd_mask, ordered_block + 1, ordered_block - 1)
         sin_cos_block = ordered_block // 2
-        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
-        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
+        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
+        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
         sin = tl.where(odd_mask, -sin, sin)
     else:
         rotated_block = (ordered_block + HEAD_DIM // 2) % HEAD_DIM
         sin_cos_block = ordered_block % (HEAD_DIM // 2)
-        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
-        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(
-            tl.float32
-        )
+        cos = tl.load(cos_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
+        sin = tl.load(sin_ptr + sin_cos_block, mask=mask, other=0.0).to(tl.float32)
         sin = tl.where(rotated_block < HEAD_DIM // 2, sin, -sin)
 
     q_ptr += s_id * q_stride_s

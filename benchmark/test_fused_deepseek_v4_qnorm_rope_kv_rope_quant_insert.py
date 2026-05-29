@@ -48,9 +48,7 @@ class FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark(base.Benchmark):
             torch.ops._C.fused_deepseek_v4_qnorm_rope_kv_rope_quant_insert,
             [torch.bfloat16],
         )
-        self.set_gems(
-            flaggems_vllm.ops_deepseek_v4_qnorm_rope_kv_rope_quant_insert
-        )
+        self.set_gems(flaggems_vllm.ops_deepseek_v4_qnorm_rope_kv_rope_quant_insert)
 
     def set_shapes(self, shape_file_path=None):
         self.shapes = []
@@ -115,17 +113,13 @@ class FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark(base.Benchmark):
         inv_freq = 1.0 / (
             base
             ** (
-                torch.arange(
-                    0, rope_dim, 2, dtype=torch.float32, device=device
-                )
+                torch.arange(0, rope_dim, 2, dtype=torch.float32, device=device)
                 / rope_dim
             )
         )
         t = torch.arange(max_pos, dtype=torch.float32, device=device)
         freqs = torch.einsum("i,j -> ij", t, inv_freq)  # [max_pos, rope_dim/2]
-        cache = torch.cat(
-            (freqs.cos(), freqs.sin()), dim=-1
-        )  # [max_pos, rope_dim]
+        cache = torch.cat((freqs.cos(), freqs.sin()), dim=-1)  # [max_pos, rope_dim]
         return cache.to(dtype)
 
     @staticmethod
@@ -140,24 +134,20 @@ class FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark(base.Benchmark):
         device = param.device
 
         global _random_counter
-        FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark.init_seed(
-            _random_counter
-        )
+        FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark.init_seed(_random_counter)
         _random_counter = _random_counter + 1
 
-        q = torch.randn(
-            num_tokens, num_heads, HEAD_DIM, dtype=dtype, device=device
-        )
+        q = torch.randn(num_tokens, num_heads, HEAD_DIM, dtype=dtype, device=device)
         kv = torch.randn(num_tokens, HEAD_DIM, dtype=dtype, device=device)
         positions = torch.arange(num_tokens, dtype=torch.int64, device=device)
-        cos_sin_cache = FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark.make_cos_sin_cache(
-            max_pos, ROPE_DIM, torch.float32, device
+        cos_sin_cache = (
+            FusedDeepseekV4QnormRopeKVRopeQuantInsertBenchmark.make_cos_sin_cache(
+                max_pos, ROPE_DIM, torch.float32, device
+            )
         )
 
         num_blocks = (num_tokens + block_size - 1) // block_size + 1
-        slot_mapping = torch.arange(
-            num_tokens_insert, dtype=torch.int64, device=device
-        )
+        slot_mapping = torch.arange(num_tokens_insert, dtype=torch.int64, device=device)
         k_cache = torch.zeros(
             num_blocks,
             block_size * HEAD_BYTES,

@@ -85,9 +85,7 @@ else:
 @pytest.mark.parametrize("N, D, lengths_list", PACK_SHAPES_2D)
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_pack_seq_accuracy_2d(N, D, lengths_list, dtype):
-    lengths = torch.tensor(
-        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(N, D, dtype=dtype, device=flaggems_vllm.device)
 
     ref_x = utils.to_reference(x, True)
@@ -101,9 +99,7 @@ def test_pack_seq_accuracy_2d(N, D, lengths_list, dtype):
 @pytest.mark.parametrize("N, H, D, lengths_list", PACK_SHAPES_3D)
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_pack_seq_accuracy_3d(N, H, D, lengths_list, dtype):
-    lengths = torch.tensor(
-        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
     B = len(lengths_list)
     Lmax = max(lengths_list)
     x = torch.randn(N, H, D, dtype=dtype, device=flaggems_vllm.device)
@@ -111,9 +107,7 @@ def test_pack_seq_accuracy_3d(N, H, D, lengths_list, dtype):
     result = pack_seq_triton(x, lengths)
 
     expected_shape = (B, Lmax, H, D)
-    assert (
-        result.shape == expected_shape
-    ), f"{result.shape} != {expected_shape}"
+    assert result.shape == expected_shape, f"{result.shape} != {expected_shape}"
     assert result.dtype == dtype
     assert result.device.type == flaggems_vllm.device
 
@@ -132,9 +126,7 @@ def test_pack_seq_accuracy_3d(N, H, D, lengths_list, dtype):
     ),
 )
 def test_pack_seq_shape_consistency(N, H, D, lengths_list):
-    lengths = torch.tensor(
-        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
     B = len(lengths_list)
     x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device)
 
@@ -148,9 +140,7 @@ def test_pack_seq_shape_consistency(N, H, D, lengths_list):
 @pytest.mark.parametrize("pad_value", [-100.0, -10.0, 0.0, 10.0, 100.0])
 def test_pack_seq_custom_padding(pad_value):
     N, D = 20, 16
-    lengths = torch.tensor(
-        [10, 10], dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([10, 10], dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(N, D, dtype=torch.float32, device=flaggems_vllm.device)
 
     result = pack_seq_triton(x, lengths, pad_value=pad_value)
@@ -169,9 +159,7 @@ def test_pack_seq_custom_padding(pad_value):
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_pack_seq_default_inf_padding(dtype):
     N, D = 20, 16
-    lengths = torch.tensor(
-        [10, 10], dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([10, 10], dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(N, D, dtype=dtype, device=flaggems_vllm.device)
 
     result = pack_seq_triton(x, lengths)
@@ -182,9 +170,7 @@ def test_pack_seq_default_inf_padding(dtype):
 
 @pytest.mark.pack_seq_triton
 def test_pack_seq_single_batch():
-    lengths = torch.tensor(
-        [10], dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([10], dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(10, 16, dtype=torch.float32, device=flaggems_vllm.device)
     result = pack_seq_triton(x, lengths)
     assert result.shape == (1, 10, 16)
@@ -192,9 +178,7 @@ def test_pack_seq_single_batch():
 
 @pytest.mark.pack_seq_triton
 def test_pack_seq_short_sequences():
-    lengths = torch.tensor(
-        [1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(20, 4, dtype=torch.float32, device=flaggems_vllm.device)
     result = pack_seq_triton(x, lengths)
     assert result.shape == (3, 1, 4)
@@ -202,21 +186,15 @@ def test_pack_seq_short_sequences():
 
 @pytest.mark.pack_seq_triton
 def test_pack_seq_3d_single_batch():
-    lengths = torch.tensor(
-        [10], dtype=torch.int32, device=flaggems_vllm.device
-    )
-    x = torch.randn(
-        10, 8, 16, dtype=torch.float32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([10], dtype=torch.int32, device=flaggems_vllm.device)
+    x = torch.randn(10, 8, 16, dtype=torch.float32, device=flaggems_vllm.device)
     result = pack_seq_triton(x, lengths)
     assert result.shape == (1, 10, 8, 16)
 
 
 @pytest.mark.pack_seq_triton
 def test_pack_seq_3d_short_sequences():
-    lengths = torch.tensor(
-        [1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor([1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(20, 4, 8, dtype=torch.float32, device=flaggems_vllm.device)
     result = pack_seq_triton(x, lengths)
     assert result.shape == (3, 1, 4, 8)
@@ -227,9 +205,7 @@ def test_pack_seq_3d_short_sequences():
 def test_pack_seq_block_sizes(block_t, block_d):
     N, D = 100, 32
     lengths_list = [25, 25, 25, 25]
-    lengths = torch.tensor(
-        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
     x = torch.randn(N, D, dtype=torch.float32, device=flaggems_vllm.device)
 
     result = pack_seq_triton(x, lengths, block_t=block_t, block_d=block_d)
@@ -251,15 +227,10 @@ def test_pack_seq_block_sizes(block_t, block_d):
 )
 def test_pack_seq_fp8_basic(N, H, D, lengths_list):
     FP8 = torch.float8_e4m3fn
-    lengths = torch.tensor(
-        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
-    )
+    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
     B = len(lengths_list)
     Lmax = max(lengths_list)
-    x = (
-        torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device)
-        * 0.1
-    )
+    x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
     x_fp8 = x.to(FP8)
     packed = pack_seq_triton(x_fp8, lengths)
     assert packed.shape == (B, Lmax, H, D)
@@ -280,13 +251,8 @@ def test_pack_seq_fp8_basic(N, H, D, lengths_list):
 def test_pack_seq_fp8_custom_padding():
     FP8 = torch.float8_e4m3fn
     N, H, D = 20, 8, 16
-    lengths = torch.tensor(
-        [10, 10], dtype=torch.int32, device=flaggems_vllm.device
-    )
-    x = (
-        torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device)
-        * 0.1
-    )
+    lengths = torch.tensor([10, 10], dtype=torch.int32, device=flaggems_vllm.device)
+    x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
     x_fp8 = x.to(FP8)
     for pad_value in [-100.0, 0.0, 100.0]:
         result = pack_seq_triton(x_fp8, lengths, pad_value=pad_value)
@@ -296,9 +262,7 @@ def test_pack_seq_fp8_custom_padding():
         elif pad_value > 0:
             assert torch.all(padded_data > 50)
         else:
-            assert torch.allclose(
-                padded_data, torch.zeros_like(padded_data), atol=1e-2
-            )
+            assert torch.allclose(padded_data, torch.zeros_like(padded_data), atol=1e-2)
 
 
 @pytest.mark.pack_seq_triton
@@ -309,13 +273,8 @@ def test_pack_seq_fp8_custom_padding():
 def test_pack_seq_fp8_default_inf_padding():
     FP8 = torch.float8_e4m3fn
     N, H, D = 20, 8, 16
-    lengths = torch.tensor(
-        [10, 10], dtype=torch.int32, device=flaggems_vllm.device
-    )
-    x = (
-        torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device)
-        * 0.1
-    )
+    lengths = torch.tensor([10, 10], dtype=torch.int32, device=flaggems_vllm.device)
+    x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
     x_fp8 = x.to(FP8)
     result = pack_seq_triton(x_fp8, lengths)
     padded_data = result[:, 10:].to(torch.float32)
@@ -334,10 +293,7 @@ def test_pack_seq_fp8_block_sizes(block_t, block_d):
     lengths = torch.tensor(
         [25, 25, 25, 25], dtype=torch.int32, device=flaggems_vllm.device
     )
-    x = (
-        torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device)
-        * 0.1
-    )
+    x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
     x_fp8 = x.to(FP8)
     result = pack_seq_triton(x_fp8, lengths, block_t=block_t, block_d=block_d)
     assert result.shape == (4, 25, 16, 32)

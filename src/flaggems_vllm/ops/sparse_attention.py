@@ -67,17 +67,13 @@ def sparse_attn_triton_kernel(
         valid_mask = idxs != -1  # (BLOCK,)
 
         # -- gather KV block: (BLOCK, D) --
-        kv_ptrs = (
-            kv_base + idxs[:, None] * stride_kvn + offs_d[None, :] * stride_kvd
-        )
+        kv_ptrs = kv_base + idxs[:, None] * stride_kvn + offs_d[None, :] * stride_kvd
         kv_block = tl.load(
             kv_ptrs, mask=valid_mask[:, None], other=0.0
         )  # (BLOCK, D) bf16
 
         # -- scores: Q @ KV^T -> (H, BLOCK) via GEMM --
-        acc_s = tl.dot(
-            q_block, tl.trans(kv_block)
-        )  # (H, D) @ (D, BLOCK) = (H, BLOCK)
+        acc_s = tl.dot(q_block, tl.trans(kv_block))  # (H, D) @ (D, BLOCK) = (H, BLOCK)
         acc_s = acc_s * scale
         # mask invalid positions to -inf
         mask_bias = tl.where(valid_mask, 0.0, float("-inf"))  # (BLOCK,)
@@ -93,9 +89,7 @@ def sparse_attn_triton_kernel(
 
         # -- accumulate output: acc_o = acc_o * correction + P @ KV --
         acc_o = acc_o * correction[:, None]
-        acc_o += tl.dot(
-            p.to(tl.bfloat16), kv_block
-        )  # (H, BLOCK) @ (BLOCK, D) = (H, D)
+        acc_o += tl.dot(p.to(tl.bfloat16), kv_block)  # (H, BLOCK) @ (BLOCK, D) = (H, D)
 
         scores_sum = tl.sum(p, axis=1)  # (H,)
         sum_exp = sum_exp * correction + scores_sum

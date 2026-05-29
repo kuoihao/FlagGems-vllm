@@ -20,9 +20,7 @@ except ImportError:
 
 @pytest.mark.dgeglu
 @pytest.mark.skipif(not TE_AVAILABLE, reason="TransformerEngine not installed")
-@pytest.mark.skipif(
-    TE_OP is None, reason="'dgeglu' not found in TransformerEngine"
-)
+@pytest.mark.skipif(TE_OP is None, reason="'dgeglu' not found in TransformerEngine")
 def test_dgeglu():
     bench = base.TexGluBackwardBenchmark(
         op_name="dgeglu",

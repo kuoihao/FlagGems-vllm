@@ -56,9 +56,7 @@ def get_tolerance(dtype, scoring_func, renormalize):
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("n_token", N_TOKEN_LIST)
 @pytest.mark.parametrize("n_expert", N_EXPERT_LIST)
@@ -87,9 +85,7 @@ def test_grouped_topk(
     topk_group = topk
     routed_scaling_factor = 1.0
 
-    scores = torch.randn(
-        (n_token, n_expert), dtype=dtype, device=flaggems_vllm.device
-    )
+    scores = torch.randn((n_token, n_expert), dtype=dtype, device=flaggems_vllm.device)
     bias = torch.randn((n_expert,), dtype=dtype, device=flaggems_vllm.device)
 
     ref_topk_weights, ref_topk_ids = vllm_grouped_topk(
@@ -121,15 +117,11 @@ def test_grouped_topk(
 
     atol, rtol = get_tolerance(dtype, scoring_func, renormalize)
     res_topk_weights = utils.to_reference(res_topk_weights)
-    torch.testing.assert_close(
-        res_topk_weights, ref_topk_weights, atol=atol, rtol=rtol
-    )
+    torch.testing.assert_close(res_topk_weights, ref_topk_weights, atol=atol, rtol=rtol)
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("n_token", [32, 64])
 @pytest.mark.parametrize("n_expert", [64])
@@ -155,9 +147,7 @@ def test_grouped_topk_large_scale(
 
     routed_scaling_factor = 1.0
 
-    scores = torch.randn(
-        (n_token, n_expert), dtype=dtype, device=flaggems_vllm.device
-    )
+    scores = torch.randn((n_token, n_expert), dtype=dtype, device=flaggems_vllm.device)
     bias = torch.randn((n_expert,), dtype=dtype, device=flaggems_vllm.device)
 
     ref_topk_weights, ref_topk_ids = vllm_grouped_topk(
@@ -189,15 +179,11 @@ def test_grouped_topk_large_scale(
 
     atol, rtol = get_tolerance(dtype, scoring_func, renormalize)
     res_topk_weights = utils.to_reference(res_topk_weights)
-    torch.testing.assert_close(
-        res_topk_weights, ref_topk_weights, atol=atol, rtol=rtol
-    )
+    torch.testing.assert_close(res_topk_weights, ref_topk_weights, atol=atol, rtol=rtol)
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("routed_scaling_factor", [1.0, 2.5])
 @pytest.mark.parametrize("renormalize", [True, False])
@@ -237,9 +223,7 @@ def test_grouped_topk_scaling_factor(routed_scaling_factor, renormalize):
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("renormalize", [True, False])
 @pytest.mark.parametrize("scoring_func", [0, 1])
@@ -272,9 +256,7 @@ def test_grouped_topk_single_token(renormalize, scoring_func):
 
 
 @pytest.mark.grouped_topk
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA is not available"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
 @pytest.mark.skipif(not HAS_VLLM, reason="vLLM is not installed")
 @pytest.mark.parametrize("renormalize", [True, False])
 def test_grouped_topk_sigmoid(renormalize):

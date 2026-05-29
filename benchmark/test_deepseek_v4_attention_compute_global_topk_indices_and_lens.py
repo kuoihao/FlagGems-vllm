@@ -55,15 +55,12 @@ class ComputeGlobalTopkIndicesAndLensBenchmark(base.Benchmark):
                 dtype=torch.int32,
             )
             token_to_req_indices = (
-                torch.arange(num_tokens, device="cuda", dtype=torch.int32)
-                % num_reqs
+                torch.arange(num_tokens, device="cuda", dtype=torch.int32) % num_reqs
             )
             block_table = torch.arange(
                 num_reqs * blocks_per_req, device="cuda", dtype=torch.int32
             ).view(num_reqs, blocks_per_req)
-            is_valid_token = torch.ones(
-                (num_tokens,), device="cuda", dtype=torch.int32
-            )
+            is_valid_token = torch.ones((num_tokens,), device="cuda", dtype=torch.int32)
             yield (
                 topk_indices,
                 token_to_req_indices,

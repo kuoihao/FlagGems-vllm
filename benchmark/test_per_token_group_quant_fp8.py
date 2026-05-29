@@ -34,15 +34,11 @@ def torch_per_token_group_quant_fp8_ref(x, group_size, scale_ue8m0):
     fp8_max = finfo.max
 
     x_ = x.reshape(x.numel() // group_size, group_size)
-    amax = (
-        x_.abs().max(dim=-1, keepdim=True)[0].clamp(min=eps).to(torch.float32)
-    )
+    amax = x_.abs().max(dim=-1, keepdim=True)[0].clamp(min=eps).to(torch.float32)
     x_s = amax / fp8_max
     if scale_ue8m0:
         min_val = torch.tensor(1e-10, dtype=x_s.dtype, device=x_s.device)
-        x_s = torch.exp2(
-            torch.ceil(torch.log2(torch.maximum(x_s.abs(), min_val)))
-        )
+        x_s = torch.exp2(torch.ceil(torch.log2(torch.maximum(x_s.abs(), min_val))))
     x_q = (x_ / x_s).clamp(min=fp8_min, max=fp8_max).to(dtype)
     x_q = x_q.reshape(x.shape)
     x_s = x_s.reshape(x.shape[:-1] + (x.shape[-1] // group_size,))

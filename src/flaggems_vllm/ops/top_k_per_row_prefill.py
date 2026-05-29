@@ -125,9 +125,7 @@ def top_k_per_row_prefill(
     vocab_size = logits.shape[1]
 
     if top_k > vocab_size:
-        raise ValueError(
-            f"top_k ({top_k}) must not exceed vocab_size ({vocab_size})"
-        )
+        raise ValueError(f"top_k ({top_k}) must not exceed vocab_size ({vocab_size})")
 
     # --- Phase 1: Mask invalid ranges to -inf ---
     # BLOCK_SIZE=8192 chosen to balance occupancy vs. grid size:
@@ -155,9 +153,7 @@ def top_k_per_row_prefill(
         # For large vocab (129280) with a single row, radix sort O(N) is ~2x faster
         # than torch.topk's heap-based O(N log k) because it fully utilizes GPU
         # parallelism without the sequential heap maintenance bottleneck.
-        sorted_idx = torch.argsort(
-            logits, dim=1, descending=True, stable=False
-        )
+        sorted_idx = torch.argsort(logits, dim=1, descending=True, stable=False)
         # src_stride0=vocab_size because argsort returns full-width sorted indices
         _fused_postprocess_kernel[(1,)](
             sorted_idx,
@@ -174,9 +170,7 @@ def top_k_per_row_prefill(
         # For batched rows, topk's heap approach has better parallelism across rows
         # than argsort (which serializes the full sort per row).
         # sorted=False avoids an unnecessary final sort pass.
-        _, top_idx = torch.topk(
-            logits, top_k, dim=1, largest=True, sorted=False
-        )
+        _, top_idx = torch.topk(logits, top_k, dim=1, largest=True, sorted=False)
         # src_stride0=top_k because topk output shape is [num_rows, top_k]
         _fused_postprocess_kernel[(num_rows,)](
             top_idx,

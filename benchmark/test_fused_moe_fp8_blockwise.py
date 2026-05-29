@@ -82,9 +82,7 @@ class FusedMoEFP8BlockwiseBenchmark(base.Benchmark):
         device = flaggems_vllm.device
         dtype = torch.bfloat16
 
-        hidden_states = torch.randn(
-            num_tokens, hidden_size, device=device, dtype=dtype
-        )
+        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
         w1_fp8 = (
             torch.randn(
                 num_experts,
@@ -130,9 +128,7 @@ class FusedMoEFP8BlockwiseBenchmark(base.Benchmark):
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(
-            torch.softmax(gating, dim=-1), topk, dim=-1
-        )
+        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(torch.float32)
 

@@ -24,9 +24,7 @@ import flaggems_vllm
 
 # FlagGems wrapper under test
 from flaggems_vllm.ops.fused_marlin_moe import QUANT_TYPE_UINT4B8
-from flaggems_vllm.ops.fused_marlin_moe import (
-    fused_marlin_moe as gems_fused_marlin_moe,
-)
+from flaggems_vllm.ops.fused_marlin_moe import fused_marlin_moe as gems_fused_marlin_moe
 
 from . import base
 
@@ -54,9 +52,7 @@ def _wna16_quantize_per_expert(w_fp):
     """
     E, out_dim, in_dim = w_fp.shape
     assert in_dim % GROUP_SIZE == 0
-    w_q = torch.empty(
-        E, out_dim, in_dim // 2, device=w_fp.device, dtype=torch.uint8
-    )
+    w_q = torch.empty(E, out_dim, in_dim // 2, device=w_fp.device, dtype=torch.uint8)
     scales = torch.empty(
         E, out_dim, in_dim // GROUP_SIZE, device=w_fp.device, dtype=w_fp.dtype
     )
@@ -127,9 +123,7 @@ class FusedMarlinMoEBenchmark(base.Benchmark):
         num_tokens, num_experts, hidden_size, intermediate_size, topk = config
         device = flaggems_vllm.device
 
-        hidden_states = torch.randn(
-            num_tokens, hidden_size, device=device, dtype=dtype
-        )
+        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 
         # Original FP weights (kept only as source for both quantizers).
         w1_fp = (
@@ -168,9 +162,7 @@ class FusedMarlinMoEBenchmark(base.Benchmark):
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(
-            torch.softmax(gating, dim=-1), topk, dim=-1
-        )
+        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         # vLLM requires fp32 topk_weights; FlagGems wrapper is dtype-agnostic.
 
@@ -251,9 +243,7 @@ def _gems_call(
     not HAS_VLLM_FUSED_MARLIN_MOE,
     reason="vllm not installed; baseline unavailable",
 )
-@pytest.mark.skipif(
-    not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture"
-)
+@pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
 def test_fused_marlin_moe():
     """
     Benchmark FlagGems fused_marlin_moe (Triton wna16) vs vLLM fused_marlin_moe

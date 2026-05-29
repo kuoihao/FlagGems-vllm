@@ -94,9 +94,7 @@ def combine_topk_swa_indices(
         device=topk_indices.device,
         dtype=torch.int32,
     )
-    lens = torch.empty(
-        (num_tokens,), device=topk_indices.device, dtype=torch.int32
-    )
+    lens = torch.empty((num_tokens,), device=topk_indices.device, dtype=torch.int32)
     with torch_device_fn.device(topk_indices.device):
         _combine_topk_swa_indices_kernel[(num_reqs, 128)](
             combined,

@@ -23,9 +23,7 @@ def _get_autotune_configs():
     configs = []
     for TILE_SIZE in [1, 2, 4, 8, 16, 32]:
         for num_warps in [1, 2, 4, 8]:
-            configs.append(
-                triton.Config({"TILE_SIZE": TILE_SIZE}, num_warps=num_warps)
-            )
+            configs.append(triton.Config({"TILE_SIZE": TILE_SIZE}, num_warps=num_warps))
     return configs
 
 
@@ -76,10 +74,7 @@ def _mhc_bwd_kernel(
                     out_ptr + base_out + i * out_stride_i + j * out_stride_j
                 )
                 dr_val = tl.load(
-                    dout_ptr
-                    + base_dout
-                    + i * dout_stride_i
-                    + j * dout_stride_j
+                    dout_ptr + base_dout + i * dout_stride_i + j * dout_stride_j
                 )
 
         base_res = seq_idx * res_stride_s
@@ -90,10 +85,7 @@ def _mhc_bwd_kernel(
                     out_ptr + base_out + i * out_stride_i + j * out_stride_j
                 )
                 dr_val = tl.load(
-                    dout_ptr
-                    + base_dout
-                    + i * dout_stride_i
-                    + j * dout_stride_j
+                    dout_ptr + base_dout + i * dout_stride_i + j * dout_stride_j
                 )
                 tl.store(
                     res_ptr + base_res + i * res_stride_i + j * res_stride_j,

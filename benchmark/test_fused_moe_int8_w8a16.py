@@ -59,9 +59,7 @@ class FusedMoEINT8W8A16Benchmark(base.Benchmark):
         num_tokens, num_experts, hidden_size, intermediate_size, topk = config
         device = flaggems_vllm.device
 
-        hidden_states = torch.randn(
-            num_tokens, hidden_size, device=device, dtype=dtype
-        )
+        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 
         # Generate INT8 weights one expert at a time to avoid OOM on large E.
         w1_int8 = torch.empty(
@@ -110,9 +108,7 @@ class FusedMoEINT8W8A16Benchmark(base.Benchmark):
             + 0.001
         )
         w2_scale = (
-            torch.rand(
-                num_experts, hidden_size, device=device, dtype=torch.float32
-            )
+            torch.rand(num_experts, hidden_size, device=device, dtype=torch.float32)
             * 0.01
             + 0.001
         )
@@ -121,9 +117,7 @@ class FusedMoEINT8W8A16Benchmark(base.Benchmark):
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(
-            torch.softmax(gating, dim=-1), topk, dim=-1
-        )
+        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(dtype)
 
@@ -148,12 +142,8 @@ def _vllm_fused_moe_int8_w8a16_wrapper(
     GPTQ/AWQ Triton) that are not directly comparable to the generic
     dequantize-then-GEMM approach, so we use a bf16 dequant baseline.
     """
-    w1_deq = w1.to(hidden_states.dtype) * w1_scale.unsqueeze(-1).to(
-        hidden_states.dtype
-    )
-    w2_deq = w2.to(hidden_states.dtype) * w2_scale.unsqueeze(-1).to(
-        hidden_states.dtype
-    )
+    w1_deq = w1.to(hidden_states.dtype) * w1_scale.unsqueeze(-1).to(hidden_states.dtype)
+    w2_deq = w2.to(hidden_states.dtype) * w2_scale.unsqueeze(-1).to(hidden_states.dtype)
     return flaggems_vllm.ops_experts_impl(
         hidden_states.clone(),
         w1_deq,
@@ -181,9 +171,7 @@ def _gems_fused_moe_int8_w8a16_wrapper(
 
 
 @pytest.mark.fused_experts_impl
-@pytest.mark.skipif(
-    not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture"
-)
+@pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
 def test_fused_experts_impl_int8_w8a16():
     """
     Benchmark FlagGems fused_experts_impl with INT8 W8A16 quantization.

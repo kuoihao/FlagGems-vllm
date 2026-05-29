@@ -62,12 +62,8 @@ def _torch_apply_rotary_pos_emb(
     return q_embed, k_embed
 
 
-def _get_rope_cos_sin(
-    max_seq_len, dim, dtype, base=10000, device=flaggems_vllm.device
-):
-    inv_freq = 1.0 / (
-        base ** (torch.arange(0, dim, 2).float().to(device) / dim)
-    )
+def _get_rope_cos_sin(max_seq_len, dim, dtype, base=10000, device=flaggems_vllm.device):
+    inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float().to(device) / dim))
     t = torch.arange(max_seq_len, device=device, dtype=inv_freq.dtype)
     freqs = torch.outer(t, inv_freq)
     cos = freqs.cos().to(dtype)

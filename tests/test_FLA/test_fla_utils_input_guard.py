@@ -29,9 +29,7 @@ def _skip_if_no_device():
 
 def _skip_if_fewer_than(n):
     if DEVICE_COUNT < n:
-        pytest.skip(
-            f"Need at least {n} {DEVICE_TYPE} devices, got {DEVICE_COUNT}"
-        )
+        pytest.skip(f"Need at least {n} {DEVICE_TYPE} devices, got {DEVICE_COUNT}")
 
 
 _captured: dict = {}

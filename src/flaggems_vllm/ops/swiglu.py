@@ -36,19 +36,13 @@ def swiglu_kernel(
     mask = (offs_m[:, None] < M) & (offs_h[None, :] < H)
 
     input_a_ptr = (
-        input_ptr
-        + offs_m[:, None] * stride_in_m
-        + offs_h[None, :] * stride_in_h
+        input_ptr + offs_m[:, None] * stride_in_m + offs_h[None, :] * stride_in_h
     )
     input_b_ptr = (
-        input_ptr
-        + offs_m[:, None] * stride_in_m
-        + (offs_h[None, :] + H) * stride_in_h
+        input_ptr + offs_m[:, None] * stride_in_m + (offs_h[None, :] + H) * stride_in_h
     )
     output_ptr = (
-        output_ptr
-        + offs_m[:, None] * stride_out_m
-        + offs_h[None, :] * stride_out_h
+        output_ptr + offs_m[:, None] * stride_out_m + offs_h[None, :] * stride_out_h
     )
 
     x_a = tl.load(input_a_ptr, mask=mask, other=0.0).to(tl.float32)
@@ -90,14 +84,10 @@ def dswiglu_kernel(
         + offs_h[None, :] * stride_grad_out_h
     )
     input_a_ptr = (
-        input_ptr
-        + offs_m[:, None] * stride_in_m
-        + offs_h[None, :] * stride_in_h
+        input_ptr + offs_m[:, None] * stride_in_m + offs_h[None, :] * stride_in_h
     )
     input_b_ptr = (
-        input_ptr
-        + offs_m[:, None] * stride_in_m
-        + (offs_h[None, :] + H) * stride_in_h
+        input_ptr + offs_m[:, None] * stride_in_m + (offs_h[None, :] + H) * stride_in_h
     )
     grad_a_ptr = (
         grad_in_ptr
@@ -125,9 +115,7 @@ def dswiglu_kernel(
     tl.store(grad_b_ptr, grad_b.to(x_a.dtype), mask=mask)
 
 
-def swiglu(
-    input_tensor: torch.Tensor, quantizer: Optional[Any] = None
-) -> torch.Tensor:
+def swiglu(input_tensor: torch.Tensor, quantizer: Optional[Any] = None) -> torch.Tensor:
     logger.debug("GEMS SWIGLU")
     if input_tensor.shape[-1] % 2 != 0:
         raise ValueError(
@@ -140,9 +128,7 @@ def swiglu(
     H = shape[-1] // 2
     M = input_tensor.numel() // (2 * H)
     input_2d = input_tensor.contiguous().view(M, 2 * H)
-    output_2d = torch.empty(
-        M, H, device=input_tensor.device, dtype=input_tensor.dtype
-    )
+    output_2d = torch.empty(M, H, device=input_tensor.device, dtype=input_tensor.dtype)
 
     grid = lambda META: (
         triton.cdiv(M, META["BLOCK_SIZE_M"]),

@@ -58,9 +58,7 @@ class FusedMoEINT8Benchmark(base.Benchmark):
         num_tokens, num_experts, hidden_size, intermediate_size, topk = config
         device = flaggems_vllm.device
 
-        hidden_states = torch.randn(
-            num_tokens, hidden_size, device=device, dtype=dtype
-        )
+        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 
         # Generate INT8 weights one expert at a time to avoid OOM on large E.
         w1_int8 = torch.empty(
@@ -109,9 +107,7 @@ class FusedMoEINT8Benchmark(base.Benchmark):
             + 0.001
         )
         w2_scale = (
-            torch.rand(
-                num_experts, hidden_size, device=device, dtype=torch.float32
-            )
+            torch.rand(num_experts, hidden_size, device=device, dtype=torch.float32)
             * 0.01
             + 0.001
         )
@@ -120,9 +116,7 @@ class FusedMoEINT8Benchmark(base.Benchmark):
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(
-            torch.softmax(gating, dim=-1), topk, dim=-1
-        )
+        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(dtype)
 

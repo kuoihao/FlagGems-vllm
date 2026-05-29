@@ -1,6 +1,5 @@
-from flaggems_vllm.ops.apply_repetition_penalties import (
-    apply_repetition_penalties,
-)
+# isort: off
+from flaggems_vllm.ops.apply_repetition_penalties import apply_repetition_penalties
 from flaggems_vllm.ops.bincount import bincount
 from flaggems_vllm.ops.chunk_gated_delta_rule import chunk_gated_delta_rule
 from flaggems_vllm.ops.concat_and_cache_mla import concat_and_cache_mla
@@ -43,9 +42,7 @@ from flaggems_vllm.ops.fused_moe import (
 from flaggems_vllm.ops.geglu import dgeglu, geglu
 from flaggems_vllm.ops.gelu_and_mul import gelu_and_mul
 from flaggems_vllm.ops.grouped_topk import grouped_topk
-from flaggems_vllm.ops.indexer_k_quant_and_cache import (
-    indexer_k_quant_and_cache,
-)
+from flaggems_vllm.ops.indexer_k_quant_and_cache import indexer_k_quant_and_cache
 from flaggems_vllm.ops.instance_norm import instance_norm
 from flaggems_vllm.ops.mhc import (
     hc_head_fused_kernel,
@@ -93,6 +90,8 @@ from flaggems_vllm.ops.weightnorm import (
     weight_norm_interface_backward,
 )
 from flaggems_vllm.ops.weight_norm import weight_norm
+
+# isort: on
 
 __all__ = [
     "apply_repetition_penalties",

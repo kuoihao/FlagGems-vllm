@@ -26,12 +26,8 @@ except ImportError:
                 atol = 1e-4
                 rtol = 1e-4
 
-        print(
-            f"Actual shape: {actual.shape}, Expected shape: {expected.shape}"
-        )
-        print(
-            f"Actual dtype: {actual.dtype}, Expected dtype: {expected.dtype}"
-        )
+        print(f"Actual shape: {actual.shape}, Expected shape: {expected.shape}")
+        print(f"Actual dtype: {actual.dtype}, Expected dtype: {expected.dtype}")
 
         # Calculate difference statistics
         diff = torch.abs(actual - expected)
@@ -90,13 +86,11 @@ def make_sparse_mla_input(
     q = torch.randn((B, S, H, DQK), dtype=dtype, device=device).requires_grad_(
         requires_grad
     )
-    kv = torch.randn(
-        (B, SKV, HKV, DQK), dtype=dtype, device=device
-    ).requires_grad_(requires_grad)
-
-    indices = torch.full(
-        (B, S, HKV, topk), SKV, dtype=torch.int32, device=device
+    kv = torch.randn((B, SKV, HKV, DQK), dtype=dtype, device=device).requires_grad_(
+        requires_grad
     )
+
+    indices = torch.full((B, S, HKV, topk), SKV, dtype=torch.int32, device=device)
     for b in range(B):
         for t in range(S):
             for h in range(HKV):
@@ -106,13 +100,9 @@ def make_sparse_mla_input(
     return q, kv, indices
 
 
-def reference_sparse_mla_implementation(
-    q, kv, indices, sm_scale=None, d_v=512
-):
+def reference_sparse_mla_implementation(q, kv, indices, sm_scale=None, d_v=512):
     """Reference implementation - using provided reference function"""
-    return ref_sparse_mla_fwd_interface(
-        q, kv, indices, sm_scale=sm_scale, d_v=d_v
-    )
+    return ref_sparse_mla_fwd_interface(q, kv, indices, sm_scale=sm_scale, d_v=d_v)
 
 
 @pytest.mark.sparse_mla_fwd_interface
@@ -167,9 +157,7 @@ def test_sparse_mla_forward(
     )
 
     # Your operator implementation
-    your_output, your_lse = triton_sparse_mla_fwd_interface(
-        q, kv, indices, d_v=d_v
-    )
+    your_output, your_lse = triton_sparse_mla_fwd_interface(q, kv, indices, d_v=d_v)
 
     # Accuracy comparison
     gems_assert_close(your_output, ref_output, dtype, atol=1e-2)
@@ -230,17 +218,13 @@ def test_sparse_mla_forward_edge_cases(config):
     )
 
     # Your operator implementation
-    your_output, your_lse = triton_sparse_mla_fwd_interface(
-        q, kv, indices, d_v=d_v
-    )
+    your_output, your_lse = triton_sparse_mla_fwd_interface(q, kv, indices, d_v=d_v)
 
     gems_assert_close(your_output, ref_output, dtype, atol=1e-2)
 
 
 # Device compatibility test
-@pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA device required"
-)
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA device required")
 @pytest.mark.sparse_mla_fwd_interface
 def test_sparse_mla_device_compatibility():
     """Test device compatibility"""
@@ -269,9 +253,7 @@ def test_sparse_mla_device_compatibility():
     )
 
     # Run on CUDA device
-    your_output, your_lse = triton_sparse_mla_fwd_interface(
-        q, kv, indices, d_v=d_v
-    )
+    your_output, your_lse = triton_sparse_mla_fwd_interface(q, kv, indices, d_v=d_v)
 
     # Verify output shape is correct
     expected_shape = (

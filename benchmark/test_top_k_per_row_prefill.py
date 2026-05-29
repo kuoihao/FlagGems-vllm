@@ -51,16 +51,12 @@ class TopKPerRowPrefillBenchmark(base.Benchmark):
                 num_rows, vocab_size, device=device, dtype=torch.float32
             )
             # Full vocab range: row_starts=0, row_ends=vocab_size (common case)
-            row_starts = torch.zeros(
-                num_rows, dtype=torch.int32, device=device
-            )
+            row_starts = torch.zeros(num_rows, dtype=torch.int32, device=device)
             row_ends = torch.full(
                 (num_rows,), vocab_size, dtype=torch.int32, device=device
             )
             # Pre-allocated output buffer (matches vLLM calling convention)
-            indices = torch.empty(
-                (num_rows, top_k), dtype=torch.int32, device=device
-            )
+            indices = torch.empty((num_rows, top_k), dtype=torch.int32, device=device)
             stride0 = logits.stride(0)  # = vocab_size for contiguous
             stride1 = logits.stride(1)  # = 1 for contiguous
 
