@@ -119,9 +119,11 @@ def test_pack_seq_accuracy_3d(N, H, D, lengths_list, dtype):
 @pytest.mark.pack_seq_triton
 @pytest.mark.parametrize(
     "N, H, D, lengths_list",
-    [(6, 8, 4, [3, 3])]
-    if cfg.QUICK_MODE
-    else [(20, 8, 16, [10, 10]), (15, 4, 8, [5, 7, 3])],
+    (
+        [(6, 8, 4, [3, 3])]
+        if cfg.QUICK_MODE
+        else [(20, 8, 16, [10, 10]), (15, 4, 8, [5, 7, 3])]
+    ),
 )
 def test_pack_seq_shape_consistency(N, H, D, lengths_list):
     lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
@@ -288,7 +290,9 @@ def test_pack_seq_fp8_default_inf_padding():
 def test_pack_seq_fp8_block_sizes(block_t, block_d):
     FP8 = torch.float8_e4m3fn
     N, H, D = 100, 16, 32
-    lengths = torch.tensor([25, 25, 25, 25], dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        [25, 25, 25, 25], dtype=torch.int32, device=flaggems_vllm.device
+    )
     x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
     x_fp8 = x.to(FP8)
     result = pack_seq_triton(x_fp8, lengths, block_t=block_t, block_d=block_d)

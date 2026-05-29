@@ -71,7 +71,8 @@ def ref_paged_attn(
         if sliding_window is not None:
             sliding_window_mask = (
                 torch.triu(
-                    empty_mask, diagonal=kv_len - (query_len + sliding_window) + 1
+                    empty_mask,
+                    diagonal=kv_len - (query_len + sliding_window) + 1,
                 )
                 .bool()
                 .logical_not()
@@ -168,7 +169,10 @@ def test_flash_attn_varlen_func(
             # alibi_slopes = torch.rand(num_seqs, num_query_heads, device=device, dtype=torch.float32) * 0.3
             alibi_slopes = (
                 torch.ones(
-                    num_seqs, num_query_heads, device=device, dtype=torch.float32
+                    num_seqs,
+                    num_query_heads,
+                    device=device,
+                    dtype=torch.float32,
                 )
                 * 0.3
             )

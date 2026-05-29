@@ -197,7 +197,10 @@ class FlashmlaSparseTestKit:
 
     @staticmethod
     def _randperm_batch(
-        batch_size: int, perm_range: torch.Tensor, perm_size: int, paddings: List[int]
+        batch_size: int,
+        perm_range: torch.Tensor,
+        perm_size: int,
+        paddings: List[int],
     ) -> torch.Tensor:
         """
         Generate random permutations in batch
@@ -220,7 +223,8 @@ class FlashmlaSparseTestKit:
             res[res >= perm_range.view(batch_size, 1)] = paddings[0]
         else:
             fillers = torch.tensor(paddings, dtype=torch.int32).index_select(
-                0, torch.randint(0, len(paddings), (res.numel(),), dtype=torch.int32)
+                0,
+                torch.randint(0, len(paddings), (res.numel(),), dtype=torch.int32),
             )
             res.masked_scatter_(res >= perm_range.view(batch_size, 1), fillers)
         torch.use_deterministic_algorithms(False)
@@ -404,7 +408,11 @@ def test_flash_mla_sparse_flashmla(param: Flashmla_Sparse_Test_Param):
         your_output, ref_output, atol=8e-4, rtol=3.01 / 128, equal_nan=False
     )  # cos_diff_tol=7e-6
     torch.testing.assert_close(
-        your_max_logbits, ref_max_logbits, atol=1e-6, rtol=2.01 / 65536, equal_nan=False
+        your_max_logbits,
+        ref_max_logbits,
+        atol=1e-6,
+        rtol=2.01 / 65536,
+        equal_nan=False,
     )
     torch.testing.assert_close(
         your_lse, ref_lse, atol=1e-6, rtol=2.01 / 65536, equal_nan=False

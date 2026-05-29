@@ -23,18 +23,10 @@ class ConfigLoader(object):
             # and is reserved from being an attr for vendor customizability
             self.arch_specialized_yaml_config = None
             self.arch_heuristics_config = None
-            self.vendor_primitive_yaml_config = (
-                self.get_vendor_tune_config() or {}
-            )
-            self.default_primitive_yaml_config = (
-                self.get_default_tune_config() or {}
-            )
-            self.vendor_heuristics_config = (
-                self.get_vendor_heuristics_config() or {}
-            )
-            self.default_heuristics_config = (
-                self.get_default_heuristics_config() or {}
-            )
+            self.vendor_primitive_yaml_config = self.get_vendor_tune_config() or {}
+            self.default_primitive_yaml_config = self.get_default_tune_config() or {}
+            self.vendor_heuristics_config = self.get_vendor_heuristics_config() or {}
+            self.default_heuristics_config = self.get_default_heuristics_config() or {}
             try:
                 if backend.BackendArchEvent().has_arch:
                     self.arch_specialized_yaml_config = (
@@ -49,8 +41,7 @@ class ConfigLoader(object):
             if self.vendor_heuristics_config is None:
                 vendorname = self.device.vendor_name
                 warnings.warn(
-                    f"The {vendorname} configuration"
-                    f" of heuristics_config is None"
+                    f"The {vendorname} configuration" f" of heuristics_config is None"
                 )
             # gen_key is an identifier that indicates whether
             # the current config needs to be generated
@@ -90,10 +81,7 @@ class ConfigLoader(object):
         return backend.get_tune_config(self.device.vendor_name)
 
     def get_heuristics_config(self, op_name):
-        if (
-            self.arch_heuristics_config
-            and op_name in self.arch_heuristics_config
-        ):
+        if self.arch_heuristics_config and op_name in self.arch_heuristics_config:
             return self.arch_heuristics_config[op_name]
         elif op_name in self.vendor_heuristics_config:
             return self.vendor_heuristics_config[op_name]
@@ -215,9 +203,7 @@ class ConfigLoader(object):
             current_config = copy.deepcopy(self.triton_config_default)
             for default_param in current_config:
                 if default_param in single_config:
-                    current_config[default_param] = single_config[
-                        default_param
-                    ]
+                    current_config[default_param] = single_config[default_param]
 
             if self.device.vendor_name in ["hygon"]:
                 configs.append(

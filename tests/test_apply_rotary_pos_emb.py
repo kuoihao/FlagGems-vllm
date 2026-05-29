@@ -92,16 +92,22 @@ def test_apply_rotary_pos_emb(
 ):
     seq_len = torch.randint(1, max_seq_len, (1,)).item()
     q = torch.randn(
-        (batch_size, seq_len, q_heads, head_dim), dtype=dtype, device=flaggems_vllm.device
+        (batch_size, seq_len, q_heads, head_dim),
+        dtype=dtype,
+        device=flaggems_vllm.device,
     )
     k = torch.randn(
-        (batch_size, seq_len, k_heads, head_dim), dtype=dtype, device=flaggems_vllm.device
+        (batch_size, seq_len, k_heads, head_dim),
+        dtype=dtype,
+        device=flaggems_vllm.device,
     )
 
     position_ids = torch.randint(
         0, max_seq_len, (batch_size, seq_len), device=flaggems_vllm.device
     )
-    cos, sin = _get_rope_cos_sin(max_seq_len, head_dim, dtype, device=flaggems_vllm.device)
+    cos, sin = _get_rope_cos_sin(
+        max_seq_len, head_dim, dtype, device=flaggems_vllm.device
+    )
 
     ref_q = utils.to_reference(q, True)
     ref_k = utils.to_reference(k, True)

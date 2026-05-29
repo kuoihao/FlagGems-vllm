@@ -150,7 +150,9 @@ class ChunkGatedDeltaRuleBenchmark(Benchmark):
         )
 
 
-@pytest.mark.skipif(flaggems_vllm.device != "cuda", reason="benchmark requires CUDA device")
+@pytest.mark.skipif(
+    flaggems_vllm.device != "cuda", reason="benchmark requires CUDA device"
+)
 @pytest.mark.chunk_gated_delta_rule
 def test_perf_chunk_gated_delta_rule():
     bench = ChunkGatedDeltaRuleBenchmark(

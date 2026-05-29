@@ -1,3 +1,4 @@
+# isort: off
 from flaggems_vllm.ops.apply_repetition_penalties import apply_repetition_penalties
 from flaggems_vllm.ops.bincount import bincount
 from flaggems_vllm.ops.chunk_gated_delta_rule import chunk_gated_delta_rule
@@ -16,7 +17,9 @@ from flaggems_vllm.ops.deepseek_v4_attention_compute_global_topk_indices_and_len
 from flaggems_vllm.ops.deepseek_v4_attention_dequantize_and_gather_k_cache import (
     dequantize_and_gather_k_cache,
 )
-from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import fused_q_kv_rmsnorm
+from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import (
+    fused_q_kv_rmsnorm,
+)
 from flaggems_vllm.ops.DSA.bin_topk import bucket_sort_topk
 from flaggems_vllm.ops.FLA import (
     chunk_gated_delta_rule_fwd,
@@ -87,6 +90,8 @@ from flaggems_vllm.ops.weightnorm import (
     weight_norm_interface_backward,
 )
 from flaggems_vllm.ops.weight_norm import weight_norm
+
+# isort: on
 
 __all__ = [
     "apply_repetition_penalties",

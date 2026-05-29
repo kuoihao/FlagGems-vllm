@@ -23,7 +23,10 @@ from flaggems_vllm.utils.shape_utils import (
     has_internal_overlapping,
 )
 from flaggems_vllm.utils.tensor_wrapper import StridedBuffer
-from flaggems_vllm.utils.type_utils import ELEMENTWISE_TYPE_PROMOTION_KIND, type_promotion
+from flaggems_vllm.utils.type_utils import (
+    ELEMENTWISE_TYPE_PROMOTION_KIND,
+    type_promotion,
+)
 
 
 # ------------------ Operation Description ---------------------------
@@ -1280,7 +1283,11 @@ class PointwiseDynamicFunction:
     # -------------------- register_complex --------------------
 
     def register_complex(
-        self, mode, cross_kernel=None, tensorize_scalars=False, fallback_target=None
+        self,
+        mode,
+        cross_kernel=None,
+        tensorize_scalars=False,
+        fallback_target=None,
     ):
         """Register complex number support for this kernel.
 

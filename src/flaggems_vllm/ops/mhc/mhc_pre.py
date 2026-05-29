@@ -17,9 +17,9 @@ import triton.language as tl
 logger = logging.getLogger(__name__)
 
 
-_FN_BF16_CACHE: weakref.WeakKeyDictionary[
-    torch.Tensor, tuple[int, torch.Tensor]
-] = weakref.WeakKeyDictionary()
+_FN_BF16_CACHE: weakref.WeakKeyDictionary[torch.Tensor, tuple[int, torch.Tensor]] = (
+    weakref.WeakKeyDictionary()
+)
 
 
 def _get_fn_bf16_cached(fn: torch.Tensor) -> torch.Tensor:
@@ -549,7 +549,8 @@ def mhc_pre_generic_kernel(
         for j in tl.static_range(HC):
             v = tl.load(comb_mix_ptr + comb_base + i * HC + j)
             tl.store(
-                comb_mix_ptr + comb_base + i * HC + j, v * inv_row_sum + hc_sinkhorn_eps
+                comb_mix_ptr + comb_base + i * HC + j,
+                v * inv_row_sum + hc_sinkhorn_eps,
             )
 
     for j in tl.static_range(HC):

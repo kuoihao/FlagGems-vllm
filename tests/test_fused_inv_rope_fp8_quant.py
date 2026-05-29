@@ -4,10 +4,6 @@ import pytest
 import torch
 
 import flaggems_vllm
-from flaggems_vllm.modules.rotary_embedding import (
-    yarn_find_correction_range,
-    yarn_linear_ramp_mask,
-)
 from flaggems_vllm.ops import per_token_group_quant_fp8
 
 from . import accuracy_utils as utils
@@ -23,13 +19,17 @@ HAS_NATIVE_FP8 = hasattr(torch, "float8_e4m3fn") and (
 )
 
 
-def yarn_find_correction_dim(num_rotations, dim, base=10000, max_position_embeddings=2048):
+def yarn_find_correction_dim(
+    num_rotations, dim, base=10000, max_position_embeddings=2048
+):
     return (dim * math.log(max_position_embeddings / (num_rotations * 2 * math.pi))) / (
         2 * math.log(base)
     )
 
 
-def yarn_find_correction_range(low_rot, high_rot, dim, base=10000, max_position_embeddings=2048):
+def yarn_find_correction_range(
+    low_rot, high_rot, dim, base=10000, max_position_embeddings=2048
+):
     low = math.floor(
         yarn_find_correction_dim(low_rot, dim, base, max_position_embeddings)
     )
@@ -201,7 +201,12 @@ def _unfused_inv_rope_fp8_quant(
     o_nope = o[..., :nope_dim]
     o_rope = o[..., nope_dim:]
     o_rope_rot, _ = flaggems_vllm.apply_rotary_pos_emb(
-        o_rope, o_rope, cos, sin, position_ids=positions, rotary_interleaved=True
+        o_rope,
+        o_rope,
+        cos,
+        sin,
+        position_ids=positions,
+        rotary_interleaved=True,
     )
     o_rot = torch.cat((o_nope, o_rope_rot), dim=-1)
 
@@ -281,7 +286,7 @@ def _run_case(
     )
 
     with flaggems_vllm.use_gems():
-        out, scale_out = flaggems_vllm.ops_inv_rope_fp8_quant(
+        out, scale_out = flaggems_vllm.fused_inv_rope_fp8_quant(
             o,
             positions,
             cos_sin_cache,

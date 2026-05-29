@@ -150,7 +150,9 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
             )
             out = torch.empty_like(query)
             lse = torch.empty(
-                (num_query_heads, cu_query_lens[-1]), dtype=torch.float, device=device
+                (num_query_heads, cu_query_lens[-1]),
+                dtype=torch.float,
+                device=device,
             )
             # lse = None
             key_cache = torch.randn(
@@ -181,7 +183,10 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
             if alibi:
                 alibi_slopes = (
                     torch.ones(
-                        num_seqs, num_query_heads, device=device, dtype=torch.float32
+                        num_seqs,
+                        num_query_heads,
+                        device=device,
+                        dtype=torch.float32,
                     )
                     * 0.3
                 )

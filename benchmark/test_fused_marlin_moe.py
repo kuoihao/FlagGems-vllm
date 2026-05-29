@@ -80,7 +80,10 @@ def _marlin_quantize_per_expert(w_fp):
     for e in range(E):
         # marlin_quantize expects (in_dim, out_dim)
         _, qw, sc, _, _, _ = marlin_quantize(
-            w_fp[e].T.contiguous(), VLLM_QUANT_TYPE, GROUP_SIZE, act_order=False
+            w_fp[e].T.contiguous(),
+            VLLM_QUANT_TYPE,
+            GROUP_SIZE,
+            act_order=False,
         )
         qweight_l.append(qw)
         scales_l.append(sc)
@@ -237,7 +240,8 @@ def _gems_call(
 
 @pytest.mark.fused_marlin_moe
 @pytest.mark.skipif(
-    not HAS_VLLM_FUSED_MARLIN_MOE, reason="vllm not installed; baseline unavailable"
+    not HAS_VLLM_FUSED_MARLIN_MOE,
+    reason="vllm not installed; baseline unavailable",
 )
 @pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
 def test_fused_marlin_moe():

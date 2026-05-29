@@ -350,7 +350,9 @@ def group_mm_input_fn(groups, N, K, cur_dtype, device):
     mat_a = torch.cat([x for x in group_A_list], dim=0)
     mat_b = torch.stack([x for x in group_B_list], dim=0)
     offs = torch.tensor(
-        [sum(M_list[: i + 1]) for i in range(groups)], dtype=torch.int32, device="cuda"
+        [sum(M_list[: i + 1]) for i in range(groups)],
+        dtype=torch.int32,
+        device="cuda",
     )
 
     yield mat_a, mat_b, offs
@@ -504,7 +506,7 @@ class ParallelBenchmarkMixin:
         for shape in self.shapes:
             group_size = max(1, int(self.get_parallel_metric_group_size(shape)))
             for _ in range(group_size):
-                yield tuple(shape) if isinstance(shape, (list, tuple)) else shape
+                yield (tuple(shape) if isinstance(shape, (list, tuple)) else shape)
 
     def _get_error_shape_output_path(self):
         return os.path.abspath("FlagTune/error_shape.yaml")

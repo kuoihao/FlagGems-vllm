@@ -206,7 +206,9 @@ def test_pack_unpack_fp8_roundtrip():
         (10, 4, 8, [2, 4, 4]),
         (15, 8, 16, [7, 5, 3]),
     ]:
-        lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
+        lengths = torch.tensor(
+            lengths_list, dtype=torch.int32, device=flaggems_vllm.device
+        )
         x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
         x_fp8 = x.to(FP8)
         packed = _ref_pack_seq(x_fp8, lengths_list)

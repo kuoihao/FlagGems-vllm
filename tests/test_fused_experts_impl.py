@@ -146,7 +146,11 @@ def test_fused_moe_vs_ref(config, dtype):
     # Generate inputs with controlled magnitude to avoid numerical blow-up
     hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
@@ -207,7 +211,11 @@ def test_fused_moe_vs_vllm(config, dtype):
     # Generate inputs with controlled magnitude to avoid numerical blow-up
     hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
@@ -220,7 +228,9 @@ def test_fused_moe_vs_vllm(config, dtype):
     topk_weights = topk_weights.to(dtype)
 
     # FlagGems result
-    result = flaggems_vllm.ops_experts_impl(hidden_states, w1, w2, topk_weights, topk_ids)
+    result = flaggems_vllm.ops_experts_impl(
+        hidden_states, w1, w2, topk_weights, topk_ids
+    )
 
     # Reference result
     ref = vllm_fused_experts_impl(
@@ -267,7 +277,11 @@ def test_accuracy_fused_moe_fp8(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     # Per-tensor quantization of weights
@@ -651,7 +665,11 @@ def test_fused_moe_int8(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -693,7 +711,12 @@ def test_fused_moe_int8(config):
     w2_deq = (w2_int8.float() * w2_scale_full).to(dtype)
 
     ref = torch_fused_moe_quantized_reference(
-        hidden_states, w1_deq, w2_deq, topk_weights, topk_ids, quant_mode="int8"
+        hidden_states,
+        w1_deq,
+        w2_deq,
+        topk_weights,
+        topk_ids,
+        quant_mode="int8",
     )
 
     torch.cuda.synchronize()
@@ -763,7 +786,11 @@ def test_fused_moe_int8_w8a16(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -838,7 +865,11 @@ def test_fused_moe_int4_w4a16(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -911,7 +942,11 @@ def test_fused_moe_inplace(config, dtype):
 
     hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
@@ -968,7 +1003,11 @@ def test_fused_moe_apply_router_weight_on_input(config, dtype):
 
     hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype

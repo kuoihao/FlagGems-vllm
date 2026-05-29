@@ -10,6 +10,7 @@ The wrapper sees packed uint8 weights; the reference sees the matching
 fp16/bf16 w_ref returned by quantize_weights so quantization round-off is
 shared by both sides.
 """
+
 import pytest
 import torch
 
@@ -130,7 +131,13 @@ def _quantize_moe_weight(w_fp, group_size):
 
 
 def _make_inputs(
-    num_tokens, num_experts, hidden_size, intermediate_size, topk, dtype, device
+    num_tokens,
+    num_experts,
+    hidden_size,
+    intermediate_size,
+    topk,
+    dtype,
+    device,
 ):
     """
     Build all tensors for one test case.

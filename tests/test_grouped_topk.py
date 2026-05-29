@@ -205,7 +205,14 @@ def test_grouped_topk_scaling_factor(routed_scaling_factor, renormalize):
 
     with flaggems_vllm.use_gems():
         res_weights, res_ids = flaggems_vllm.grouped_topk(
-            scores.clone(), 4, 2, 2, renormalize, routed_scaling_factor, bias, 0
+            scores.clone(),
+            4,
+            2,
+            2,
+            renormalize,
+            routed_scaling_factor,
+            bias,
+            0,
         )
 
     utils.gems_assert_equal(res_ids, ref_ids)

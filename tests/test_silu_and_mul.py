@@ -10,8 +10,12 @@ from . import accuracy_utils as utils
 @pytest.mark.parametrize("shape", utils.POINTWISE_SHAPES)
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 def test_silu_and_mul(shape, dtype):
-    inp1 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
-    inp2 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
+    inp1 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
+    inp2 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
     ref_inp1 = utils.to_reference(inp1, True)
     ref_inp2 = utils.to_reference(inp2, True)
 

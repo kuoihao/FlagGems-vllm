@@ -77,7 +77,10 @@ class CutlassScaledMMPerfKit:
         ]
         scale_shape_types = ["scalar", "vector", "matrix"]
         if_use_bias = [True, False]
-        dtypes = [(torch.int8, torch.float16), (torch.float8_e4m3fn, torch.bfloat16)]
+        dtypes = [
+            (torch.int8, torch.float16),
+            (torch.float8_e4m3fn, torch.bfloat16),
+        ]
 
         combinations = product(
             mnk, scale_shape_types, scale_shape_types, if_use_bias, dtypes
@@ -172,9 +175,16 @@ class CutlassScaledMMPerfKit:
 
 class CutlassScaledMMBenchmark(base.Benchmark):
     def __init__(self):
-        extended_dtypes = ["scalar_only", "vector_only", "scalar_and_vector", "block"]
+        extended_dtypes = [
+            "scalar_only",
+            "vector_only",
+            "scalar_and_vector",
+            "block",
+        ]
         super().__init__(
-            "cutlass_scaled_mm", torch.ops._C.cutlass_scaled_mm, extended_dtypes
+            "cutlass_scaled_mm",
+            torch.ops._C.cutlass_scaled_mm,
+            extended_dtypes,
         )
         self.set_gems(flaggems_vllm.cutlass_scaled_mm)
         self.kit = CutlassScaledMMPerfKit
@@ -196,13 +206,19 @@ class CutlassScaledMMBenchmark(base.Benchmark):
             if in_dtype == torch.int8:
                 a = to_int8(torch.randn((M, K), device=flaggems_vllm.device))
                 b = to_int8(
-                    torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t()
+                    torch.randn((K, N), device=flaggems_vllm.device)
+                    .t()
+                    .contiguous()
+                    .t()
                     * 5
                 )
             else:
                 a = to_fp8(torch.randn((M, K), device=flaggems_vllm.device))
                 b = to_fp8(
-                    torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t()
+                    torch.randn((K, N), device=flaggems_vllm.device)
+                    .t()
+                    .contiguous()
+                    .t()
                 )
 
             a_scale_shape = self.kit.get_scale_shape(M, N, K, a_scale_category)

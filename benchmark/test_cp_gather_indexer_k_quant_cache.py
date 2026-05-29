@@ -120,7 +120,13 @@ class CpGatherIndexerKQuantCacheBenchmark(base.Benchmark):
 
     def get_input_iter(self, dtype):
         del dtype
-        for batch_size, seq_len, block_size, head_dim, quant_block_size in self.shapes:
+        for (
+            batch_size,
+            seq_len,
+            block_size,
+            head_dim,
+            quant_block_size,
+        ) in self.shapes:
             block_table, cu_seqlen = make_gather_metadata(
                 batch_size,
                 seq_len,

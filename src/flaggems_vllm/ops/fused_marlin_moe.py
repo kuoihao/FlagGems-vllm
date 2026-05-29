@@ -548,7 +548,11 @@ def _fused_marlin_moe_impl(
     assert hidden_states.is_contiguous()
     assert w1.stride(-1) == 1
     assert w2.stride(-1) == 1
-    assert hidden_states.dtype in [torch.float32, torch.float16, torch.bfloat16]
+    assert hidden_states.dtype in [
+        torch.float32,
+        torch.float16,
+        torch.bfloat16,
+    ]
 
     num_tokens = hidden_states.size(0)
     E, N, _ = w1.size()

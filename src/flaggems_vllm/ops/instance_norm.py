@@ -620,7 +620,17 @@ class InstanceNorm(torch.autograd.Function):
             else:
                 weight_grad = None
                 bias_grad = None
-        return in_grad, weight_grad, bias_grad, None, None, None, None, None, None
+        return (
+            in_grad,
+            weight_grad,
+            bias_grad,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
 
 def instance_norm(
@@ -651,5 +661,12 @@ def instance_norm(
     """
 
     return InstanceNorm.apply(
-        input, weight, bias, running_mean, running_var, use_input_stats, momentum, eps
+        input,
+        weight,
+        bias,
+        running_mean,
+        running_var,
+        use_input_stats,
+        momentum,
+        eps,
     )

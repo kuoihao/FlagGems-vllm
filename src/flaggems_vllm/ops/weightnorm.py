@@ -57,7 +57,8 @@ def weight_norm_kernel_last(
 
 @libentry()
 @triton.autotune(
-    configs=runtime.get_tuned_config("weight_norm_kernel_first"), key=["M", "N"]
+    configs=runtime.get_tuned_config("weight_norm_kernel_first"),
+    key=["M", "N"],
 )
 @triton.jit(do_not_specialize=["eps"])
 def weight_norm_kernel_first(
@@ -150,7 +151,8 @@ def weight_norm_bwd_kernel_last(
 
 @libentry()
 @triton.autotune(
-    configs=runtime.get_tuned_config("weight_norm_kernel_first"), key=["M", "N"]
+    configs=runtime.get_tuned_config("weight_norm_kernel_first"),
+    key=["M", "N"],
 )
 @triton.jit(do_not_specialize=["eps"])
 def weight_norm_bwd_kernel_first(

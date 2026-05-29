@@ -22,7 +22,8 @@ else:
 
 @pytest.mark.outer
 @pytest.mark.parametrize(
-    "M, N", MN_SHAPES + ([(32, 131072)] if flaggems_vllm.vendor_name == "cambricon" else [])
+    "M, N",
+    MN_SHAPES + ([(32, 131072)] if flaggems_vllm.vendor_name == "cambricon" else []),
 )
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_outer(M, N, dtype):

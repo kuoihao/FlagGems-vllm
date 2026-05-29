@@ -13,7 +13,11 @@ def cross_entropy_loss_input_fn(shape, cur_dtype, device):
 
     if base.Config.bench_level == consts.BenchLevel.COMPREHENSIVE:
         weight = torch.randn(shape[-1], dtype=cur_dtype, device=device)
-        yield inp, target, {"weight": weight, "ignore_index": 1, "reduction": "none"}
+        yield inp, target, {
+            "weight": weight,
+            "ignore_index": 1,
+            "reduction": "none",
+        }
         yield inp, target, {
             "weight": weight,
             "reduction": "sum",

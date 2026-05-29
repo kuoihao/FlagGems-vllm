@@ -13,8 +13,12 @@ SILU_AND_MUL_WITH_CLAMP_LIMITS = [3.0, 7.0]
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 @pytest.mark.parametrize("limit", SILU_AND_MUL_WITH_CLAMP_LIMITS)
 def test_silu_and_mul_with_clamp(shape, dtype, limit):
-    inp1 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
-    inp2 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
+    inp1 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
+    inp2 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
     ref_inp1 = utils.to_reference(inp1, True)
     ref_inp2 = utils.to_reference(inp2, True)
 

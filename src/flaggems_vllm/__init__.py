@@ -3,11 +3,12 @@ flaggems_vllm - DNN operations implemented with Triton
 """
 
 import torch
-from flaggems_vllm import runtime
-from flaggems_vllm import testing  # noqa: F401
+
 import flaggems_vllm.ops as _ops_module
-from flaggems_vllm.ops import *  # noqa: F401,F403
+from flaggems_vllm import testing  # noqa: F401
+from flaggems_vllm import runtime
 from flaggems_vllm.config import aten_patch_list, resolve_user_setting
+from flaggems_vllm.ops import *  # noqa: F401,F403
 from flaggems_vllm.runtime.register import Register
 
 device = runtime.device.name
@@ -124,8 +125,7 @@ def only_enable(
     include_ops = resolve_user_setting(include, "include")
     if not include_ops:
         warnings.warn(
-            "only_enable failed: No include entries"
-            " resolved from list or yaml."
+            "only_enable failed: No include entries" " resolved from list or yaml."
         )
         return
 
@@ -146,16 +146,10 @@ class use_dnn:
     When 'include' is not None, use_dnn will not process 'exclude'.
     """
 
-    def __init__(
-        self, exclude=None, include=None, record=False, once=False, path=None
-    ):
+    def __init__(self, exclude=None, include=None, record=False, once=False, path=None):
         self.lib = torch.library.Library("aten", "IMPL")
-        self.exclude = (
-            exclude if isinstance(exclude, (list, tuple, set, str)) else []
-        )
-        self.include = (
-            include if isinstance(include, (list, tuple, set, str)) else []
-        )
+        self.exclude = exclude if isinstance(exclude, (list, tuple, set, str)) else []
+        self.include = include if isinstance(include, (list, tuple, set, str)) else []
         self.registrar = Register
         self.record = record
         self.once = once

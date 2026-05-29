@@ -4,6 +4,7 @@ Accuracy tests for mHC (Manifold Constrained Hyper-Connection) operators.
 Tests both mhc_post and mhc_pre against PyTorch reference implementations,
 and optionally compares with TileLang implementations.
 """
+
 from itertools import product
 
 import pytest
@@ -43,7 +44,10 @@ def generate_mhc_post_data(
         (n, hc_mult, hc_mult), dtype=torch.float32, device=device
     )
     return dict(
-        x=x, residual=residual, post_layer_mix=post_layer_mix, comb_res_mix=comb_res_mix
+        x=x,
+        residual=residual,
+        post_layer_mix=post_layer_mix,
+        comb_res_mix=comb_res_mix,
     )
 
 
@@ -297,7 +301,15 @@ def _hc_head_fused_kernel_ref(
     hs_flat, fn, hc_scale, hc_base, out, hidden_size, rms_eps, hc_eps, hc_mult
 ):
     _vllm_hc_head_fused(
-        hs_flat, fn, hc_scale, hc_base, out, hidden_size, rms_eps, hc_eps, hc_mult
+        hs_flat,
+        fn,
+        hc_scale,
+        hc_base,
+        out,
+        hidden_size,
+        rms_eps,
+        hc_eps,
+        hc_mult,
     )
     return out
 

@@ -150,7 +150,11 @@ def pytest_sessionfinish(session, exitstatus):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_protocol(item, nextitem):
-    TEST_RESULTS[item.nodeid] = {"params": None, "result": None, "opname": None}
+    TEST_RESULTS[item.nodeid] = {
+        "params": None,
+        "result": None,
+        "opname": None,
+    }
     param_values = {}
     request = item._request
     if hasattr(request, "node") and hasattr(request.node, "callspec"):

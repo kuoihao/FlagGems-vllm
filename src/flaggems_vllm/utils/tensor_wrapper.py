@@ -25,14 +25,10 @@ class TypedPtr:
 
     @classmethod
     def from_tensor(cls, tensor: torch.Tensor, offset: int = 0):
-        return cls(
-            tensor.data_ptr() + tensor.element_size() * offset, tensor.dtype
-        )
+        return cls(tensor.data_ptr() + tensor.element_size() * offset, tensor.dtype)
 
     @classmethod
-    def reinterpret_tensor(
-        cls, tensor: torch.Tensor, dtype: torch.dtype, offset=0
-    ):
+    def reinterpret_tensor(cls, tensor: torch.Tensor, dtype: torch.dtype, offset=0):
         return cls(tensor.data_ptr() + dtype.itemsize * offset, dtype)
 
 
@@ -91,9 +87,7 @@ class StridedBuffer:
 
             self._data_ptr = self._base.data_ptr() + offset
         self.shape = tuple(shape if shape is not None else self._base.shape)
-        self._strides = tuple(
-            strides if strides is not None else self._base.stride()
-        )
+        self._strides = tuple(strides if strides is not None else self._base.stride())
         self.device = self._base.device
         self.ndim = len(self.shape)
 

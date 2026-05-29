@@ -76,7 +76,11 @@ class FusedMoEMXQW8A16Benchmark(base.Benchmark):
         device = flaggems_vllm.device
         dtype = torch.bfloat16
 
-        from flaggems_vllm.ops_moe_mxq import QuantConfig, QuantMode, quantize_weights_moe
+        from flaggems_vllm.ops_moe_mxq import (
+            QuantConfig,
+            QuantMode,
+            quantize_weights_moe,
+        )
 
         hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
 

@@ -32,9 +32,7 @@ class Base(sqlalchemy.orm.DeclarativeBase):
 class SQLPersistantModel(PersistantModel):
     def __init__(self, db_url: str, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.engine: Final[sqlalchemy.engine.Engine] = (
-            sqlalchemy.create_engine(db_url)
-        )
+        self.engine: Final[sqlalchemy.engine.Engine] = sqlalchemy.create_engine(db_url)
         self.sql_model_pool: Dict[str, Type[Base]] = {}
 
     @staticmethod
@@ -50,12 +48,8 @@ class SQLPersistantModel(PersistantModel):
             for k, v in chain(keys.items(), values.items())
         }
         cols: Dict[str, sqlalchemy.orm.MappedColumn] = {
-            k: sqlalchemy.orm.mapped_column(primary_key=True)
-            for k in keys.keys()
-        } | {
-            k: sqlalchemy.orm.mapped_column(primary_key=False)
-            for k in values.keys()
-        }
+            k: sqlalchemy.orm.mapped_column(primary_key=True) for k in keys.keys()
+        } | {k: sqlalchemy.orm.mapped_column(primary_key=False) for k in values.keys()}
         ModelCls: Type[Base] = type(
             name,
             (Base,),
@@ -108,17 +102,13 @@ class SQLPersistantModel(PersistantModel):
             ModelCls: Optional[Type[Base]] = self.sql_model_pool.get(name)
             if ModelCls is not None:
                 return ModelCls
-            ModelCls = SQLPersistantModel.build_sql_model_by_db(
-                name, self.engine
-            )
+            ModelCls = SQLPersistantModel.build_sql_model_by_db(name, self.engine)
             if ModelCls is not None:
                 self.sql_model_pool[name] = ModelCls
                 return ModelCls
             if not keys or not values:
                 return None
-            ModelCls = SQLPersistantModel.build_sql_model_by_py(
-                name, keys, values
-            )
+            ModelCls = SQLPersistantModel.build_sql_model_by_py(name, keys, values)
             with self.engine.begin() as conn:
                 conn.execute(
                     sqlalchemy.schema.CreateTable(
@@ -153,9 +143,7 @@ class SQLPersistantModel(PersistantModel):
                 if k.key not in key_dict
             }
             kwargs: Dict[str, Union[bool, int, float, str]] = {
-                k: v
-                for k, v in obj_dict.items()
-                if k not in self.signature.parameters
+                k: v for k, v in obj_dict.items() if k not in self.signature.parameters
             }
             config_dict: Dict[str, int] = {
                 k: v  # type: ignore[misc]
@@ -214,9 +202,7 @@ class SQLPersistantModel(PersistantModel):
         )
         if ConfigCls is not None:
             with RollbackSession(self.engine) as session:
-                obj: Base = ConfigCls(
-                    **key_dict, **config
-                )  # type: ignore[call-arg]
+                obj: Base = ConfigCls(**key_dict, **config)  # type: ignore[call-arg]
                 session.merge(obj)
                 session.commit()
 

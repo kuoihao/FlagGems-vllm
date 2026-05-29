@@ -21,7 +21,8 @@ def _cuda_available() -> bool:
 pytestmark = [
     pytest.mark.chunk_gated_delta_rule,
     pytest.mark.skipif(
-        not _cuda_available(), reason="chunk gated delta rule tests require CUDA"
+        not _cuda_available(),
+        reason="chunk gated delta rule tests require CUDA",
     ),
 ]
 
@@ -211,7 +212,11 @@ def _assert_close(
     else:
         atol, rtol = (3e-1, 3e-1) if final_state else (1.5e-1, 1.5e-1)
     torch.testing.assert_close(
-        actual.float(), expected.float(), atol=atol, rtol=rtol, check_dtype=False
+        actual.float(),
+        expected.float(),
+        atol=atol,
+        rtol=rtol,
+        check_dtype=False,
     )
 
 
@@ -289,7 +294,9 @@ def test_chunk_gated_delta_rule_supports_two_sequence_varlen_pack():
     q, k, v, beta, g = _make_inputs(
         B=1, T=80, Hg=2, H=4, K=64, V=32, dtype=dtype, head_first=False
     )
-    cu_seqlens = torch.tensor([0, 17, 80], device=flaggems_vllm.device, dtype=torch.long)
+    cu_seqlens = torch.tensor(
+        [0, 17, 80], device=flaggems_vllm.device, dtype=torch.long
+    )
 
     actual, actual_final = flaggems_vllm.chunk_gated_delta_rule(
         q,
@@ -810,7 +817,9 @@ def test_chunk_gated_delta_rule_does_not_broadly_reject_iluvatar_chunk_path(
         return None, kwargs["v"].clone(), None, None, None, None, None
 
     monkeypatch.setattr(
-        chunk_gated_delta_rule_module, "chunk_gated_delta_rule_fwd", _fake_chunk_fwd
+        chunk_gated_delta_rule_module,
+        "chunk_gated_delta_rule_fwd",
+        _fake_chunk_fwd,
     )
 
     actual, actual_final = flaggems_vllm.chunk_gated_delta_rule(
