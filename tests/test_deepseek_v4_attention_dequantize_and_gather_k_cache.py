@@ -23,18 +23,22 @@ def is_support_fp8e4nv():
     return major * 10 + minor >= 89
 
 
-def _fill_cache(k_cache, expected_rows, block_size, nope_dim, rope_dim, scale_slots):
+def _fill_cache(
+    k_cache, expected_rows, block_size, nope_dim, rope_dim, scale_slots
+):
     token_data_size = nope_dim + rope_dim * 2
     for slot, row in expected_rows.items():
         block = slot // block_size
         pos = slot % block_size
         base = pos * token_data_size
         x = (
-            torch.arange(nope_dim, device=k_cache.device, dtype=torch.float32) / 32.0
+            torch.arange(nope_dim, device=k_cache.device, dtype=torch.float32)
+            / 32.0
             + slot / 8.0
         ).to(torch.float8_e4m3fn)
         rope = (
-            torch.arange(rope_dim, device=k_cache.device, dtype=torch.float32) / 16.0
+            torch.arange(rope_dim, device=k_cache.device, dtype=torch.float32)
+            / 16.0
             + slot
         ).to(torch.bfloat16)
         k_cache[block, base : base + nope_dim].copy_(x.view(torch.uint8))
@@ -68,7 +72,9 @@ def test_dequantize_and_gather_k_cache_accuracy(
     block_stride = block_size * token_data_size + block_size * scale_slots
     blocks_per_seq = (seq_len + block_size - 1) // block_size
     num_blocks = batch * blocks_per_seq
-    k_cache = torch.zeros((num_blocks, block_stride), device=device, dtype=torch.uint8)
+    k_cache = torch.zeros(
+        (num_blocks, block_stride), device=device, dtype=torch.uint8
+    )
     out = torch.empty(
         (batch, gather_len, output_dim), device=device, dtype=torch.bfloat16
     )
@@ -84,10 +90,12 @@ def test_dequantize_and_gather_k_cache_accuracy(
     _fill_cache(k_cache, rows, block_size, nope_dim, rope_dim, scale_slots)
 
     seq_lens = torch.full((batch,), seq_len, device=device, dtype=torch.int32)
-    gather_lens = torch.full((batch,), gather_len, device=device, dtype=torch.int32)
-    block_table = torch.arange(num_blocks, device=device, dtype=torch.int32).view(
-        batch, blocks_per_seq
+    gather_lens = torch.full(
+        (batch,), gather_len, device=device, dtype=torch.int32
     )
+    block_table = torch.arange(
+        num_blocks, device=device, dtype=torch.int32
+    ).view(batch, blocks_per_seq)
     dequantize_and_gather_k_cache(
         out,
         k_cache,
@@ -100,7 +108,9 @@ def test_dequantize_and_gather_k_cache_accuracy(
         scale_slots=scale_slots,
     )
 
-    fg_testing.assert_close(out, expected, dtype=torch.bfloat16, equal_nan=True)
+    fg_testing.assert_close(
+        out, expected, dtype=torch.bfloat16, equal_nan=True
+    )
 
 
 @pytest.mark.skipif(
@@ -123,7 +133,9 @@ def test_dequantize_and_gather_k_cache_vllm_accuracy():
     block_stride = block_size * token_data_size + block_size * scale_slots
     blocks_per_seq = (seq_len + block_size - 1) // block_size
     num_blocks = batch * blocks_per_seq
-    k_cache = torch.zeros((num_blocks, block_stride), device=device, dtype=torch.uint8)
+    k_cache = torch.zeros(
+        (num_blocks, block_stride), device=device, dtype=torch.uint8
+    )
     expected_rows = torch.empty(
         (batch, gather_len, output_dim), device=device, dtype=torch.bfloat16
     )
@@ -140,10 +152,12 @@ def test_dequantize_and_gather_k_cache_vllm_accuracy():
     actual = torch.empty_like(expected_rows)
     expected = torch.empty_like(expected_rows)
     seq_lens = torch.full((batch,), seq_len, device=device, dtype=torch.int32)
-    gather_lens = torch.full((batch,), gather_len, device=device, dtype=torch.int32)
-    block_table = torch.arange(num_blocks, device=device, dtype=torch.int32).view(
-        batch, blocks_per_seq
+    gather_lens = torch.full(
+        (batch,), gather_len, device=device, dtype=torch.int32
     )
+    block_table = torch.arange(
+        num_blocks, device=device, dtype=torch.int32
+    ).view(batch, blocks_per_seq)
 
     dequantize_and_gather_k_cache(
         actual,
@@ -166,4 +180,6 @@ def test_dequantize_and_gather_k_cache_vllm_accuracy():
         0,
     )
 
-    fg_testing.assert_close(actual, expected, dtype=torch.bfloat16, equal_nan=True)
+    fg_testing.assert_close(
+        actual, expected, dtype=torch.bfloat16, equal_nan=True
+    )

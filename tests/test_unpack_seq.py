@@ -115,7 +115,9 @@ else:
 def test_unpack_seq_accuracy_2d(N, D, lengths_list, dtype):
     B = len(lengths_list)
     Lmax = max(lengths_list)
-    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
+    )
 
     packed = torch.randn(B, Lmax, D, dtype=dtype, device=flaggems_vllm.device)
     ref_packed = utils.to_reference(packed, True)
@@ -130,7 +132,9 @@ def test_unpack_seq_accuracy_2d(N, D, lengths_list, dtype):
 @pytest.mark.parametrize("N, D, lengths_list", UNPACK_SHAPES_2D)
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_pack_unpack_roundtrip_2d(N, D, lengths_list, dtype):
-    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
+    )
     x = torch.randn(N, D, dtype=dtype, device=flaggems_vllm.device)
 
     packed = _ref_pack_seq(x, lengths_list)
@@ -145,7 +149,9 @@ def test_pack_unpack_roundtrip_2d(N, D, lengths_list, dtype):
 @pytest.mark.parametrize("N, H, D, lengths_list", UNPACK_SHAPES_3D)
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_pack_unpack_roundtrip_3d(N, H, D, lengths_list, dtype):
-    lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        lengths_list, dtype=torch.int32, device=flaggems_vllm.device
+    )
     x = torch.randn(N, H, D, dtype=dtype, device=flaggems_vllm.device)
 
     packed = _ref_pack_seq(x, lengths_list)
@@ -160,7 +166,9 @@ def test_pack_unpack_roundtrip_3d(N, H, D, lengths_list, dtype):
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_unpack_seq_single_batch(dtype):
     x = torch.randn(10, 16, dtype=dtype, device=flaggems_vllm.device)
-    lengths = torch.tensor([10], dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        [10], dtype=torch.int32, device=flaggems_vllm.device
+    )
     packed = _ref_pack_seq(x, [10])
     unpacked = unpack_seq_triton(packed, lengths)
     assert unpacked.shape == x.shape
@@ -173,7 +181,9 @@ def test_unpack_seq_single_batch(dtype):
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_unpack_seq_short_sequences(dtype):
     x = torch.randn(20, 4, dtype=dtype, device=flaggems_vllm.device)
-    lengths = torch.tensor([1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        [1, 1, 1], dtype=torch.int32, device=flaggems_vllm.device
+    )
     packed = _ref_pack_seq(x, [1, 1, 1])
     unpacked = unpack_seq_triton(packed, lengths)
 
@@ -185,7 +195,9 @@ def test_unpack_seq_short_sequences(dtype):
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_unpack_seq_3d_edge_cases(dtype):
     x = torch.randn(15, 8, 16, dtype=dtype, device=flaggems_vllm.device)
-    lengths = torch.tensor([5, 7, 3], dtype=torch.int32, device=flaggems_vllm.device)
+    lengths = torch.tensor(
+        [5, 7, 3], dtype=torch.int32, device=flaggems_vllm.device
+    )
     packed = _ref_pack_seq(x, [5, 7, 3])
     unpacked = unpack_seq_triton(packed, lengths)
     assert unpacked.shape == x.shape
@@ -206,8 +218,15 @@ def test_pack_unpack_fp8_roundtrip():
         (10, 4, 8, [2, 4, 4]),
         (15, 8, 16, [7, 5, 3]),
     ]:
-        lengths = torch.tensor(lengths_list, dtype=torch.int32, device=flaggems_vllm.device)
-        x = torch.randn(N, H, D, dtype=torch.float32, device=flaggems_vllm.device) * 0.1
+        lengths = torch.tensor(
+            lengths_list, dtype=torch.int32, device=flaggems_vllm.device
+        )
+        x = (
+            torch.randn(
+                N, H, D, dtype=torch.float32, device=flaggems_vllm.device
+            )
+            * 0.1
+        )
         x_fp8 = x.to(FP8)
         packed = _ref_pack_seq(x_fp8, lengths_list)
         unpacked = unpack_seq_triton(packed, lengths)

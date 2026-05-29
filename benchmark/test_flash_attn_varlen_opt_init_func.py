@@ -104,7 +104,9 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
                 alibi,
                 soft_cap,
             )
-            for cu_seq_lens_q, seqused_k in zip(all_cu_seq_lens_q, all_seqused_k)
+            for cu_seq_lens_q, seqused_k in zip(
+                all_cu_seq_lens_q, all_seqused_k
+            )
         ]
 
         self.shapes = all_configs
@@ -150,7 +152,9 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
             )
             out = torch.empty_like(query)
             lse = torch.empty(
-                (num_query_heads, cu_query_lens[-1]), dtype=torch.float, device=device
+                (num_query_heads, cu_query_lens[-1]),
+                dtype=torch.float,
+                device=device,
             )
             # lse = None
             key_cache = torch.randn(
@@ -165,9 +169,13 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
             cu_query_lens = torch.tensor(
                 cu_query_lens, dtype=torch.int32, device=device
             )
-            seqused_k = torch.tensor(seqused_k, dtype=torch.int32, device=device)
+            seqused_k = torch.tensor(
+                seqused_k, dtype=torch.int32, device=device
+            )
 
-            max_num_blocks_per_seq = (max_kv_len + block_size - 1) // block_size
+            max_num_blocks_per_seq = (
+                max_kv_len + block_size - 1
+            ) // block_size
             block_tables = torch.randint(
                 0,
                 num_blocks,
@@ -181,7 +189,10 @@ class FlashAttnVarlenOptInitBenchmark(base.Benchmark):
             if alibi:
                 alibi_slopes = (
                     torch.ones(
-                        num_seqs, num_query_heads, device=device, dtype=torch.float32
+                        num_seqs,
+                        num_query_heads,
+                        device=device,
+                        dtype=torch.float32,
                     )
                     * 0.3
                 )
@@ -260,7 +271,9 @@ def flash_attn_varlen_func_ref(*args, **kwargs):
     ) = args
 
     # TODO(Qiming): don't import things in the middle
-    from vllm.vllm_flash_attn.flash_attn_interface import flash_attn_varlen_func
+    from vllm.vllm_flash_attn.flash_attn_interface import (
+        flash_attn_varlen_func,
+    )
 
     result = flash_attn_varlen_func(
         q,
@@ -304,7 +317,9 @@ def flash_attn_varlen_func_ref(*args, **kwargs):
 )
 @pytest.mark.skipif(vendor_name == "kunlunxin", reason="#2887: Not working")
 @pytest.mark.skipif(vendor_name == "hygon", reason="#2888: RuntimeError")
-@pytest.mark.skipif(flaggems_vllm.vendor_name == "cambricon", reason="#2889: TypeError")
+@pytest.mark.skipif(
+    flaggems_vllm.vendor_name == "cambricon", reason="#2889: TypeError"
+)
 def test_flash_attn_varlen_opt_func(monkeypatch):
     monkeypatch.setenv("VLLM_CONFIGURE_LOGGING", "0")
 

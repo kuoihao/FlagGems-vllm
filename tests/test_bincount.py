@@ -15,7 +15,9 @@ BINCOUNT_MAXVALS = [10, 100, 1000] if not QUICK_MODE else [100]
 @pytest.mark.parametrize("max_val", BINCOUNT_MAXVALS)
 def test_accuracy_bincount(size, max_val):
     """Test bincount without weights."""
-    inp = torch.randint(0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device)
+    inp = torch.randint(
+        0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device
+    )
     ref_inp = utils.to_reference(inp)
 
     ref_out = torch.bincount(ref_inp)
@@ -31,7 +33,9 @@ def test_accuracy_bincount(size, max_val):
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 def test_accuracy_bincount_with_weights(size, max_val, dtype):
     """Test bincount with weights."""
-    inp = torch.randint(0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device)
+    inp = torch.randint(
+        0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device
+    )
     weights = torch.randn(size, dtype=dtype, device=flaggems_vllm.device)
     ref_inp = utils.to_reference(inp)
     ref_weights = utils.to_reference(weights)
@@ -49,7 +53,9 @@ def test_accuracy_bincount_with_weights(size, max_val, dtype):
 @pytest.mark.parametrize("minlength", [0, 50, 2000])
 def test_accuracy_bincount_with_minlength(size, max_val, minlength):
     """Test bincount with minlength parameter."""
-    inp = torch.randint(0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device)
+    inp = torch.randint(
+        0, max_val, (size,), dtype=torch.int64, device=flaggems_vllm.device
+    )
     ref_inp = utils.to_reference(inp)
 
     ref_out = torch.bincount(ref_inp, minlength=minlength)
@@ -102,7 +108,9 @@ def test_accuracy_bincount_all_zeros():
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 def test_accuracy_bincount_weights_edge_cases(dtype):
     """Test bincount with edge case weights."""
-    inp = torch.tensor([0, 1, 2, 1, 0], dtype=torch.int64, device=flaggems_vllm.device)
+    inp = torch.tensor(
+        [0, 1, 2, 1, 0], dtype=torch.int64, device=flaggems_vllm.device
+    )
     weights = torch.tensor(
         [1.0, 2.0, 3.0, 4.0, 5.0], dtype=dtype, device=flaggems_vllm.device
     )

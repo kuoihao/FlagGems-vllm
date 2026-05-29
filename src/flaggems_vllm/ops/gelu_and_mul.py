@@ -22,7 +22,8 @@ def gelu_none_and_mul_kernel(x, y):
 
 
 @pointwise_dynamic(
-    promotion_methods=[(0, 1, 2, "DEFAULT"), (0, 1, 2, "DEFAULT")], num_outputs=2
+    promotion_methods=[(0, 1, 2, "DEFAULT"), (0, 1, 2, "DEFAULT")],
+    num_outputs=2,
 )
 @triton.jit
 def gelu_none_and_mul_grad_kernel(x, y, dgrad):
@@ -57,14 +58,19 @@ def gelu_tanh_and_mul_kernel(x, y):
         * x_fp32
         * (
             1
-            + tanh(x_fp32 * 0.79788456 * (1 + 0.044715 * pow(x_fp32.to(tl.float32), 2)))
+            + tanh(
+                x_fp32
+                * 0.79788456
+                * (1 + 0.044715 * pow(x_fp32.to(tl.float32), 2))
+            )
         )
     )
     return x_gelu * y
 
 
 @pointwise_dynamic(
-    promotion_methods=[(0, 1, 2, "DEFAULT"), (0, 1, 2, "DEFAULT")], num_outputs=2
+    promotion_methods=[(0, 1, 2, "DEFAULT"), (0, 1, 2, "DEFAULT")],
+    num_outputs=2,
 )
 @triton.jit
 def gelu_tanh_and_mul_grad_kernel(x, y, dgrad):

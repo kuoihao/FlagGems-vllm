@@ -112,7 +112,9 @@ def torch_fused_moe_reference(
     """
     M, K = hidden_states.shape
     topk = topk_ids.shape[1]
-    output = torch.zeros(M, K, device=hidden_states.device, dtype=hidden_states.dtype)
+    output = torch.zeros(
+        M, K, device=hidden_states.device, dtype=hidden_states.dtype
+    )
 
     for m in range(M):
         for j in range(topk):
@@ -144,17 +146,27 @@ def test_fused_moe_vs_ref(config, dtype):
     torch.manual_seed(0)
 
     # Generate inputs with controlled magnitude to avoid numerical blow-up
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
     ) * (1.0 / intermediate_size**0.5)
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -168,7 +180,9 @@ def test_fused_moe_vs_ref(config, dtype):
     )
 
     # Pure PyTorch reference (no vLLM dependency)
-    ref = torch_fused_moe_reference(hidden_states, w1, w2, topk_weights, topk_ids)
+    ref = torch_fused_moe_reference(
+        hidden_states, w1, w2, topk_weights, topk_ids
+    )
 
     if flaggems_vllm.vendor_name == "ascend":
         torch.npu.synchronize()
@@ -205,22 +219,34 @@ def test_fused_moe_vs_vllm(config, dtype):
     torch.manual_seed(0)
 
     # Generate inputs with controlled magnitude to avoid numerical blow-up
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
     ) * (1.0 / intermediate_size**0.5)
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
     # FlagGems result
-    result = flaggems_vllm.ops_experts_impl(hidden_states, w1, w2, topk_weights, topk_ids)
+    result = flaggems_vllm.ops_experts_impl(
+        hidden_states, w1, w2, topk_weights, topk_ids
+    )
 
     # Reference result
     ref = vllm_fused_experts_impl(
@@ -256,7 +282,9 @@ def test_accuracy_fused_moe_fp8(config):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
 
     # Create FP8 weights: quantize and store scale
     w1_fp32 = torch.randn(
@@ -267,7 +295,11 @@ def test_accuracy_fused_moe_fp8(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     # Per-tensor quantization of weights
@@ -281,7 +313,11 @@ def test_accuracy_fused_moe_fp8(config):
     for e in range(num_experts):
         amax = w1_fp32[e].abs().amax().clamp(min=eps)
         scale = amax / fp8_max
-        w1_q = (w1_fp32[e] / scale).clamp(finfo.min, finfo.max).to(torch.float8_e4m3fn)
+        w1_q = (
+            (w1_fp32[e] / scale)
+            .clamp(finfo.min, finfo.max)
+            .to(torch.float8_e4m3fn)
+        )
         w1_fp8_list.append(w1_q)
         w1_scales.append(scale)
     w1_fp8 = torch.stack(w1_fp8_list)
@@ -293,15 +329,23 @@ def test_accuracy_fused_moe_fp8(config):
     for e in range(num_experts):
         amax = w2_fp32[e].abs().amax().clamp(min=eps)
         scale = amax / fp8_max
-        w2_q = (w2_fp32[e] / scale).clamp(finfo.min, finfo.max).to(torch.float8_e4m3fn)
+        w2_q = (
+            (w2_fp32[e] / scale)
+            .clamp(finfo.min, finfo.max)
+            .to(torch.float8_e4m3fn)
+        )
         w2_fp8_list.append(w2_q)
         w2_scales.append(scale)
     w2_fp8 = torch.stack(w2_fp8_list)
     w2_scale = torch.tensor(w2_scales, device=device, dtype=torch.float32)
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -346,7 +390,11 @@ def _fake_quantize_fp8(tensor: torch.Tensor):
     # Per-tensor quantization
     amax = tensor.abs().amax().clamp(min=eps).float()
     scale = amax / fp8_max
-    q = (tensor.float() / scale).clamp(finfo.min, finfo.max).to(torch.float8_e4m3fn)
+    q = (
+        (tensor.float() / scale)
+        .clamp(finfo.min, finfo.max)
+        .to(torch.float8_e4m3fn)
+    )
     return q.float() * scale  # dequantized
 
 
@@ -376,7 +424,9 @@ def torch_fused_moe_quantized_reference(
     """
     M, K = hidden_states.shape
     topk = topk_ids.shape[1]
-    output = torch.zeros(M, K, device=hidden_states.device, dtype=hidden_states.dtype)
+    output = torch.zeros(
+        M, K, device=hidden_states.device, dtype=hidden_states.dtype
+    )
 
     if quant_mode == "fp8":
         fake_quant = _fake_quantize_fp8
@@ -433,7 +483,9 @@ def torch_w8a8_block_matmul(
     assert k_tiles == b_scales.shape[1]
 
     c = torch.zeros((m, n), dtype=compute_type, device=a.device)
-    a_tiles = [a[:, i * block_k : min((i + 1) * block_k, k)] for i in range(k_tiles)]
+    a_tiles = [
+        a[:, i * block_k : min((i + 1) * block_k, k)] for i in range(k_tiles)
+    ]
     b_tiles = [
         [
             b[
@@ -444,13 +496,17 @@ def torch_w8a8_block_matmul(
         ]
         for j in range(n_tiles)
     ]
-    c_tiles = [c[:, j * block_n : min((j + 1) * block_n, n)] for j in range(n_tiles)]
+    c_tiles = [
+        c[:, j * block_n : min((j + 1) * block_n, n)] for j in range(n_tiles)
+    ]
     a_scale_tiles = [a_scales[:, i : i + 1] for i in range(k_tiles)]
 
     for i in range(k_tiles):
         for j in range(n_tiles):
             scale = a_scale_tiles[i] * b_scales[j][i]
-            c_tiles[j][:, :] += torch.matmul(a_tiles[i], b_tiles[j][i].t()) * scale
+            c_tiles[j][:, :] += (
+                torch.matmul(a_tiles[i], b_tiles[j][i].t()) * scale
+            )
 
     return c.reshape(origin_c_shape).to(output_dtype)
 
@@ -467,10 +523,15 @@ def torch_per_token_group_quant_fp8(
     finfo = torch.finfo(dtype)
     x_reshaped = x.reshape(x.numel() // group_size, group_size)
     amax = (
-        x_reshaped.abs().max(dim=-1, keepdim=True)[0].clamp(min=eps).to(torch.float32)
+        x_reshaped.abs()
+        .max(dim=-1, keepdim=True)[0]
+        .clamp(min=eps)
+        .to(torch.float32)
     )
     x_scales = amax / finfo.max
-    x_quant = (x_reshaped / x_scales).clamp(min=finfo.min, max=finfo.max).to(dtype)
+    x_quant = (
+        (x_reshaped / x_scales).clamp(min=finfo.min, max=finfo.max).to(dtype)
+    )
     x_quant = x_quant.reshape(x.shape)
     x_scales = x_scales.reshape(x.shape[:-1] + (x.shape[-1] // group_size,))
 
@@ -489,7 +550,9 @@ def torch_w8a8_block_fp8_moe(
 ):
     batch_size, hidden_size = hidden_states.shape
     topk = topk_ids.size(1)
-    expanded_hidden = hidden_states.view(batch_size, -1, hidden_size).repeat(1, topk, 1)
+    expanded_hidden = hidden_states.view(batch_size, -1, hidden_size).repeat(
+        1, topk, 1
+    )
     expanded_hidden = expanded_hidden.reshape(-1, hidden_size)
     out = torch.zeros(
         batch_size * topk,
@@ -501,7 +564,9 @@ def torch_w8a8_block_fp8_moe(
     flat_weights = topk_weights.view(-1)
     flat_ids = topk_ids.view(-1)
     _, block_k = block_shape
-    hidden_q, hidden_scale = torch_per_token_group_quant_fp8(expanded_hidden, block_k)
+    hidden_q, hidden_scale = torch_per_token_group_quant_fp8(
+        expanded_hidden, block_k
+    )
     hidden_q = hidden_q.to(torch.float32)
 
     def silu_and_mul(x):
@@ -558,7 +623,9 @@ def test_fused_moe_fp8_blockwise(config, block_shape):
     dtype = torch.bfloat16
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
     w1_fp8 = (
         torch.randn(
             num_experts,
@@ -595,8 +662,12 @@ def test_fused_moe_fp8_blockwise(config, block_shape):
         dtype=torch.float32,
     )
 
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -640,7 +711,9 @@ def test_fused_moe_int8(config):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
 
     # Create INT8 weights: quantize per-channel (per output column of each expert)
     w1_fp32 = torch.randn(
@@ -651,7 +724,11 @@ def test_fused_moe_int8(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -670,8 +747,12 @@ def test_fused_moe_int8(config):
     w2_scale = w2_scale_full.squeeze(-1)
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -693,7 +774,12 @@ def test_fused_moe_int8(config):
     w2_deq = (w2_int8.float() * w2_scale_full).to(dtype)
 
     ref = torch_fused_moe_quantized_reference(
-        hidden_states, w1_deq, w2_deq, topk_weights, topk_ids, quant_mode="int8"
+        hidden_states,
+        w1_deq,
+        w2_deq,
+        topk_weights,
+        topk_ids,
+        quant_mode="int8",
     )
 
     torch.cuda.synchronize()
@@ -720,7 +806,9 @@ def torch_fused_moe_weight_only_reference(
     """
     M, K = hidden_states.shape
     topk = topk_ids.shape[1]
-    output = torch.zeros(M, K, device=hidden_states.device, dtype=hidden_states.dtype)
+    output = torch.zeros(
+        M, K, device=hidden_states.device, dtype=hidden_states.dtype
+    )
 
     for m in range(M):
         for j in range(topk):
@@ -752,7 +840,9 @@ def test_fused_moe_int8_w8a16(config):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
 
     # Create INT8 weights per-channel
     w1_fp32 = torch.randn(
@@ -763,7 +853,11 @@ def test_fused_moe_int8_w8a16(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -779,8 +873,12 @@ def test_fused_moe_int8_w8a16(config):
     w2_scale = w2_scale_full.squeeze(-1)  # [E, K]
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -827,7 +925,9 @@ def test_fused_moe_int4_w4a16(config):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
 
     # Create INT4 weights stored in INT8 containers, per-channel
     w1_fp32 = torch.randn(
@@ -838,7 +938,11 @@ def test_fused_moe_int4_w4a16(config):
         dtype=torch.float32,
     ) * (1.0 / hidden_size**0.5)
     w2_fp32 = torch.randn(
-        num_experts, hidden_size, intermediate_size, device=device, dtype=torch.float32
+        num_experts,
+        hidden_size,
+        intermediate_size,
+        device=device,
+        dtype=torch.float32,
     ) * (1.0 / intermediate_size**0.5)
 
     eps = 1e-10
@@ -847,17 +951,31 @@ def test_fused_moe_int4_w4a16(config):
 
     w1_amax = w1_fp32.abs().amax(dim=-1, keepdim=True).clamp(min=eps)
     w1_scale_full = w1_amax / int4_max
-    w1_int4 = (w1_fp32 / w1_scale_full).round().clamp(int4_min, int4_max).to(torch.int8)
+    w1_int4 = (
+        (w1_fp32 / w1_scale_full)
+        .round()
+        .clamp(int4_min, int4_max)
+        .to(torch.int8)
+    )
     w1_scale = w1_scale_full.squeeze(-1)
 
     w2_amax = w2_fp32.abs().amax(dim=-1, keepdim=True).clamp(min=eps)
     w2_scale_full = w2_amax / int4_max
-    w2_int4 = (w2_fp32 / w2_scale_full).round().clamp(int4_min, int4_max).to(torch.int8)
+    w2_int4 = (
+        (w2_fp32 / w2_scale_full)
+        .round()
+        .clamp(int4_min, int4_max)
+        .to(torch.int8)
+    )
     w2_scale = w2_scale_full.squeeze(-1)
 
     # Generate routing
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -909,16 +1027,26 @@ def test_fused_moe_inplace(config, dtype):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
     ) * (1.0 / intermediate_size**0.5)
 
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -946,7 +1074,9 @@ def test_fused_moe_inplace(config, dtype):
     torch.cuda.synchronize()
 
     # Result should be the same tensor as input
-    assert result.data_ptr() == hidden_copy.data_ptr(), "inplace should reuse input"
+    assert (
+        result.data_ptr() == hidden_copy.data_ptr()
+    ), "inplace should reuse input"
     torch.testing.assert_close(result, ref, rtol=1e-3, atol=1e-3)
 
 
@@ -966,16 +1096,26 @@ def test_fused_moe_apply_router_weight_on_input(config, dtype):
 
     torch.manual_seed(0)
 
-    hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+    hidden_states = torch.randn(
+        num_tokens, hidden_size, device=device, dtype=dtype
+    )
     w1 = torch.randn(
-        num_experts, intermediate_size * 2, hidden_size, device=device, dtype=dtype
+        num_experts,
+        intermediate_size * 2,
+        hidden_size,
+        device=device,
+        dtype=dtype,
     ) * (1.0 / hidden_size**0.5)
     w2 = torch.randn(
         num_experts, hidden_size, intermediate_size, device=device, dtype=dtype
     ) * (1.0 / intermediate_size**0.5)
 
-    gating = torch.randn(num_tokens, num_experts, device=device, dtype=torch.float32)
-    topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+    gating = torch.randn(
+        num_tokens, num_experts, device=device, dtype=torch.float32
+    )
+    topk_weights, topk_ids = torch.topk(
+        torch.softmax(gating, dim=-1), topk, dim=-1
+    )
     topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
     topk_weights = topk_weights.to(dtype)
 
@@ -1003,7 +1143,9 @@ def test_fused_moe_apply_router_weight_on_input(config, dtype):
 
     # Due to SiLU nonlinearity, these will differ, but both should be
     # close to the reference with weight on the respective path.
-    ref = torch_fused_moe_reference(hidden_states, w1, w2, topk_weights, topk_ids)
+    ref = torch_fused_moe_reference(
+        hidden_states, w1, w2, topk_weights, topk_ids
+    )
 
     # The default (weight on output) should match our standard reference
     rtol = 1e-1

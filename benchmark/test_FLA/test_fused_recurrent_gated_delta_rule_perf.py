@@ -16,7 +16,13 @@ except ImportError:  # pragma: no cover - optional dependency guard
 
 
 def rearrange_mixed_qkv(
-    mixed_qkv, key_dim, value_dim, head_k_dim, head_v_dim, tp_size=1, contiguous=True
+    mixed_qkv,
+    key_dim,
+    value_dim,
+    head_k_dim,
+    head_v_dim,
+    tp_size=1,
+    contiguous=True,
 ):
     query, key, value = torch.split(
         mixed_qkv,
@@ -131,7 +137,9 @@ class FusedRecurrentGatedDeltaRuleBenchmark(Benchmark):
         )
         beta = torch.rand(B, T, HV_local, device=device, dtype=dtype).sigmoid()
         cu_seqlens = torch.arange(T + 1, device=device, dtype=torch.long)
-        initial_state = torch.zeros((1024, HV_local, K, V), device=device, dtype=dtype)
+        initial_state = torch.zeros(
+            (1024, HV_local, K, V), device=device, dtype=dtype
+        )
         ssm_state_indices = torch.zeros(T, device=device, dtype=torch.long)
         scale = 0.08838834764831845
 

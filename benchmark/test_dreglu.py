@@ -22,7 +22,9 @@ except ImportError:
 
 @pytest.mark.dreglu
 @pytest.mark.skipif(not TE_AVAILABLE, reason="TransformerEngine not installed")
-@pytest.mark.skipif(TE_OP is None, reason="'dreglu' not found in TransformerEngine")
+@pytest.mark.skipif(
+    TE_OP is None, reason="'dreglu' not found in TransformerEngine"
+)
 @pytest.mark.skipif(GEMS_OP is None, reason="'dreglu' not found in FlagGems")
 def test_dreglu():
     bench = base.TexGluBackwardBenchmark(

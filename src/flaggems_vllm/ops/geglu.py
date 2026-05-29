@@ -37,19 +37,27 @@ def geglu_kernel(
     mask = (offs_m[:, None] < M) & (offs_h[None, :] < H)
 
     input_a_ptr = (
-        input_ptr + offs_m[:, None] * stride_in_m + offs_h[None, :] * stride_in_h
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + offs_h[None, :] * stride_in_h
     )
     input_b_ptr = (
-        input_ptr + offs_m[:, None] * stride_in_m + (offs_h[None, :] + H) * stride_in_h
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + (offs_h[None, :] + H) * stride_in_h
     )
     output_ptr = (
-        output_ptr + offs_m[:, None] * stride_out_m + offs_h[None, :] * stride_out_h
+        output_ptr
+        + offs_m[:, None] * stride_out_m
+        + offs_h[None, :] * stride_out_h
     )
 
     x_a = tl.load(input_a_ptr, mask=mask, other=0.0).to(tl.float32)
     x_b = tl.load(input_b_ptr, mask=mask, other=0.0).to(tl.float32)
 
-    gelu_out = 0.5 * x_a * (1 + tanh(0.79788456 * x_a * (1 + 0.044715 * pow(x_a, 2))))
+    gelu_out = (
+        0.5 * x_a * (1 + tanh(0.79788456 * x_a * (1 + 0.044715 * pow(x_a, 2))))
+    )
     out = gelu_out * x_b
 
     tl.store(output_ptr, out.to(tl.float32), mask=mask)
@@ -85,10 +93,14 @@ def dgeglu_kernel(
         + offs_h[None, :] * stride_grad_out_h
     )
     input_a_ptr = (
-        input_ptr + offs_m[:, None] * stride_in_m + offs_h[None, :] * stride_in_h
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + offs_h[None, :] * stride_in_h
     )
     input_b_ptr = (
-        input_ptr + offs_m[:, None] * stride_in_m + (offs_h[None, :] + H) * stride_in_h
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + (offs_h[None, :] + H) * stride_in_h
     )
     grad_a_ptr = (
         grad_in_ptr
@@ -121,14 +133,18 @@ def dgeglu_kernel(
     tl.store(grad_b_ptr, grad_b.to(x_a.dtype), mask=mask)
 
 
-def geglu(input_tensor: torch.Tensor, quantizer: Optional[Any] = None) -> torch.Tensor:
+def geglu(
+    input_tensor: torch.Tensor, quantizer: Optional[Any] = None
+) -> torch.Tensor:
     logger.debug("GEMS GEGLU")
     shape = input_tensor.shape
     H = shape[-1] // 2
     M = input_tensor.numel() // (2 * H)
 
     input_2d = input_tensor.contiguous().view(M, 2 * H)
-    output_2d = torch.empty(M, H, device=input_tensor.device, dtype=input_tensor.dtype)
+    output_2d = torch.empty(
+        M, H, device=input_tensor.device, dtype=input_tensor.dtype
+    )
 
     grid = lambda META: (
         triton.cdiv(M, META["BLOCK_SIZE_M"]),

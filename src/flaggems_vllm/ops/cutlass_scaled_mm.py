@@ -52,14 +52,21 @@ def get_block_wise_smm_configs():
 
 @triton.jit
 def grouped_launch(
-    pid, M, N, TILE_M: tl.constexpr, TILE_N: tl.constexpr, SWIZZLE_GROUP_M: tl.constexpr
+    pid,
+    M,
+    N,
+    TILE_M: tl.constexpr,
+    TILE_N: tl.constexpr,
+    SWIZZLE_GROUP_M: tl.constexpr,
 ):
     grid_m = tl.cdiv(M, TILE_M)
     grid_n = tl.cdiv(N, TILE_N)
 
     width = SWIZZLE_GROUP_M * grid_n
     group_id = pid // width
-    group_size = tl.minimum(grid_m - group_id * SWIZZLE_GROUP_M, SWIZZLE_GROUP_M)
+    group_size = tl.minimum(
+        grid_m - group_id * SWIZZLE_GROUP_M, SWIZZLE_GROUP_M
+    )
 
     pid_m = group_id * SWIZZLE_GROUP_M + (pid % group_size)
     pid_n = (pid % width) // group_size
@@ -108,8 +115,12 @@ def _block_wise_smm_kernel(
     offs_am = (pid_m * TILE_M + tl.arange(0, TILE_M)) % M
     offs_bn = (pid_n * TILE_N + tl.arange(0, TILE_N)) % N
     offs_k = tl.arange(0, TILE_K)
-    a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)
-    b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)
+    a_ptrs = a_ptr + (
+        offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak
+    )
+    b_ptrs = b_ptr + (
+        offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn
+    )
 
     a_scale_ptrs = a_scale_ptr + offs_am * stride_Ascale_m
     offs_bsn = offs_bn // SCALE_BLOCK_N
@@ -131,7 +142,9 @@ def _block_wise_smm_kernel(
 
     offs_cm = pid_m * TILE_M + tl.arange(0, TILE_M)
     offs_cn = pid_n * TILE_N + tl.arange(0, TILE_N)
-    c_ptrs = c_ptr + stride_cm * offs_cm[:, None] + stride_cn * offs_cn[None, :]
+    c_ptrs = (
+        c_ptr + stride_cm * offs_cm[:, None] + stride_cn * offs_cn[None, :]
+    )
     mask = (offs_cm[:, None] < M) & (offs_cn[None, :] < N)
     tl.store(c_ptrs, acc, mask=mask)
 
@@ -238,16 +251,22 @@ def _pertensor_or_pertoken_smm_kernel(
     masks_bn = offsets_bn < N
 
     offsets_k = tl.arange(0, TILE_K).to(tl.int64)
-    offsets_a = stride_am * offsets_am[:, None] + stride_ak * offsets_k[None, :]
-    offsets_b = stride_bk * offsets_k[:, None] + stride_bn * offsets_bn[None, :]
+    offsets_a = (
+        stride_am * offsets_am[:, None] + stride_ak * offsets_k[None, :]
+    )
+    offsets_b = (
+        stride_bk * offsets_k[:, None] + stride_bn * offsets_bn[None, :]
+    )
 
     offsets_scale_am = (
-        tl.arange(0, TILE_SIZE_SCALE_A) + (TILE_SIZE_SCALE_A > 1) * pid_m * TILE_M
+        tl.arange(0, TILE_SIZE_SCALE_A)
+        + (TILE_SIZE_SCALE_A > 1) * pid_m * TILE_M
     )
     masks_scale_am = offsets_scale_am < M
 
     offsets_scale_bn = (
-        tl.arange(0, TILE_SIZE_SCALE_B) + (TILE_SIZE_SCALE_B > 1) * pid_n * TILE_N
+        tl.arange(0, TILE_SIZE_SCALE_B)
+        + (TILE_SIZE_SCALE_B > 1) * pid_n * TILE_N
     )
     masks_scale_bn = offsets_scale_bn < N
 
@@ -294,7 +313,9 @@ def _pertensor_or_pertoken_smm_kernel(
     offs_cn = pid_n * TILE_N + tl.arange(0, TILE_N).to(tl.int64)
     offs_cm = offs_cm.to(tl.int64)
     offs_cn = offs_cn.to(tl.int64)
-    c_ptrs = c_ptr + stride_cm * offs_cm[:, None] + stride_cn * offs_cn[None, :]
+    c_ptrs = (
+        c_ptr + stride_cm * offs_cm[:, None] + stride_cn * offs_cn[None, :]
+    )
     c_mask = (offs_cm[:, None] < M) & (offs_cn[None, :] < N)
 
     tl.store(c_ptrs, c, mask=c_mask)
@@ -387,8 +408,12 @@ def dispatch_scaled_mm(
                     f"Use FP8 quantization instead, or run on older arch (SM < 100)."
                 )
     else:
-        assert a_scale.dim() == 2, "a_scale must be 2D tensor for blockwise scaling"
-        assert b_scale.dim() == 2, "b_scale must be 2D tensor for blockwise scaling"
+        assert (
+            a_scale.dim() == 2
+        ), "a_scale must be 2D tensor for blockwise scaling"
+        assert (
+            b_scale.dim() == 2
+        ), "b_scale must be 2D tensor for blockwise scaling"
 
         if SM_VERSION_NUM >= 90:
             assert a.size(0) == a_scale.size(0), (
@@ -439,23 +464,33 @@ def cutlass_scaled_mm_sm90(
 
 
 def cutlass_scaled_mm_sm120(*args, **kwargs):
-    raise NotImplementedError("cutlass_scaled_mm_sm120 is not yet implemented. ")
+    raise NotImplementedError(
+        "cutlass_scaled_mm_sm120 is not yet implemented. "
+    )
 
 
 def cutlass_scaled_mm_sm100(*args, **kwargs):
-    raise NotImplementedError("cutlass_scaled_mm_sm100 is not yet implemented. ")
+    raise NotImplementedError(
+        "cutlass_scaled_mm_sm100 is not yet implemented. "
+    )
 
 
 def cutlass_scaled_mm_sm89(*args, **kwargs):
-    raise NotImplementedError("cutlass_scaled_mm_sm89 is not yet implemented. ")
+    raise NotImplementedError(
+        "cutlass_scaled_mm_sm89 is not yet implemented. "
+    )
 
 
 def cutlass_scaled_mm_sm80(*args, **kwargs):
-    raise NotImplementedError("cutlass_scaled_mm_sm80 is not yet implemented. ")
+    raise NotImplementedError(
+        "cutlass_scaled_mm_sm80 is not yet implemented. "
+    )
 
 
 def cutlass_scaled_mm_sm75(*args, **kwargs):
-    raise NotImplementedError("cutlass_scaled_mm_sm75 is not yet implemented. ")
+    raise NotImplementedError(
+        "cutlass_scaled_mm_sm75 is not yet implemented. "
+    )
 
 
 def cutlass_scaled_mm(
@@ -471,7 +506,9 @@ def cutlass_scaled_mm(
         a.dim() == 2 and b.dim() == 2 and c.dim() == 2
     ), "All inputs must be 2D tensors"
 
-    assert c.size(0) == a.size(0), "Number of rows in c must equal number of rows in a"
+    assert c.size(0) == a.size(
+        0
+    ), "Number of rows in c must equal number of rows in a"
     assert a.size(1) == b.size(
         0
     ), "Number of columns in a must equal number of rows in b"

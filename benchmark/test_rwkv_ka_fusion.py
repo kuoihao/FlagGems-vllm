@@ -27,10 +27,15 @@ def rwkv_ka_fusion_input_fn(shape, dtype, device):
 
 def torch_rwkv_ka(k, kk, a, ka, H, N):
     T, C = k.shape
-    assert C == H * N and kk.shape == (C,) and a.shape == (T, C) and ka.shape == (C,)
-    o_kk = torch.nn.functional.normalize((k * kk).view(T, H, N), dim=-1, p=2.0).view(
-        T, H * N
+    assert (
+        C == H * N
+        and kk.shape == (C,)
+        and a.shape == (T, C)
+        and ka.shape == (C,)
     )
+    o_kk = torch.nn.functional.normalize(
+        (k * kk).view(T, H, N), dim=-1, p=2.0
+    ).view(T, H * N)
     o_k = k * (1 + (a - 1) * ka)
     o_kka = o_kk * a
 

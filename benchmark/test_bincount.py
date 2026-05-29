@@ -12,7 +12,9 @@ def bincount_input_fn(shape, dtype, device):
 
     n = shape[0]
     for num_classes in [10, 256, 4096]:
-        inp = torch.randint(0, num_classes, (n,), dtype=torch.int64, device=device)
+        inp = torch.randint(
+            0, num_classes, (n,), dtype=torch.int64, device=device
+        )
 
         yield inp, {}
 
@@ -37,7 +39,9 @@ def bincount_weighted_input_fn(shape, dtype, device):
 
     n = shape[0]
     for num_classes in [10, 256, 4096]:
-        inp = torch.randint(0, num_classes, (n,), dtype=torch.int64, device=device)
+        inp = torch.randint(
+            0, num_classes, (n,), dtype=torch.int64, device=device
+        )
         weights = torch.randn((n,), dtype=dtype, device=device)
 
         yield inp, {"weights": weights}

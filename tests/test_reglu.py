@@ -32,7 +32,9 @@ REGLU_SHAPES = [
 @pytest.mark.reglu
 @pytest.mark.parametrize("shape", REGLU_SHAPES)
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
-@pytest.mark.skipif(not TE_AVAILABLE, reason="transformer engine is not available")
+@pytest.mark.skipif(
+    not TE_AVAILABLE, reason="transformer engine is not available"
+)
 def test_reglu(shape, dtype):
     if len(shape) == 0:
         # reglu does not support 0-dim scalar tensors.

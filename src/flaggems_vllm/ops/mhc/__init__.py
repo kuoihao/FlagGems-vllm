@@ -6,7 +6,11 @@ from flaggems_vllm.ops.mhc.hc_split_sinkhorn import (
     hc_split_sinkhorn,
     mhc_split_sinkhorn_torch_ref,
 )
-from flaggems_vllm.ops.mhc.mhc_bwd import mhc_bwd, mhc_bwd_ref, sinkhorn_forward
+from flaggems_vllm.ops.mhc.mhc_bwd import (
+    mhc_bwd,
+    mhc_bwd_ref,
+    sinkhorn_forward,
+)
 from flaggems_vllm.ops.mhc.mhc_post import mhc_post
 from flaggems_vllm.ops.mhc.mhc_pre import mhc_pre
 

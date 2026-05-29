@@ -76,9 +76,15 @@ class FusedMoEMXQW8A16Benchmark(base.Benchmark):
         device = flaggems_vllm.device
         dtype = torch.bfloat16
 
-        from flaggems_vllm.ops_moe_mxq import QuantConfig, QuantMode, quantize_weights_moe
+        from flaggems_vllm.ops_moe_mxq import (
+            QuantConfig,
+            QuantMode,
+            quantize_weights_moe,
+        )
 
-        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+        hidden_states = torch.randn(
+            num_tokens, hidden_size, device=device, dtype=dtype
+        )
 
         # Generate INT8 weights with scales (group-wise quantization)
         w1_fp16 = torch.randn(
@@ -105,15 +111,23 @@ class FusedMoEMXQW8A16Benchmark(base.Benchmark):
 
         # Quantize to W8A16
         quant_config = QuantConfig(mode=QuantMode.W8A16, has_zero_point=False)
-        w1_q, w1_scale, _ = quantize_weights_moe(w1_fp16, num_experts, quant_config)
-        w2_q, w2_scale, _ = quantize_weights_moe(w2_fp16, num_experts, quant_config)
-        w3_q, w3_scale, _ = quantize_weights_moe(w3_fp16, num_experts, quant_config)
+        w1_q, w1_scale, _ = quantize_weights_moe(
+            w1_fp16, num_experts, quant_config
+        )
+        w2_q, w2_scale, _ = quantize_weights_moe(
+            w2_fp16, num_experts, quant_config
+        )
+        w3_q, w3_scale, _ = quantize_weights_moe(
+            w3_fp16, num_experts, quant_config
+        )
 
         # Routing
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+        topk_weights, topk_ids = torch.topk(
+            torch.softmax(gating, dim=-1), topk, dim=-1
+        )
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(dtype)
 
@@ -283,7 +297,9 @@ def _gems_fused_moe_mxq_w8a16_wrapper(
 
 
 @pytest.mark.fused_moe
-@pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
+@pytest.mark.skipif(
+    not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture"
+)
 def test_fused_moe_w8a16_mxq():
     """
     Benchmark flaggems_vllm.ops_moe_mxq.fused_moe with W8A16 mixed precision.
@@ -299,7 +315,9 @@ def test_fused_moe_w8a16_mxq():
 
 @pytest.mark.fused_moe
 @pytest.mark.skipif(not HAS_VLLM_FUSED_MOE, reason="vLLM not installed")
-@pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
+@pytest.mark.skipif(
+    not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture"
+)
 def test_fused_moe_w8a16_mxq_gems_vs_vllm():
     """
     Benchmark flaggems_vllm.ops_moe_mxq.fused_moe with W8A16 mixed precision.

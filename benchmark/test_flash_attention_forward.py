@@ -9,7 +9,14 @@ from . import base, utils
 
 
 def torch_flash_attention_forward(
-    q, k, v, scale, is_causal, dropout_p=0.0, return_debug_mask=False, **extra_kwargs
+    q,
+    k,
+    v,
+    scale,
+    is_causal,
+    dropout_p=0.0,
+    return_debug_mask=False,
+    **extra_kwargs,
 ):
     return torch.ops.aten._flash_attention_forward(
         q,
@@ -28,7 +35,14 @@ def torch_flash_attention_forward(
 
 
 def gems_flash_attention_forward(
-    q, k, v, scale, is_causal, dropout_p=0.0, return_debug_mask=False, **extra_kwargs
+    q,
+    k,
+    v,
+    scale,
+    is_causal,
+    dropout_p=0.0,
+    return_debug_mask=False,
+    **extra_kwargs,
 ):
     return flaggems_vllm.ops.flash_attention_forward(
         q,
@@ -55,7 +69,9 @@ def torch_flash_attention_supports_alibi(device: str) -> bool:
         k = torch.randn((1, 16, 1, 64), device=device, dtype=torch.float16)
         v = torch.randn((1, 16, 1, 64), device=device, dtype=torch.float16)
         scale = float(1.0 / math.sqrt(64))
-        alibi_slopes = torch.ones((1, 1), device=device, dtype=torch.float32) * 0.3
+        alibi_slopes = (
+            torch.ones((1, 1), device=device, dtype=torch.float32) * 0.3
+        )
         torch.ops.aten._flash_attention_forward(
             q,
             k,
@@ -144,17 +160,56 @@ class FlashAttentionForwardBenchmark(base.GenericBenchmark):
                     )
             for is_causal in (False, True):
                 self.shapes.append(
-                    (4, 4, 4, 1, 519, 128, is_causal, 0.0, False, None, None, True)
+                    (
+                        4,
+                        4,
+                        4,
+                        1,
+                        519,
+                        128,
+                        is_causal,
+                        0.0,
+                        False,
+                        None,
+                        None,
+                        True,
+                    )
                 )
 
         # Split-KV like cases (q_seq_len=1, num_head_k < num_head).
         for is_causal in (False, True):
             self.shapes.append(
-                (1, 4, 1, 1, 1024, 128, is_causal, 0.0, False, None, None, False)
+                (
+                    1,
+                    4,
+                    1,
+                    1,
+                    1024,
+                    128,
+                    is_causal,
+                    0.0,
+                    False,
+                    None,
+                    None,
+                    False,
+                )
             )
             if supports_alibi:
                 self.shapes.append(
-                    (1, 4, 1, 1, 1024, 128, is_causal, 0.0, False, None, None, True)
+                    (
+                        1,
+                        4,
+                        1,
+                        1,
+                        1024,
+                        128,
+                        is_causal,
+                        0.0,
+                        False,
+                        None,
+                        None,
+                        True,
+                    )
                 )
 
         # Sliding window attention.
@@ -187,7 +242,20 @@ class FlashAttentionForwardBenchmark(base.GenericBenchmark):
 
         for is_causal in (False, True):
             self.shapes.append(
-                (1, 1, 1, 1024, 1024, 128, is_causal, 0.2, True, None, None, False)
+                (
+                    1,
+                    1,
+                    1,
+                    1024,
+                    1024,
+                    128,
+                    is_causal,
+                    0.2,
+                    True,
+                    None,
+                    None,
+                    False,
+                )
             )
 
     def set_more_shapes(self):
@@ -231,15 +299,22 @@ def flash_attention_forward_input_fn(config, dtype, device):
         )
     if use_alibi:
         extra_kwargs["alibi_slopes"] = (
-            torch.ones(batch, num_head, device=device, dtype=torch.float32) * 0.3
+            torch.ones(batch, num_head, device=device, dtype=torch.float32)
+            * 0.3
         )
 
     yield q, k, v, scale, is_causal, dropout_p, return_debug_mask, extra_kwargs
 
 
-@pytest.mark.skipif(utils.SkipVersion("torch", "<2.4"), reason="Low Pytorch Version.")
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
-@pytest.mark.skipif(flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode")
+@pytest.mark.skipif(
+    utils.SkipVersion("torch", "<2.4"), reason="Low Pytorch Version."
+)
+@pytest.mark.skipif(
+    not torch.cuda.is_available(), reason="CUDA is not available"
+)
+@pytest.mark.skipif(
+    flaggems_vllm.device == "cpu", reason="Unsupported in CPU mode"
+)
 @pytest.mark.flash_attention_forward
 def test_flash_attention_forward():
     bench = FlashAttentionForwardBenchmark(

@@ -61,7 +61,9 @@ def triton_lighting_indexer_k_tiled(
         mask_d = offs_d < D
         mask_boq = offs_boq < Q
 
-        q_ptr = q_base + offs_bq[:, None] * stride_qh + offs_d[None, :] * stride_qd
+        q_ptr = (
+            q_base + offs_bq[:, None] * stride_qh + offs_d[None, :] * stride_qd
+        )
         q_msk = mask_bq[:, None] & mask_d[None, :]
         q_blk = tl.load(q_ptr, q_msk, 0.0).to(tl.float16)  # [BQ*H, D]
 
@@ -73,14 +75,22 @@ def triton_lighting_indexer_k_tiled(
         for ck in range(CK, warp_specialize=True):
             offs_bk = ck * BK + tl.arange(0, BK)
             mask_bk = bos + offs_bk < eos
-            k_ptr = k_base + offs_d[:, None] * stride_kd + offs_bk[None, :] * stride_kn
+            k_ptr = (
+                k_base
+                + offs_d[:, None] * stride_kd
+                + offs_bk[None, :] * stride_kn
+            )
             k_msk = mask_d[:, None] & mask_bk[None, :]
             k_blk = tl.load(k_ptr, k_msk, 0.0).to(tl.float16)
             acc = tl.dot(q_blk, k_blk, out_dtype=tl.float16)  # [BQ*H, BK]
             acc = tl.maximum(acc, 0.0) * w_blk[:, None]
-            out_blk = acc.trans().reshape(BK, BQ, H).sum(-1).trans()  # [BQ, BK]
+            out_blk = (
+                acc.trans().reshape(BK, BQ, H).sum(-1).trans()
+            )  # [BQ, BK]
             out_ptr = (
-                o_base + offs_boq[:, None] * stride_lm + offs_bk[None, :] * stride_ln
+                o_base
+                + offs_boq[:, None] * stride_lm
+                + offs_bk[None, :] * stride_ln
             )
             out_msk = (
                 mask_boq[:, None]
@@ -97,7 +107,9 @@ def triton_lighting_indexer_k_tiled_interface(
     Q, H, D = q.shape[0], q.shape[1], q.shape[2]
     K = kv.shape[0]
     CU = cu_seqlen_ks.shape[0]
-    logits = torch.full([Q, K], float("-inf"), device="cuda", dtype=torch.float32)
+    logits = torch.full(
+        [Q, K], float("-inf"), device="cuda", dtype=torch.float32
+    )
     BQ = 1
     BK = 64
     TK = 2048

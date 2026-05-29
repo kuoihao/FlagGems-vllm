@@ -66,7 +66,9 @@ def _topk_single_block(
     seq_len = tl.load(seq_len_ptr)
     valid = (offs < N) & (offs < seq_len)
 
-    vals = tl.load(logits_ptr + offs * stride1, mask=valid, other=float("-inf"))
+    vals = tl.load(
+        logits_ptr + offs * stride1, mask=valid, other=float("-inf")
+    )
     sortable = _float_to_sortable(vals)
 
     bins = tl.arange(0, 256)
@@ -165,7 +167,9 @@ def _topk_medium_block(
     seq_len = tl.load(seq_len_ptr)
     valid = (offs < N) & (offs < seq_len)
 
-    vals = tl.load(logits_ptr + offs * stride1, mask=valid, other=float("-inf"))
+    vals = tl.load(
+        logits_ptr + offs * stride1, mask=valid, other=float("-inf")
+    )
     sortable = _float_to_sortable(vals)
 
     bins = tl.arange(0, 256)
@@ -288,7 +292,10 @@ def _topk_medium_block(
         tl.store(
             indices_ptr + wpe,
             offs.to(tl.int32),
-            mask=equal & ((base_e + pe - 1) < remaining_k) & (wpe >= 0) & (wpe < TOP_K),
+            mask=equal
+            & ((base_e + pe - 1) < remaining_k)
+            & (wpe >= 0)
+            & (wpe < TOP_K),
         )
 
     # Zero shared state for next call
@@ -327,7 +334,9 @@ def _topk_multi_block(
     seq_len = tl.load(seq_len_ptr)
     valid = (offs < N) & (offs < seq_len)
 
-    vals = tl.load(logits_ptr + offs * stride1, mask=valid, other=float("-inf"))
+    vals = tl.load(
+        logits_ptr + offs * stride1, mask=valid, other=float("-inf")
+    )
     sortable = _float_to_sortable(vals)
 
     # Iteration 0: all blocks compute byte-3 histogram
@@ -575,7 +584,9 @@ def top_k_per_row_decode(
             pb_size = max_nb * 256
             total_sz = pb_size + 4
             scratch = torch.zeros(total_sz, dtype=torch.int32, device=device)
-            buf = torch.empty(_LARGE_BUF_SIZE * 2, dtype=torch.int32, device=device)
+            buf = torch.empty(
+                _LARGE_BUF_SIZE * 2, dtype=torch.int32, device=device
+            )
             _cache[key] = (
                 scratch[:pb_size],
                 scratch[pb_size : pb_size + 2],

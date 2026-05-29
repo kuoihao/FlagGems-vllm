@@ -22,12 +22,18 @@ else:
 
 @pytest.mark.outer
 @pytest.mark.parametrize(
-    "M, N", MN_SHAPES + ([(32, 131072)] if flaggems_vllm.vendor_name == "cambricon" else [])
+    "M, N",
+    MN_SHAPES
+    + ([(32, 131072)] if flaggems_vllm.vendor_name == "cambricon" else []),
 )
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
 def test_outer(M, N, dtype):
-    inp1 = torch.randn(M, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
-    inp2 = torch.randn(N, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
+    inp1 = torch.randn(
+        M, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
+    inp2 = torch.randn(
+        N, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
     ref_inp1 = utils.to_reference(inp1, True)
     ref_inp2 = utils.to_reference(inp2, True)
 
@@ -41,6 +47,8 @@ def test_outer(M, N, dtype):
     ref_in1_grad, ref_in2_grad = torch.autograd.grad(
         ref_out, (ref_inp1, ref_inp2), ref_grad
     )
-    res_in1_grad, res_in2_grad = torch.autograd.grad(res_out, (inp1, inp2), out_grad)
+    res_in1_grad, res_in2_grad = torch.autograd.grad(
+        res_out, (inp1, inp2), out_grad
+    )
     utils.gems_assert_close(res_in1_grad, ref_in1_grad, dtype, reduce_dim=N)
     utils.gems_assert_close(res_in2_grad, ref_in2_grad, dtype, reduce_dim=M)

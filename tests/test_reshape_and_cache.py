@@ -28,11 +28,15 @@ def create_kv_caches_with_random(
     key_caches: list[torch.Tensor] = []
 
     for _ in range(num_layers):
-        key_cache = torch.empty(size=key_cache_shape, dtype=torch_dtype, device=device)
+        key_cache = torch.empty(
+            size=key_cache_shape, dtype=torch_dtype, device=device
+        )
         if cache_dtype in ["auto", "half", "bfloat16", "float"]:
             key_cache.uniform_(-scale, scale)
         else:
-            raise ValueError(f"Does not support key cache of type {cache_dtype}")
+            raise ValueError(
+                f"Does not support key cache of type {cache_dtype}"
+            )
         key_caches.append(key_cache)
 
     value_cache_shape = (num_blocks, num_heads, head_size, block_size)
@@ -45,7 +49,9 @@ def create_kv_caches_with_random(
         if cache_dtype in ["auto", "half", "bfloat16", "float"]:
             value_cache.uniform_(-scale, scale)
         else:
-            raise ValueError(f"Does not support value cache of type {cache_dtype}")
+            raise ValueError(
+                f"Does not support value cache of type {cache_dtype}"
+            )
         value_caches.append(value_cache)
 
     return key_caches, value_caches
@@ -76,14 +82,23 @@ def test_reshape_and_cache(
         # Create a random slot mapping.
         num_slots = block_size * num_blocks
         slot_mapping_lst = random.sample(range(num_slots), num_tokens)
-        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
+        slot_mapping = torch.tensor(
+            slot_mapping_lst, dtype=torch.long, device=device
+        )
 
         qkv = torch.randn(num_tokens, 3, num_heads, head_size, dtype=dtype)
         _, key, value = qkv.unbind(dim=1)
 
         # Create the KV caches.
         key_caches, value_caches = create_kv_caches_with_random(
-            num_blocks, block_size, 1, num_heads, head_size, kv_cache_dtype, dtype, seed
+            num_blocks,
+            block_size,
+            1,
+            num_heads,
+            head_size,
+            kv_cache_dtype,
+            dtype,
+            seed,
         )
         key_cache, value_cache = key_caches[0], value_caches[0]
 
@@ -109,7 +124,9 @@ def test_reshape_and_cache(
 
         # Run the reference implementation.
         reshaped_key = key.reshape(num_tokens, *key_cache[0, :, :, 0, :].shape)
-        block_indicies = torch.div(slot_mapping, block_size, rounding_mode="floor")
+        block_indicies = torch.div(
+            slot_mapping, block_size, rounding_mode="floor"
+        )
         block_indicies_lst = block_indicies.cpu().tolist()
         block_offsets = slot_mapping % block_size
         block_offsets_lst = block_offsets.cpu().tolist()
@@ -117,7 +134,9 @@ def test_reshape_and_cache(
         for i in range(num_tokens):
             block_idx = block_indicies_lst[i]
             block_offset = block_offsets_lst[i]
-            cloned_key_cache[block_idx, :, :, block_offset, :] = reshaped_key[i]
+            cloned_key_cache[block_idx, :, :, block_offset, :] = reshaped_key[
+                i
+            ]
             cloned_value_cache[block_idx, :, :, block_offset] = value[i]
 
         torch.testing.assert_close(key_cache.cpu(), cloned_key_cache.cpu())

@@ -32,7 +32,9 @@ NUM_BLOCKS = [1024, 10000]
 
 NUM_MAPPINGS = [256]  # Arbitrary values for testing
 SEEDS = [0]
-CUDA_DEVICES = [f"cuda:{i}" for i in range(1 if torch.cuda.device_count() == 1 else 2)]
+CUDA_DEVICES = [
+    f"cuda:{i}" for i in range(1 if torch.cuda.device_count() == 1 else 2)
+]
 
 # We assume fp8 is always enabled for testing.
 if flaggems_vllm.vendor_name in ["kunlunxin", "cambricon"]:
@@ -82,7 +84,11 @@ def convert_fp8(
 @pytest.mark.parametrize("seed", SEEDS)
 @pytest.mark.parametrize(
     "device",
-    [flaggems_vllm.device] if flaggems_vllm.vendor_name == "mthreads" else CUDA_DEVICES,
+    (
+        [flaggems_vllm.device]
+        if flaggems_vllm.vendor_name == "mthreads"
+        else CUDA_DEVICES
+    ),
 )
 @pytest.mark.parametrize("kv_cache_dtype", KV_CACHE_DTYPE)
 @torch.inference_mode()
@@ -103,10 +109,16 @@ def test_concat_and_cache_mla(
     with torch.device(device):
         total_slots = num_blocks * block_size
         slot_mapping_lst = random.sample(range(total_slots), num_tokens)
-        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
+        slot_mapping = torch.tensor(
+            slot_mapping_lst, dtype=torch.long, device=device
+        )
 
-        kv_c = torch.randn(num_tokens, kv_lora_rank, dtype=dtype, device=device)
-        k_pe = torch.randn(num_tokens, qk_rope_head_dim, dtype=dtype, device=device)
+        kv_c = torch.randn(
+            num_tokens, kv_lora_rank, dtype=dtype, device=device
+        )
+        k_pe = torch.randn(
+            num_tokens, qk_rope_head_dim, dtype=dtype, device=device
+        )
         entry_size = kv_lora_rank + qk_rope_head_dim
 
         scale = torch.tensor(0.1, dtype=torch.float32, device=device)
@@ -128,7 +140,9 @@ def test_concat_and_cache_mla(
             ref_kv_cache = to_reference(
                 torch.empty_like(ref_temp, dtype=kv_cache.dtype)
             )
-            convert_fp8(ref_kv_cache, ref_temp, scale.item(), kv_dtype=kv_cache_dtype)
+            convert_fp8(
+                ref_kv_cache, ref_temp, scale.item(), kv_dtype=kv_cache_dtype
+            )
         else:
             ref_kv_cache = to_reference(ref_temp)
         with flaggems_vllm.use_gems():
@@ -148,14 +162,19 @@ def test_concat_and_cache_mla(
                 torch.empty_like(ref_kv_cache, dtype=torch.uint8)
             )
             convert_fp8(
-                expected_temp, ref_kv_cache, scale.item(), kv_dtype=kv_cache_dtype
+                expected_temp,
+                ref_kv_cache,
+                scale.item(),
+                kv_dtype=kv_cache_dtype,
             )
             dtype = torch.float8_e4m3fn
             result_temp = to_reference(result_temp)
             # TODO: RuntimeError: Comparing
             # maybe a bug in torch.testing.assert_close
             # gems_assert_close(kv_cache.view(dtype), ref_kv_cache.view(dtype), dtype)
-            torch.testing.assert_close(result_temp, expected_temp, atol=0.001, rtol=0.1)
+            torch.testing.assert_close(
+                result_temp, expected_temp, atol=0.001, rtol=0.1
+            )
         else:
             if flaggems_vllm.vendor_name == "mthreads":
                 kv_cache = to_reference(kv_cache)

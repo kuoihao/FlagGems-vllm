@@ -21,7 +21,9 @@ def attn_bias_from_alibi_slopes(slopes, seqlen_q, seqlen_k, causal=False):
         v = torch.arange(-seqlen_k + 1, 1, device=device, dtype=torch.float32)
         return v * slopes
 
-    row_idx = torch.arange(seqlen_q, device=device, dtype=torch.long).unsqueeze(-1)
+    row_idx = torch.arange(
+        seqlen_q, device=device, dtype=torch.long
+    ).unsqueeze(-1)
     col_idx = torch.arange(seqlen_k, device=device, dtype=torch.long)
     relative_pos = torch.abs(row_idx + seqlen_k - seqlen_q - col_idx)
 
@@ -71,7 +73,8 @@ def ref_paged_attn(
         if sliding_window is not None:
             sliding_window_mask = (
                 torch.triu(
-                    empty_mask, diagonal=kv_len - (query_len + sliding_window) + 1
+                    empty_mask,
+                    diagonal=kv_len - (query_len + sliding_window) + 1,
                 )
                 .bool()
                 .logical_not()
@@ -94,7 +97,9 @@ def ref_paged_attn(
 
 
 @pytest.mark.flash_attn_varlen_func
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2815: Not supported")
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2815: Not supported"
+)
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2816: Not working")
 @pytest.mark.parametrize("seq_lens", [[(1, 1328), (5, 18), (129, 463)]])
 @pytest.mark.parametrize("num_heads", [(4, 4), (8, 2), (16, 2)])
@@ -140,10 +145,14 @@ def test_flash_attn_varlen_func(
         max_query_len = max(query_lens)
         max_kv_len = max(kv_lens)
         window_size = (
-            (sliding_window, sliding_window) if sliding_window is not None else (-1, -1)
+            (sliding_window, sliding_window)
+            if sliding_window is not None
+            else (-1, -1)
         )
         scale = head_size**-0.5
-        query = torch.randn(sum(query_lens), num_query_heads, head_size, dtype=dtype)
+        query = torch.randn(
+            sum(query_lens), num_query_heads, head_size, dtype=dtype
+        )
         key_cache = torch.randn(
             num_blocks, block_size, num_kv_heads, head_size, dtype=dtype
         )
@@ -168,7 +177,10 @@ def test_flash_attn_varlen_func(
             # alibi_slopes = torch.rand(num_seqs, num_query_heads, device=device, dtype=torch.float32) * 0.3
             alibi_slopes = (
                 torch.ones(
-                    num_seqs, num_query_heads, device=device, dtype=torch.float32
+                    num_seqs,
+                    num_query_heads,
+                    device=device,
+                    dtype=torch.float32,
                 )
                 * 0.3
             )
@@ -245,10 +257,14 @@ def test_flash_attn_varlen_func(
         )
 
         msg = f"{torch.max(torch.abs(output - ref_output))}"
-        torch.testing.assert_close(output, ref_output, atol=2e-2, rtol=1e-2, msg=msg)
+        torch.testing.assert_close(
+            output, ref_output, atol=2e-2, rtol=1e-2, msg=msg
+        )
 
 
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2815: Not working")
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2815: Not working"
+)
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2816: Not working")
 @pytest.mark.flash_attn_varlen_func
 @pytest.mark.parametrize("seq_lens", [[(1, 1328), (1, 18), (1, 463)]])
@@ -282,10 +298,14 @@ def test_flash_attn_varlen_func_swap_qg(
         max_query_len = max(query_lens)
         max_kv_len = max(kv_lens)
         window_size = (
-            (sliding_window, sliding_window) if sliding_window is not None else (-1, -1)
+            (sliding_window, sliding_window)
+            if sliding_window is not None
+            else (-1, -1)
         )
         scale = head_size**-0.5
-        query = torch.randn(sum(query_lens), num_query_heads, head_size, dtype=dtype)
+        query = torch.randn(
+            sum(query_lens), num_query_heads, head_size, dtype=dtype
+        )
         key_cache = torch.randn(
             num_blocks, block_size, num_kv_heads, head_size, dtype=dtype
         )

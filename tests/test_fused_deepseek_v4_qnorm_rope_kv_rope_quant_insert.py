@@ -46,11 +46,16 @@ def make_cos_sin_cache(max_pos: int, rope_dim: int, dtype, device):
 
     inv_freq = 1.0 / (
         base
-        ** (torch.arange(0, rope_dim, 2, dtype=torch.float32, device=device) / rope_dim)
+        ** (
+            torch.arange(0, rope_dim, 2, dtype=torch.float32, device=device)
+            / rope_dim
+        )
     )
     t = torch.arange(max_pos, dtype=torch.float32, device=device)
     freqs = torch.einsum("i,j -> ij", t, inv_freq)  # [max_pos, rope_dim/2]
-    cache = torch.cat((freqs.cos(), freqs.sin()), dim=-1)  # [max_pos, rope_dim]
+    cache = torch.cat(
+        (freqs.cos(), freqs.sin()), dim=-1
+    )  # [max_pos, rope_dim]
     return cache.to(dtype)
 
 
@@ -152,17 +157,26 @@ def torch_quantize_and_insert_k_cache(
     pos_in_block = slot_id % block_size
     fp8_off = pos_in_block * TOKEN_DATA_BYTES
     bf16_off = fp8_off + NOPE_DIM
-    scale_off = block_size * TOKEN_DATA_BYTES + pos_in_block * SCALE_BYTES_PER_TOKEN
+    scale_off = (
+        block_size * TOKEN_DATA_BYTES + pos_in_block * SCALE_BYTES_PER_TOKEN
+    )
     scale_pad_off = scale_off + NUM_QUANT_BLOCKS
 
     k_direct = (
-        k[token_id, NOPE_DIM:].view(torch.uint8).view(num, ROPE_DIM * 2).to(torch.uint8)
+        k[token_id, NOPE_DIM:]
+        .view(torch.uint8)
+        .view(num, ROPE_DIM * 2)
+        .to(torch.uint8)
     )
     bf16_range = torch.arange(ROPE_DIM * 2, dtype=torch.int64, device=k.device)
-    k_cache[block_id[:, None], bf16_off[:, None] + bf16_range[None, :]] = k_direct
+    k_cache[block_id[:, None], bf16_off[:, None] + bf16_range[None, :]] = (
+        k_direct
+    )
 
     k_quant = k[token_id, :NOPE_DIM]
-    kv_quant_blk = k_quant.view(num, NUM_QUANT_BLOCKS, QUANT_BLOCK).to(torch.float32)
+    kv_quant_blk = k_quant.view(num, NUM_QUANT_BLOCKS, QUANT_BLOCK).to(
+        torch.float32
+    )
     block_max = torch.max(torch.abs(kv_quant_blk), dim=-1).values
     block_max = torch.clamp(block_max, min=1e-4)
     raw_scale = block_max / FP8_MAX
@@ -176,11 +190,15 @@ def torch_quantize_and_insert_k_cache(
     fp8_range = torch.arange(NOPE_DIM, dtype=torch.int64, device=k.device)
     k_cache[block_id[:, None], fp8_off[:, None] + fp8_range[None, :]] = x_uint8
     encoded_scale = exponent + 127.0
-    encoded_scale = torch.clamp(encoded_scale, min=0.0, max=255.0).to(torch.uint8)
-    scale_range = torch.arange(NUM_QUANT_BLOCKS, dtype=torch.int64, device=k.device)
-    k_cache[
-        block_id[:, None], scale_off[:, None] + scale_range[None, :]
-    ] = encoded_scale
+    encoded_scale = torch.clamp(encoded_scale, min=0.0, max=255.0).to(
+        torch.uint8
+    )
+    scale_range = torch.arange(
+        NUM_QUANT_BLOCKS, dtype=torch.int64, device=k.device
+    )
+    k_cache[block_id[:, None], scale_off[:, None] + scale_range[None, :]] = (
+        encoded_scale
+    )
     k_cache[block_id, scale_pad_off] = 0
 
 
@@ -203,13 +221,18 @@ def k_cache_compare(
     num_blocks = k_cache.shape[0]
     scale_start = block_size * TOKEN_DATA_BYTES
     scale_end = block_size * HEAD_BYTES
-    token_data = k_cache[:, :scale_start].view(num_blocks, block_size, TOKEN_DATA_BYTES)
+    token_data = k_cache[:, :scale_start].view(
+        num_blocks, block_size, TOKEN_DATA_BYTES
+    )
     token_data_ref = k_cache_ref[:, :scale_start].view(
         num_blocks, block_size, TOKEN_DATA_BYTES
     )
     # quantization data part, uint8
     torch.testing.assert_close(
-        token_data[:, :, :NOPE_DIM], token_data_ref[:, :, :NOPE_DIM], rtol=0, atol=0
+        token_data[:, :, :NOPE_DIM],
+        token_data_ref[:, :, :NOPE_DIM],
+        rtol=0,
+        atol=0,
     )
     # rope part, bf16
     torch.testing.assert_close(
@@ -239,10 +262,14 @@ def ref_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, bs):
             kv = kv[: slot_mapping.size(0), :]
             positions = positions[: slot_mapping.size(0)]
         apply_rope_gptj_last_k(kv, None, positions, cos_sin_cache)
-        torch_quantize_and_insert_k_cache(kv, k_cache, slot_mapping, block_size=bs)
+        torch_quantize_and_insert_k_cache(
+            kv, k_cache, slot_mapping, block_size=bs
+        )
 
 
-def fused_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, bs):
+def fused_impl(
+    q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, bs
+):
     flaggems_vllm.ops_deepseek_v4_qnorm_rope_kv_rope_quant_insert(
         q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, bs
     )
@@ -253,7 +280,8 @@ def fused_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, bs):
 
 @pytest.mark.fused_deepseek_v4_qnorm_rope_kv_rope_quant_insert
 @pytest.mark.skipif(
-    not is_support_fp8e4nv(), reason="Do not support fp8e4nv when capability < 89"
+    not is_support_fp8e4nv(),
+    reason="Do not support fp8e4nv when capability < 89",
 )
 @pytest.mark.parametrize("num_tokens", [1, 4, 17, 64])
 @pytest.mark.parametrize("n_heads", [8, 64])
@@ -271,9 +299,13 @@ def test_q_path_matches_reference(num_tokens: int, n_heads: int):
     k_cache = torch.zeros(
         num_blocks, bs, HEAD_BYTES, dtype=torch.uint8, device=device
     ).view(num_blocks, -1)
-    slot_mapping = torch.full((num_tokens,), -1, dtype=torch.int64, device=device)
+    slot_mapping = torch.full(
+        (num_tokens,), -1, dtype=torch.int64, device=device
+    )
     positions = torch.arange(num_tokens, dtype=torch.int64, device=device)
-    cos_sin_cache = make_cos_sin_cache(max_pos, ROPE_DIM, torch.float32, device)
+    cos_sin_cache = make_cos_sin_cache(
+        max_pos, ROPE_DIM, torch.float32, device
+    )
     q_ref = q.clone()
     kv_ref = kv.clone()
     k_cache_ref = k_cache.clone()
@@ -313,7 +345,8 @@ def _ue8m0_per_block_scales(kv_roped_nope_f32: torch.Tensor, qblock: int):
 
 @pytest.mark.fused_deepseek_v4_qnorm_rope_kv_rope_quant_insert
 @pytest.mark.skipif(
-    not is_support_fp8e4nv(), reason="Do not support fp8e4nv when capability < 89"
+    not is_support_fp8e4nv(),
+    reason="Do not support fp8e4nv when capability < 89",
 )
 @pytest.mark.parametrize("num_tokens", [1, 4, 17, 64])
 @pytest.mark.parametrize("block_size", [16, 64])
@@ -331,7 +364,9 @@ def test_kv_path_matches_reference(num_tokens: int, block_size: int):
         num_blocks, block_size * HEAD_BYTES, dtype=torch.uint8, device=device
     )
     positions = torch.arange(num_tokens, dtype=torch.int64, device=device)
-    cos_sin_cache = make_cos_sin_cache(max_pos, ROPE_DIM, torch.float32, device)
+    cos_sin_cache = make_cos_sin_cache(
+        max_pos, ROPE_DIM, torch.float32, device
+    )
     slot_mapping = torch.arange(num_tokens, dtype=torch.int64, device=device)
     q_ref = q.clone()
     kv_ref = kv.clone()
@@ -351,7 +386,9 @@ def test_kv_path_matches_reference(num_tokens: int, block_size: int):
         block_size,
     )
 
-    fused_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size)
+    fused_impl(
+        q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size
+    )
 
     k_cache_compare(k_cache, k_cache_ref, block_size, rtol=1e-2, atol=1e-2)
 
@@ -361,7 +398,8 @@ def test_kv_path_matches_reference(num_tokens: int, block_size: int):
 
 @pytest.mark.fused_deepseek_v4_qnorm_rope_kv_rope_quant_insert
 @pytest.mark.skipif(
-    not is_support_fp8e4nv(), reason="Do not support fp8e4nv when capability < 89"
+    not is_support_fp8e4nv(),
+    reason="Do not support fp8e4nv when capability < 89",
 )
 @pytest.mark.parametrize("num_tokens", [4, 17])
 @pytest.mark.parametrize("pad", [1, 5])
@@ -383,7 +421,9 @@ def test_kv_path_with_dp_padding(num_tokens: int, pad: int, block_size: int):
         num_blocks, block_size * HEAD_BYTES, dtype=torch.uint8, device=device
     )
     positions = torch.arange(total, dtype=torch.int64, device=device)
-    cos_sin_cache = make_cos_sin_cache(max_pos, ROPE_DIM, torch.float32, device)
+    cos_sin_cache = make_cos_sin_cache(
+        max_pos, ROPE_DIM, torch.float32, device
+    )
     slot_mapping = torch.arange(num_tokens, dtype=torch.int64, device=device)
     q_ref = q.clone()
     kv_ref = kv.clone()
@@ -403,7 +443,9 @@ def test_kv_path_with_dp_padding(num_tokens: int, pad: int, block_size: int):
         block_size,
     )
 
-    fused_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size)
+    fused_impl(
+        q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size
+    )
 
     torch.testing.assert_close(k_cache, k_cache_ref, rtol=0, atol=0)
 
@@ -413,11 +455,16 @@ def test_kv_path_with_dp_padding(num_tokens: int, pad: int, block_size: int):
 
 @pytest.mark.fused_deepseek_v4_qnorm_rope_kv_rope_quant_insert
 @pytest.mark.skipif(
-    not is_support_fp8e4nv(), reason="Do not support fp8e4nv when capability < 89"
+    not is_support_fp8e4nv(),
+    reason="Do not support fp8e4nv when capability < 89",
 )
 @pytest.mark.parametrize(
     "num_tokens",
-    [1, 4, 17, 64] if QUICK_MODE else [1, 4, 17, 64, 8192, 32768, 65536, 98304, 131072],
+    (
+        [1, 4, 17, 64]
+        if QUICK_MODE
+        else [1, 4, 17, 64, 8192, 32768, 65536, 98304, 131072]
+    ),
 )
 @pytest.mark.parametrize("n_heads", [64, 128])
 @pytest.mark.parametrize("block_size", [16, 64])
@@ -439,7 +486,9 @@ def test_combined_q_and_kv(num_tokens: int, n_heads: int, block_size: int):
         num_blocks, block_size * HEAD_BYTES, dtype=torch.uint8, device=device
     )
     positions = torch.arange(num_tokens, dtype=torch.int64, device=device)
-    cos_sin_cache = make_cos_sin_cache(max_pos, ROPE_DIM, torch.float32, device)
+    cos_sin_cache = make_cos_sin_cache(
+        max_pos, ROPE_DIM, torch.float32, device
+    )
     slot_mapping = torch.arange(num_tokens, dtype=torch.int64, device=device)
     q_ref = q.clone()
     kv_ref = kv.clone()
@@ -458,7 +507,9 @@ def test_combined_q_and_kv(num_tokens: int, n_heads: int, block_size: int):
         eps,
         block_size,
     )
-    fused_impl(q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size)
+    fused_impl(
+        q, kv, k_cache, slot_mapping, positions, cos_sin_cache, eps, block_size
+    )
 
     torch.testing.assert_close(q, q_ref, rtol=1e-2, atol=1e-2)
     k_cache_compare(k_cache, k_cache_ref, block_size, rtol=1e-2, atol=1e-2)

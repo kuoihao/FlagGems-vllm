@@ -42,13 +42,21 @@ def moe_sum_kernel(
 
     for expert_idx in range(topk):
         expert_ptr = input_base + expert_idx * input_stride_topk
-        expert_data = tl.load(expert_ptr + hidden_offsets, mask=hidden_mask, other=0.0)
+        expert_data = tl.load(
+            expert_ptr + hidden_offsets, mask=hidden_mask, other=0.0
+        )
         acc += expert_data
-    output_ptr_pos = output_ptr + token_idx * output_stride_token + hidden_offsets
+    output_ptr_pos = (
+        output_ptr + token_idx * output_stride_token + hidden_offsets
+    )
 
     tl.store(
         output_ptr_pos,
-        acc.to(tl.float16) if input_ptr.dtype.element_ty == tl.float16 else acc,
+        (
+            acc.to(tl.float16)
+            if input_ptr.dtype.element_ty == tl.float16
+            else acc
+        ),
         mask=hidden_mask,
     )
 
@@ -61,7 +69,10 @@ def moe_sum(
     num_tokens, topk, hidden_size = input.shape
     input_strides = input.stride()
     output_strides = output.stride()
-    grid = lambda meta: (num_tokens, triton.cdiv(hidden_size, meta["BLOCK_SIZE"]))
+    grid = lambda meta: (
+        num_tokens,
+        triton.cdiv(hidden_size, meta["BLOCK_SIZE"]),
+    )
     moe_sum_kernel[grid](
         input,
         output,

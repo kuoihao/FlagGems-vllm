@@ -29,8 +29,12 @@ def _cp_gather_indexer_quant_cache_kernel(
     quant_block_id = tl.program_id(1)
     batch_offsets = tl.arange(0, BATCH_BLOCK)
     batch_mask = batch_offsets < batch_size
-    seq_starts = tl.load(cu_seqlen_ptr + batch_offsets, mask=batch_mask, other=0)
-    seq_ends = tl.load(cu_seqlen_ptr + batch_offsets + 1, mask=batch_mask, other=0)
+    seq_starts = tl.load(
+        cu_seqlen_ptr + batch_offsets, mask=batch_mask, other=0
+    )
+    seq_ends = tl.load(
+        cu_seqlen_ptr + batch_offsets + 1, mask=batch_mask, other=0
+    )
     in_batch = (tid >= seq_starts) & (tid < seq_ends) & batch_mask
     batch_id = tl.max(tl.where(in_batch, batch_offsets, -1), axis=0)
     if batch_id < 0:
@@ -44,7 +48,9 @@ def _cp_gather_indexer_quant_cache_kernel(
     block_table_offset = batch_id * block_table_stride + block_table_id
     block_id = tl.load(block_table_ptr + block_table_offset)
 
-    offsets = quant_block_id * QUANT_BLOCK_SIZE + tl.arange(0, QUANT_BLOCK_SIZE)
+    offsets = quant_block_id * QUANT_BLOCK_SIZE + tl.arange(
+        0, QUANT_BLOCK_SIZE
+    )
     mask = offsets < HEAD_DIM
     src_cache_offset = block_id * kv_cache_stride + block_offset * HEAD_DIM
     src_scale_offset = (
@@ -83,7 +89,9 @@ def cp_gather_indexer_k_quant_cache(
 
     k_cache_flat = k_cache.view(num_blocks, -1)
     k_cache_value = k_cache_flat[:, : block_size * head_dim]
-    k_cache_scale = k_cache_flat[:, block_size * head_dim :].view(torch.float32)
+    k_cache_scale = k_cache_flat[:, block_size * head_dim :].view(
+        torch.float32
+    )
     k_fp8 = k_fp8.view(torch.uint8)
     k_fp8_scale = k_fp8_scale.view(torch.float32)
     batch_size = block_table.shape[0]

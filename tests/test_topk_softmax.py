@@ -39,7 +39,9 @@ def generate_test_params():
         (1024, 512, 32),
     ],
 )
-@pytest.mark.parametrize("input_dtype", [torch.float32, torch.float16, torch.bfloat16])
+@pytest.mark.parametrize(
+    "input_dtype", [torch.float32, torch.float16, torch.bfloat16]
+)
 @pytest.mark.parametrize("renormalize", [False, True])
 def test_topk_softmax(
     num_tokens, num_experts, topk, input_dtype, index_dtype, renormalize
@@ -60,9 +62,15 @@ def test_topk_softmax(
         num_tokens, num_experts, dtype=torch.float32, device=device
     )
 
-    vllm_weights = torch.empty(num_tokens, topk, device=device, dtype=torch.float32)
-    vllm_indices = torch.empty(num_tokens, topk, device=device, dtype=index_dtype)
-    vllm_token_expert = torch.empty(num_tokens, topk, device=device, dtype=torch.int32)
+    vllm_weights = torch.empty(
+        num_tokens, topk, device=device, dtype=torch.float32
+    )
+    vllm_indices = torch.empty(
+        num_tokens, topk, device=device, dtype=index_dtype
+    )
+    vllm_token_expert = torch.empty(
+        num_tokens, topk, device=device, dtype=torch.int32
+    )
 
     vllm_topk_softmax(
         vllm_weights,

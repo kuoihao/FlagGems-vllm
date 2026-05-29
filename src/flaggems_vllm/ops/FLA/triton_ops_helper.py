@@ -14,7 +14,9 @@ import triton.language.extra.libdevice as tldevice
 def get_exp():
     """Return exp implementation (fast or accurate) based on env flag."""
     return (
-        tldevice.fast_expf if os.environ.get("FLA_USE_FAST_OPS", "0") == "1" else tl.exp
+        tldevice.fast_expf
+        if os.environ.get("FLA_USE_FAST_OPS", "0") == "1"
+        else tl.exp
     )
 
 
@@ -24,7 +26,9 @@ exp = get_exp()
 
 if hasattr(triton.language, "_experimental_make_tensor_descriptor"):
     # For Triton 3.3.x
-    make_tensor_descriptor = triton.language._experimental_make_tensor_descriptor
+    make_tensor_descriptor = (
+        triton.language._experimental_make_tensor_descriptor
+    )
 elif hasattr(triton.language, "make_tensor_descriptor"):
     # For Triton 3.4.x and later
     make_tensor_descriptor = triton.language.make_tensor_descriptor

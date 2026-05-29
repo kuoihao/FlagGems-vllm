@@ -71,24 +71,30 @@ def _fused_inv_rope_fp8_quant_per_head(
                 + pid_token
                 + qb_indices * scale_stride_k
             )
-            tl.store(scale_addrs, tl.zeros((CHUNKS_PER_HEAD,), dtype=tl.float32))
+            tl.store(
+                scale_addrs, tl.zeros((CHUNKS_PER_HEAD,), dtype=tl.float32)
+            )
         return
 
-    input_base = o_ptr + pid_token * o_stride_token + global_head * o_stride_head
+    input_base = (
+        o_ptr + pid_token * o_stride_token + global_head * o_stride_head
+    )
 
     HEAD_DIM: tl.constexpr = CHUNKS_PER_HEAD * QUANT_GROUP_SIZE
     offsets = tl.arange(0, HEAD_DIM)
     x = tl.load(input_base + offsets).to(tl.float32)
 
-    rope_abs_start: tl.constexpr = (CHUNKS_PER_HEAD - 1) * QUANT_GROUP_SIZE + ROPE_START
+    rope_abs_start: tl.constexpr = (
+        CHUNKS_PER_HEAD - 1
+    ) * QUANT_GROUP_SIZE + ROPE_START
     pos = tl.load(positions_ptr + pid_token)
     cache_base = cos_sin_cache_ptr + pos * cache_stride_pos
     is_rope = offsets >= rope_abs_start
     rope_local = offsets - rope_abs_start
 
-    x_partner = tl.load(input_base + (offsets ^ 1), mask=is_rope, other=0.0).to(
-        tl.float32
-    )
+    x_partner = tl.load(
+        input_base + (offsets ^ 1), mask=is_rope, other=0.0
+    ).to(tl.float32)
     cs_idx = tl.maximum(rope_local >> 1, 0)
     cos_v = tl.load(cache_base + cs_idx, mask=is_rope, other=1.0)
     sin_v = tl.load(cache_base + HALF_ROPE + cs_idx, mask=is_rope, other=0.0)
@@ -102,7 +108,9 @@ def _fused_inv_rope_fp8_quant_per_head(
     block_absmax = tl.maximum(tl.max(x_2d, axis=1), eps)
     scales = block_absmax * (1.0 / fp8_max)
     if TMA_ALIGNED_SCALES:
-        scales = tl.math.exp2(tl.ceil(tl.log2(tl.maximum(tl.abs(scales), 1e-10))))
+        scales = tl.math.exp2(
+            tl.ceil(tl.log2(tl.maximum(tl.abs(scales), 1e-10)))
+        )
 
     scales_exp = tl.reshape(
         tl.broadcast_to(
@@ -136,7 +144,10 @@ def _fused_inv_rope_fp8_quant_per_head(
         tl.store(scale_addr, packed_val)
     else:
         scale_addrs = (
-            scale_ptr + g * scale_stride_group + pid_token + qb_indices * scale_stride_k
+            scale_ptr
+            + g * scale_stride_group
+            + pid_token
+            + qb_indices * scale_stride_k
         )
         tl.store(scale_addrs, scales)
 
@@ -169,12 +180,16 @@ def fused_inv_rope_fp8_quant(
     logger.debug("GEMS FUSED INV ROPE FP8 QUANT")
 
     fp8_dtype = SUPPORTED_FP8_DTYPE if dtype is None else dtype
-    assert fp8_dtype == torch.float8_e4m3fn, "only torch.float8_e4m3fn is supported"
+    assert (
+        fp8_dtype == torch.float8_e4m3fn
+    ), "only torch.float8_e4m3fn is supported"
     assert o.ndim == 3, "`o` must be [num_tokens, num_heads, head_dim]"
     assert positions.ndim == 1, "`positions` must be 1D"
     assert cos_sin_cache.ndim == 2, "`cos_sin_cache` must be 2D"
     assert o.stride(-1) == 1, "head_dim must be contiguous"
-    assert positions.shape[0] == o.shape[0], "positions and o token count mismatch"
+    assert (
+        positions.shape[0] == o.shape[0]
+    ), "positions and o token count mismatch"
 
     num_tokens, num_heads, head_dim = o.shape
     assert num_heads == n_groups * heads_per_group
@@ -203,7 +218,9 @@ def fused_inv_rope_fp8_quant(
         scale_dtype = torch.float32
 
     finfo = torch.finfo(fp8_dtype)
-    fp8_q = torch.empty((n_groups, num_tokens, d), dtype=fp8_dtype, device=o.device)
+    fp8_q = torch.empty(
+        (n_groups, num_tokens, d), dtype=fp8_dtype, device=o.device
+    )
     scale = torch.empty(
         n_groups * scale_inner * tma_aligned_t,
         dtype=scale_dtype,

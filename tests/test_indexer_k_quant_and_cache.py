@@ -154,7 +154,9 @@ def _make_cache(num_blocks, block_size, head_dim, quant_block_size, device):
 
 
 def _make_slot_mapping(num_tokens, num_blocks, block_size, device):
-    slot_mapping = torch.randperm(num_blocks * block_size, device=device)[:num_tokens]
+    slot_mapping = torch.randperm(num_blocks * block_size, device=device)[
+        :num_tokens
+    ]
     slot_mapping = slot_mapping.to(torch.long)
     slot_mapping[-1] = -1
     return slot_mapping
@@ -184,7 +186,9 @@ def test_indexer_k_quant_and_cache_matches_reference(
     torch.manual_seed(0)
     device = torch.device("cuda")
     k = torch.randn(num_tokens, head_dim, device=device, dtype=dtype)
-    slot_mapping = _make_slot_mapping(num_tokens, num_blocks, block_size, device)
+    slot_mapping = _make_slot_mapping(
+        num_tokens, num_blocks, block_size, device
+    )
 
     gems_cache = _make_cache(
         num_blocks,
@@ -198,7 +202,9 @@ def test_indexer_k_quant_and_cache_matches_reference(
     if has_vllm and dtype != torch.float16:
         vllm_op(k, reference_cache, slot_mapping, quant_block_size, scale_fmt)
     else:
-        torch_indexer(k, reference_cache, slot_mapping, quant_block_size, scale_fmt)
+        torch_indexer(
+            k, reference_cache, slot_mapping, quant_block_size, scale_fmt
+        )
     indexer_k_quant_and_cache(
         k,
         gems_cache,

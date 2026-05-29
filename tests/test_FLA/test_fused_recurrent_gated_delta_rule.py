@@ -29,7 +29,13 @@ CUDA_AVAILABLE = is_cuda_available()
 
 
 def rearrange_mixed_qkv(
-    mixed_qkv, key_dim, value_dim, head_k_dim, head_v_dim, tp_size=1, contiguous=True
+    mixed_qkv,
+    key_dim,
+    value_dim,
+    head_k_dim,
+    head_v_dim,
+    tp_size=1,
+    contiguous=True,
 ):
     query, key, value = torch.split(
         mixed_qkv,
@@ -88,7 +94,9 @@ class FusedRecurrentGatedDeltaRuleTestKit:
         value_dim = cfg["HV"] * cfg["V"]  # 32 * 128 = 4096
 
         assert key_dim % tp_size == 0, "key_dim must be divisible by tp_size"
-        assert value_dim % tp_size == 0, "value_dim must be divisible by tp_size"
+        assert (
+            value_dim % tp_size == 0
+        ), "value_dim must be divisible by tp_size"
         assert (key_dim // tp_size) % cfg[
             "K"
         ] == 0, "(key_dim/tp_size) must be multiple of head_k_dim"
@@ -116,15 +124,21 @@ class FusedRecurrentGatedDeltaRuleTestKit:
 
         HV_local = value.shape[2]
 
-        g = F.logsigmoid(torch.randn((B, T, HV_local), device=device, dtype=dtype))
+        g = F.logsigmoid(
+            torch.randn((B, T, HV_local), device=device, dtype=dtype)
+        )
         if cfg["beta_has_dim_v"]:
             beta = torch.rand(
                 B, T, HV_local, cfg["V"], device=device, dtype=dtype
             ).sigmoid()
         else:
-            beta = torch.rand(B, T, HV_local, device=device, dtype=dtype).sigmoid()
+            beta = torch.rand(
+                B, T, HV_local, device=device, dtype=dtype
+            ).sigmoid()
 
-        cu_seqlens = torch.arange(cu_seqlens_len, device=device, dtype=torch.long)
+        cu_seqlens = torch.arange(
+            cu_seqlens_len, device=device, dtype=torch.long
+        )
         initial_state = torch.zeros(
             (cfg["ssm_state_len"], HV_local, cfg["K"], cfg["V"]),
             device=device,
@@ -133,7 +147,9 @@ class FusedRecurrentGatedDeltaRuleTestKit:
         if cfg.get("ssm_state_indices_all_zero", False):
             ssm_state_indices = torch.zeros(T, device=device, dtype=torch.long)
         else:
-            ssm_state_indices = torch.arange(T, device=device, dtype=torch.long)
+            ssm_state_indices = torch.arange(
+                T, device=device, dtype=torch.long
+            )
 
         scale = cfg["scale"] if cfg["scale"] is not None else cfg["K"] ** -0.5
 
@@ -157,7 +173,9 @@ class FusedRecurrentGatedDeltaRuleTestKit:
     reason="requires vLLM installed and CUDA device",
 )
 @pytest.mark.fused_recurrent_gated_delta_rule
-@pytest.mark.parametrize("cfg", FusedRecurrentGatedDeltaRuleTestKit.get_test_params())
+@pytest.mark.parametrize(
+    "cfg", FusedRecurrentGatedDeltaRuleTestKit.get_test_params()
+)
 @pytest.mark.parametrize("T", [1, 2, 4, 128, 512])
 @pytest.mark.parametrize("qkv_contiguous", [True, False])
 def test_fused_recurrent_gated_delta_rule_matches_vllm(cfg, T, qkv_contiguous):
@@ -233,7 +251,11 @@ def _reference_fused_recurrent_gated_delta_rule_fwd(
 
         for i_hv in range(HV):
             i_h = i_hv // (HV // H)
-            h = initial_state[ssm_state_indices[bos].item(), i_hv].float().clone()
+            h = (
+                initial_state[ssm_state_indices[bos].item(), i_hv]
+                .float()
+                .clone()
+            )
 
             for t in range(seq_len):
                 pos = bos + t
@@ -286,7 +308,9 @@ def test_fused_recurrent_gated_delta_rule_fwd_accuracy(
 
     mixed_qkv_dim = (2 * key_dim + value_dim) // tp_size
     total_tokens = B * T
-    mixed_qkv = torch.randn((total_tokens, mixed_qkv_dim), device=device, dtype=dtype)
+    mixed_qkv = torch.randn(
+        (total_tokens, mixed_qkv_dim), device=device, dtype=dtype
+    )
 
     query, key, value = rearrange_mixed_qkv(
         mixed_qkv,
@@ -304,7 +328,10 @@ def test_fused_recurrent_gated_delta_rule_fwd_accuracy(
     cu_seqlens = torch.arange(T + 1, device=device, dtype=torch.long)
     ssm_state_len = 128
     initial_state = (
-        torch.randn((ssm_state_len, HV_local, K, V), device=device, dtype=dtype) * 0.01
+        torch.randn(
+            (ssm_state_len, HV_local, K, V), device=device, dtype=dtype
+        )
+        * 0.01
     )
     ssm_state_indices = torch.zeros(T, device=device, dtype=torch.long)
     scale = K**-0.5

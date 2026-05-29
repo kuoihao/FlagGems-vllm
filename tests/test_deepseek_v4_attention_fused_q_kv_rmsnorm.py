@@ -2,7 +2,9 @@ import pytest
 import torch
 
 import flaggems_vllm.testing as fg_testing
-from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import fused_q_kv_rmsnorm
+from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import (
+    fused_q_kv_rmsnorm,
+)
 
 try:
     from vllm.v1.attention.ops.deepseek_v4_ops import (
@@ -45,10 +47,16 @@ def test_fused_q_kv_rmsnorm_accuracy(tokens, qdim, kvdim):
     q_out, kv_out = fused_q_kv_rmsnorm(qr, kv, q_weight, kv_weight, eps)
 
     fg_testing.assert_close(
-        q_out, _rmsnorm_ref(qr, q_weight, eps), dtype=torch.bfloat16, equal_nan=True
+        q_out,
+        _rmsnorm_ref(qr, q_weight, eps),
+        dtype=torch.bfloat16,
+        equal_nan=True,
     )
     fg_testing.assert_close(
-        kv_out, _rmsnorm_ref(kv, kv_weight, eps), dtype=torch.bfloat16, equal_nan=True
+        kv_out,
+        _rmsnorm_ref(kv, kv_weight, eps),
+        dtype=torch.bfloat16,
+        equal_nan=True,
     )
 
 
@@ -65,7 +73,13 @@ def test_fused_q_kv_rmsnorm_vllm_accuracy():
     eps = 1e-6
 
     q_out, kv_out = fused_q_kv_rmsnorm(qr, kv, q_weight, kv_weight, eps)
-    q_expected, kv_expected = vllm_fused_q_kv_rmsnorm(qr, kv, q_weight, kv_weight, eps)
+    q_expected, kv_expected = vllm_fused_q_kv_rmsnorm(
+        qr, kv, q_weight, kv_weight, eps
+    )
 
-    fg_testing.assert_close(q_out, q_expected, dtype=torch.bfloat16, equal_nan=True)
-    fg_testing.assert_close(kv_out, kv_expected, dtype=torch.bfloat16, equal_nan=True)
+    fg_testing.assert_close(
+        q_out, q_expected, dtype=torch.bfloat16, equal_nan=True
+    )
+    fg_testing.assert_close(
+        kv_out, kv_expected, dtype=torch.bfloat16, equal_nan=True
+    )

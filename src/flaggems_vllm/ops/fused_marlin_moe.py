@@ -181,7 +181,9 @@ def _int4_gemm_silu_kernel(
     if pid_m * BLOCK_SIZE_M >= num_tokens_post_padded:
         return
 
-    offs_token_id = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M).to(tl.int64)
+    offs_token_id = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M).to(
+        tl.int64
+    )
     offs_token = tl.load(sorted_token_ids_ptr + offs_token_id).to(tl.int64)
     token_mask = offs_token < num_valid_tokens
 
@@ -224,8 +226,12 @@ def _int4_gemm_silu_kernel(
     )
 
     # Scale is transposed: [E, K//gs, N], stride_bsk=N, stride_bsn=1
-    scale_base_gate = b_scale_ptr + off_experts * stride_bse + offs_bn_gate * stride_bsn
-    scale_base_up = b_scale_ptr + off_experts * stride_bse + offs_bn_up * stride_bsn
+    scale_base_gate = (
+        b_scale_ptr + off_experts * stride_bse + offs_bn_gate * stride_bsn
+    )
+    scale_base_up = (
+        b_scale_ptr + off_experts * stride_bse + offs_bn_up * stride_bsn
+    )
 
     # ---- Pass 1: Gate projection ----
     a_ptrs = a_base + offs_k[None, :] * stride_ak
@@ -237,7 +243,9 @@ def _int4_gemm_silu_kernel(
         raw_dot = tl.dot(a, b_g)
         row_sum = tl.sum(a.to(tl.float32), axis=1)
         scale_idx = k * BLOCK_SIZE_K // GROUP_SIZE_K
-        scale_g = tl.load(scale_base_gate + scale_idx * stride_bsk).to(tl.float32)
+        scale_g = tl.load(scale_base_gate + scale_idx * stride_bsk).to(
+            tl.float32
+        )
         acc_gate += scale_g[None, :] * (raw_dot - 8.0 * row_sum[:, None])
 
         a_ptrs += BLOCK_SIZE_K * stride_ak
@@ -253,7 +261,9 @@ def _int4_gemm_silu_kernel(
         raw_dot = tl.dot(a, b_u)
         row_sum = tl.sum(a.to(tl.float32), axis=1)
         scale_idx = k * BLOCK_SIZE_K // GROUP_SIZE_K
-        scale_u = tl.load(scale_base_up + scale_idx * stride_bsk).to(tl.float32)
+        scale_u = tl.load(scale_base_up + scale_idx * stride_bsk).to(
+            tl.float32
+        )
         acc_up += scale_u[None, :] * (raw_dot - 8.0 * row_sum[:, None])
 
         a_ptrs += BLOCK_SIZE_K * stride_ak
@@ -263,13 +273,17 @@ def _int4_gemm_silu_kernel(
     accumulator = tl.fdiv(acc_gate, (1.0 + tl.exp(-acc_gate))) * acc_up
 
     if MUL_ROUTED_WEIGHT:
-        moe_weight = tl.load(topk_weights_ptr + offs_token, mask=token_mask, other=0)
+        moe_weight = tl.load(
+            topk_weights_ptr + offs_token, mask=token_mask, other=0
+        )
         accumulator = accumulator * moe_weight[:, None]
 
     accumulator = accumulator.to(compute_type)
 
     offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
-    c_ptrs = c_ptr + stride_cm * offs_token[:, None] + stride_cn * offs_cn[None, :]
+    c_ptrs = (
+        c_ptr + stride_cm * offs_token[:, None] + stride_cn * offs_cn[None, :]
+    )
     c_mask = token_mask[:, None] & (offs_cn[None, :] < N_out)
     tl.store(c_ptrs, accumulator, mask=c_mask)
 
@@ -326,7 +340,9 @@ def _int4_gemm_kernel(
     if pid_m * BLOCK_SIZE_M >= num_tokens_post_padded:
         return
 
-    offs_token_id = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M).to(tl.int64)
+    offs_token_id = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M).to(
+        tl.int64
+    )
     offs_token = tl.load(sorted_token_ids_ptr + offs_token_id).to(tl.int64)
     token_mask = offs_token < num_valid_tokens
 
@@ -346,7 +362,9 @@ def _int4_gemm_kernel(
         )
         return
 
-    offs_bn = (pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N).to(tl.int64)) % N
+    offs_bn = (
+        pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N).to(tl.int64)
+    ) % N
     offs_k = tl.arange(0, BLOCK_SIZE_K)
 
     a_ptrs = a_ptr + (
@@ -377,13 +395,17 @@ def _int4_gemm_kernel(
         b_ptrs += (BLOCK_SIZE_K // 2) * stride_bk
 
     if MUL_ROUTED_WEIGHT:
-        moe_weight = tl.load(topk_weights_ptr + offs_token, mask=token_mask, other=0)
+        moe_weight = tl.load(
+            topk_weights_ptr + offs_token, mask=token_mask, other=0
+        )
         accumulator = accumulator * moe_weight[:, None]
 
     accumulator = accumulator.to(compute_type)
 
     offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
-    c_ptrs = c_ptr + stride_cm * offs_token[:, None] + stride_cn * offs_cn[None, :]
+    c_ptrs = (
+        c_ptr + stride_cm * offs_token[:, None] + stride_cn * offs_cn[None, :]
+    )
     c_mask = token_mask[:, None] & (offs_cn[None, :] < N)
     tl.store(c_ptrs, accumulator, mask=c_mask)
 
@@ -479,7 +501,8 @@ def _invoke_gemm2(
         EM = min(EM, M * top_k * block_m)
 
     grid = lambda META: (
-        triton.cdiv(EM, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),
+        triton.cdiv(EM, META["BLOCK_SIZE_M"])
+        * triton.cdiv(N, META["BLOCK_SIZE_N"]),
     )
 
     _int4_gemm_kernel[grid](
@@ -548,7 +571,11 @@ def _fused_marlin_moe_impl(
     assert hidden_states.is_contiguous()
     assert w1.stride(-1) == 1
     assert w2.stride(-1) == 1
-    assert hidden_states.dtype in [torch.float32, torch.float16, torch.bfloat16]
+    assert hidden_states.dtype in [
+        torch.float32,
+        torch.float16,
+        torch.bfloat16,
+    ]
 
     num_tokens = hidden_states.size(0)
     E, N, _ = w1.size()
@@ -591,7 +618,9 @@ def _fused_marlin_moe_impl(
     else:
         raise ValueError(f"Unsupported dtype: {hidden_states.dtype}")
 
-    out_hidden_states = hidden_states if inplace else torch.empty_like(hidden_states)
+    out_hidden_states = (
+        hidden_states if inplace else torch.empty_like(hidden_states)
+    )
 
     for chunk in range((num_tokens // CHUNK_SIZE) + 1):
         begin_idx = chunk * CHUNK_SIZE
@@ -603,18 +632,22 @@ def _fused_marlin_moe_impl(
             break
 
         if tokens_in_chunk < CHUNK_SIZE and chunk > 0:
-            intermediate_cache2 = intermediate_cache2[: tokens_in_chunk * top_k_num]
+            intermediate_cache2 = intermediate_cache2[
+                : tokens_in_chunk * top_k_num
+            ]
             intermediate_cache3 = intermediate_cache3[:tokens_in_chunk]
             block_m = _select_block_m(tokens_in_chunk, E, top_k_num)
 
         curr_topk_ids = topk_ids[begin_idx:end_idx]
         curr_topk_weights = topk_weights[begin_idx:end_idx]
 
-        sorted_token_ids, expert_ids, num_tokens_post_padded = moe_align_block_size(
-            curr_topk_ids,
-            block_m,
-            global_num_experts,
-            expert_map,
+        sorted_token_ids, expert_ids, num_tokens_post_padded = (
+            moe_align_block_size(
+                curr_topk_ids,
+                block_m,
+                global_num_experts,
+                expert_map,
+            )
         )
 
         # ----- GEMM1: gate/up + SiLU fused (two-pass) -----
@@ -711,9 +744,13 @@ def fused_marlin_moe(
     if g_idx1 is not None or g_idx2 is not None:
         raise NotImplementedError("act_order (g_idx) not yet supported in MVP")
     if sort_indices1 is not None or sort_indices2 is not None:
-        raise NotImplementedError("act_order (sort_indices) not yet supported in MVP")
+        raise NotImplementedError(
+            "act_order (sort_indices) not yet supported in MVP"
+        )
     if input_dtype is not None:
-        raise NotImplementedError("FP8 / INT8 input quantization not supported")
+        raise NotImplementedError(
+            "FP8 / INT8 input quantization not supported"
+        )
     if clamp_limit is not None:
         raise NotImplementedError("clamp_limit (GLM-4 swiglu) not supported")
     if input_global_scale1 is not None or input_global_scale2 is not None:

@@ -74,9 +74,13 @@ def test_combine_topk_swa_indices_accuracy(
 ):
     device = "cuda"
     topk_indices = torch.tensor(topk_values, device=device, dtype=torch.int32)
-    query_start_loc = torch.tensor(query_start_values, device=device, dtype=torch.int32)
+    query_start_loc = torch.tensor(
+        query_start_values, device=device, dtype=torch.int32
+    )
     seq_lens = torch.tensor(seq_len_values, device=device, dtype=torch.int32)
-    gather_lens = torch.tensor(gather_len_values, device=device, dtype=torch.int32)
+    gather_lens = torch.tensor(
+        gather_len_values, device=device, dtype=torch.int32
+    )
 
     actual, actual_lens = combine_topk_swa_indices(
         topk_indices,
@@ -93,8 +97,12 @@ def test_combine_topk_swa_indices_accuracy(
     expected = torch.full_like(actual, -1)
     expected_lens = torch.empty_like(actual_lens)
     for batch in range(seq_lens.numel()):
-        start = int(query_start_loc[batch].item()) - int(query_start_loc[0].item())
-        end = int(query_start_loc[batch + 1].item()) - int(query_start_loc[0].item())
+        start = int(query_start_loc[batch].item()) - int(
+            query_start_loc[0].item()
+        )
+        end = int(query_start_loc[batch + 1].item()) - int(
+            query_start_loc[0].item()
+        )
         query_len = end - start
         seq_len = int(seq_lens[batch].item())
         gather_len = int(gather_lens[batch].item())
@@ -120,7 +128,8 @@ def test_combine_topk_swa_indices_accuracy(
 
 
 @pytest.mark.skipif(
-    (not torch.cuda.is_available()) or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
+    (not torch.cuda.is_available())
+    or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
     reason="requires cuda and vllm deepseek_v4_ops.combine_topk_swa_indices",
 )
 def test_combine_topk_swa_indices_vllm_accuracy():
@@ -133,7 +142,17 @@ def test_combine_topk_swa_indices_vllm_accuracy():
     query_start_loc = torch.tensor([0, 2, 3], device=device, dtype=torch.int32)
     seq_lens = torch.tensor([8, 10], device=device, dtype=torch.int32)
     gather_lens = torch.tensor([8, 10], device=device, dtype=torch.int32)
-    args = (topk_indices, query_start_loc, seq_lens, gather_lens, 4, 2, 4, 64, 16)
+    args = (
+        topk_indices,
+        query_start_loc,
+        seq_lens,
+        gather_lens,
+        4,
+        2,
+        4,
+        64,
+        16,
+    )
 
     actual, actual_lens = combine_topk_swa_indices(*args)
     expected, expected_lens = vllm_combine_topk_swa_indices(*args)

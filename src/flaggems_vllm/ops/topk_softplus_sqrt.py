@@ -53,9 +53,9 @@ def _fused_topk_kernel(
     emask = expert_offsets < num_experts
 
     row_base = pid * num_experts
-    x = tl.load(gating_ptr + row_base + expert_offsets, mask=emask, other=0.0).to(
-        tl.float32
-    )
+    x = tl.load(
+        gating_ptr + row_base + expert_offsets, mask=emask, other=0.0
+    ).to(tl.float32)
 
     # Fused softplus + sqrt
     x = tl.where(x > 20.0, x, tl.log(1.0 + tl.exp(x)))
@@ -100,7 +100,9 @@ def _fused_topk_kernel(
 
     # Renormalize: re-read weights and apply scale
     if renormalize:
-        scale = routed_scaling_factor / tl.where(weight_sum > 0.0, weight_sum, 1.0)
+        scale = routed_scaling_factor / tl.where(
+            weight_sum > 0.0, weight_sum, 1.0
+        )
     else:
         scale = routed_scaling_factor
 
@@ -136,9 +138,9 @@ def _hash_kernel(
     emask = expert_offsets < num_experts
 
     row_base = pid * num_experts
-    x = tl.load(gating_ptr + row_base + expert_offsets, mask=emask, other=0.0).to(
-        tl.float32
-    )
+    x = tl.load(
+        gating_ptr + row_base + expert_offsets, mask=emask, other=0.0
+    ).to(tl.float32)
 
     # Fused softplus + sqrt
     x = tl.where(x > 20.0, x, tl.log(1.0 + tl.exp(x)))
@@ -149,7 +151,9 @@ def _hash_kernel(
     k_offsets = tl.arange(0, BLOCK_K)
     kmask = k_offsets < topk
     expert_ids = tl.load(
-        hash_indices_table_ptr + token_id * topk + k_offsets, mask=kmask, other=0
+        hash_indices_table_ptr + token_id * topk + k_offsets,
+        mask=kmask,
+        other=0,
     )
 
     # Gather weights for each selected expert
@@ -164,7 +168,9 @@ def _hash_kernel(
 
     # Apply renormalization + scaling
     if renormalize:
-        scale = routed_scaling_factor / tl.where(weight_sum > 0.0, weight_sum, 1.0)
+        scale = routed_scaling_factor / tl.where(
+            weight_sum > 0.0, weight_sum, 1.0
+        )
     else:
         scale = routed_scaling_factor
     weights = weights * scale

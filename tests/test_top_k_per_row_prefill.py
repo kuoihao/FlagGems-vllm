@@ -31,7 +31,9 @@ def reference_top_k_per_row(logits, row_starts, row_ends, top_k):
     the Triton kernel's output convention.
     """
     num_rows, vocab_size = logits.shape
-    indices = torch.empty((num_rows, top_k), dtype=torch.int32, device=logits.device)
+    indices = torch.empty(
+        (num_rows, top_k), dtype=torch.int32, device=logits.device
+    )
 
     for i in range(num_rows):
         start = row_starts[i].item()
@@ -47,7 +49,9 @@ def reference_top_k_per_row(logits, row_starts, row_ends, top_k):
     return indices
 
 
-def check_topk_values_match(logits, indices_test, indices_ref, row_starts, top_k):
+def check_topk_values_match(
+    logits, indices_test, indices_ref, row_starts, top_k
+):
     """Value-based set comparison: verify that the actual logit values selected
     by test indices match those selected by reference indices.
 
@@ -74,7 +78,9 @@ def check_topk_values_match(logits, indices_test, indices_ref, row_starts, top_k
         vals_test_sorted, _ = vals_test.sort(descending=True)
         vals_ref_sorted, _ = vals_ref.sort(descending=True)
 
-        if not torch.allclose(vals_test_sorted, vals_ref_sorted, atol=1e-6, rtol=1e-6):
+        if not torch.allclose(
+            vals_test_sorted, vals_ref_sorted, atol=1e-6, rtol=1e-6
+        ):
             return False
     return True
 
@@ -91,18 +97,33 @@ def test_top_k_per_row_prefill_full_vocab(num_rows, vocab_size, top_k):
     """
     torch.manual_seed(42)
 
-    logits = torch.randn(num_rows, vocab_size, device=device, dtype=torch.float32)
+    logits = torch.randn(
+        num_rows, vocab_size, device=device, dtype=torch.float32
+    )
     row_starts = torch.zeros(num_rows, dtype=torch.int32, device=device)
-    row_ends = torch.full((num_rows,), vocab_size, dtype=torch.int32, device=device)
+    row_ends = torch.full(
+        (num_rows,), vocab_size, dtype=torch.int32, device=device
+    )
     stride0 = logits.stride(0)
     stride1 = logits.stride(1)
 
     # Reference uses a clone because the Triton kernel modifies logits in-place
-    indices_ref = reference_top_k_per_row(logits.clone(), row_starts, row_ends, top_k)
+    indices_ref = reference_top_k_per_row(
+        logits.clone(), row_starts, row_ends, top_k
+    )
 
-    indices_test = torch.empty((num_rows, top_k), dtype=torch.int32, device=device)
+    indices_test = torch.empty(
+        (num_rows, top_k), dtype=torch.int32, device=device
+    )
     top_k_per_row_prefill(
-        logits, row_starts, row_ends, indices_test, num_rows, stride0, stride1, top_k
+        logits,
+        row_starts,
+        row_ends,
+        indices_test,
+        num_rows,
+        stride0,
+        stride1,
+        top_k,
     )
 
     assert check_topk_values_match(
@@ -113,7 +134,8 @@ def test_top_k_per_row_prefill_full_vocab(num_rows, vocab_size, top_k):
 @pytest.mark.top_k_per_row_prefill
 @pytest.mark.parametrize("num_rows", [1, 32])
 @pytest.mark.parametrize(
-    "vocab_size", [20000, 129280]  # 20000: smaller vocab for edge case coverage
+    "vocab_size",
+    [20000, 129280],  # 20000: smaller vocab for edge case coverage
 )
 @pytest.mark.parametrize(
     "top_k", [1024, 2048]  # 2048: tests larger top_k (used in some configs)
@@ -127,7 +149,9 @@ def test_top_k_per_row_prefill_variable_lengths(num_rows, vocab_size, top_k):
     """
     torch.manual_seed(123)
 
-    logits = torch.randn(num_rows, vocab_size, device=device, dtype=torch.float32)
+    logits = torch.randn(
+        num_rows, vocab_size, device=device, dtype=torch.float32
+    )
     row_starts = torch.zeros(num_rows, dtype=torch.int32, device=device)
     # Ensure row_ends >= top_k so there are enough valid elements to select
     row_ends = torch.randint(
@@ -136,11 +160,22 @@ def test_top_k_per_row_prefill_variable_lengths(num_rows, vocab_size, top_k):
     stride0 = logits.stride(0)
     stride1 = logits.stride(1)
 
-    indices_ref = reference_top_k_per_row(logits.clone(), row_starts, row_ends, top_k)
+    indices_ref = reference_top_k_per_row(
+        logits.clone(), row_starts, row_ends, top_k
+    )
 
-    indices_test = torch.empty((num_rows, top_k), dtype=torch.int32, device=device)
+    indices_test = torch.empty(
+        (num_rows, top_k), dtype=torch.int32, device=device
+    )
     top_k_per_row_prefill(
-        logits, row_starts, row_ends, indices_test, num_rows, stride0, stride1, top_k
+        logits,
+        row_starts,
+        row_ends,
+        indices_test,
+        num_rows,
+        stride0,
+        stride1,
+        top_k,
     )
 
     assert check_topk_values_match(
@@ -161,21 +196,40 @@ def test_top_k_per_row_prefill_nonzero_starts(num_rows):
     vocab_size = 50000
     top_k = 1024
 
-    logits = torch.randn(num_rows, vocab_size, device=device, dtype=torch.float32)
+    logits = torch.randn(
+        num_rows, vocab_size, device=device, dtype=torch.float32
+    )
     # row_starts in [0, 1000): simulates offset within a packed sequence
-    row_starts = torch.randint(0, 1000, (num_rows,), dtype=torch.int32, device=device)
+    row_starts = torch.randint(
+        0, 1000, (num_rows,), dtype=torch.int32, device=device
+    )
     # row_ends in [top_k+1000, vocab_size]: ensures enough valid range after start
     row_ends = torch.randint(
-        top_k + 1000, vocab_size + 1, (num_rows,), dtype=torch.int32, device=device
+        top_k + 1000,
+        vocab_size + 1,
+        (num_rows,),
+        dtype=torch.int32,
+        device=device,
     )
     stride0 = logits.stride(0)
     stride1 = logits.stride(1)
 
-    indices_ref = reference_top_k_per_row(logits.clone(), row_starts, row_ends, top_k)
+    indices_ref = reference_top_k_per_row(
+        logits.clone(), row_starts, row_ends, top_k
+    )
 
-    indices_test = torch.empty((num_rows, top_k), dtype=torch.int32, device=device)
+    indices_test = torch.empty(
+        (num_rows, top_k), dtype=torch.int32, device=device
+    )
     top_k_per_row_prefill(
-        logits, row_starts, row_ends, indices_test, num_rows, stride0, stride1, top_k
+        logits,
+        row_starts,
+        row_ends,
+        indices_test,
+        num_rows,
+        stride0,
+        stride1,
+        top_k,
     )
 
     assert check_topk_values_match(

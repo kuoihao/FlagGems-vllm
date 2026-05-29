@@ -16,7 +16,9 @@ if cfg.QUICK_MODE:
     SMOOTH_SHAPE = [(0.1, utils.REDUCTION_SHAPES[0])]
 else:
     FLOAT_DTYPES = utils.FLOAT_DTYPES
-    SMOOTH_IGNORE_SHAPE = list(zip([0, 0.1, 1], [1, 200, -100], utils.REDUCTION_SHAPES))
+    SMOOTH_IGNORE_SHAPE = list(
+        zip([0, 0.1, 1], [1, 200, -100], utils.REDUCTION_SHAPES)
+    )
     CROSS_ENTROPY_LOSS_REDUCTION = ["mean", "none", "sum"]
     SMOOTH_SHAPE = list(zip([1, 0.1, 0], utils.REDUCTION_SHAPES))
 
@@ -24,7 +26,9 @@ random.seed(time.time() // 100)
 
 
 @pytest.mark.cross_entropy_loss
-@pytest.mark.parametrize("label_smoothing, ignore_index, shape", SMOOTH_IGNORE_SHAPE)
+@pytest.mark.parametrize(
+    "label_smoothing, ignore_index, shape", SMOOTH_IGNORE_SHAPE
+)
 @pytest.mark.parametrize("reduction", CROSS_ENTROPY_LOSS_REDUCTION)
 @pytest.mark.parametrize("weight", [True, False])
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
@@ -36,8 +40,12 @@ def test_cross_entropy_loss_indices(
     target_shape = list(shape)
     del target_shape[dim]
 
-    inp = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
-    target = torch.randint(0, up_limit, target_shape, device=flaggems_vllm.device)
+    inp = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
+    target = torch.randint(
+        0, up_limit, target_shape, device=flaggems_vllm.device
+    )
     ref_inp = utils.to_reference(inp, True)
     ref_target = utils.to_reference(target)
 
@@ -73,16 +81,22 @@ def test_cross_entropy_loss_indices(
     (ref_in_grad,) = torch.autograd.grad(ref_out, ref_inp, ref_grad)
     (res_in_grad,) = torch.autograd.grad(res_out, inp, out_grad)
 
-    utils.gems_assert_close(res_in_grad, ref_in_grad, dtype, reduce_dim=shape[dim])
+    utils.gems_assert_close(
+        res_in_grad, ref_in_grad, dtype, reduce_dim=shape[dim]
+    )
 
 
 @pytest.mark.cross_entropy_loss
 @pytest.mark.parametrize("label_smoothing, shape", SMOOTH_SHAPE)
 @pytest.mark.parametrize("reduction", CROSS_ENTROPY_LOSS_REDUCTION)
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
-def test_cross_entropy_loss_probabilities(shape, dtype, reduction, label_smoothing):
+def test_cross_entropy_loss_probabilities(
+    shape, dtype, reduction, label_smoothing
+):
     dim = 1
-    inp = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
+    inp = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
     target = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device)
     weight = torch.randn(shape[dim], dtype=dtype, device=flaggems_vllm.device)
     ref_inp = utils.to_reference(inp, True)
@@ -96,7 +110,11 @@ def test_cross_entropy_loss_probabilities(shape, dtype, reduction, label_smoothi
         label_smoothing=label_smoothing,
     )
     res_out = flaggems_vllm.cross_entropy_loss(
-        inp, target, weight=weight, reduction=reduction, label_smoothing=label_smoothing
+        inp,
+        target,
+        weight=weight,
+        reduction=reduction,
+        label_smoothing=label_smoothing,
     )
 
     utils.gems_assert_close(res_out, ref_out, dtype, reduce_dim=shape[dim])
@@ -106,4 +124,6 @@ def test_cross_entropy_loss_probabilities(shape, dtype, reduction, label_smoothi
     (ref_in_grad,) = torch.autograd.grad(ref_out, ref_inp, ref_grad)
     (res_in_grad,) = torch.autograd.grad(res_out, inp, out_grad)
 
-    utils.gems_assert_close(res_in_grad, ref_in_grad, dtype, reduce_dim=shape[dim])
+    utils.gems_assert_close(
+        res_in_grad, ref_in_grad, dtype, reduce_dim=shape[dim]
+    )

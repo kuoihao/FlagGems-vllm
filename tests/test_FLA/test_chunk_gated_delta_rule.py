@@ -21,7 +21,8 @@ def _cuda_available() -> bool:
 pytestmark = [
     pytest.mark.chunk_gated_delta_rule,
     pytest.mark.skipif(
-        not _cuda_available(), reason="chunk gated delta rule tests require CUDA"
+        not _cuda_available(),
+        reason="chunk gated delta rule tests require CUDA",
     ),
 ]
 
@@ -37,7 +38,9 @@ def _install_triton_allocator():
         return
 
     def _alloc(size: int, _alignment: int, _stream: int | None):
-        return torch.empty((size,), dtype=torch.uint8, device=flaggems_vllm.device)
+        return torch.empty(
+            (size,), dtype=torch.uint8, device=flaggems_vllm.device
+        )
 
     triton.set_allocator(_alloc)
     _TRITON_ALLOCATOR_READY = True
@@ -93,18 +96,22 @@ def _make_inputs(
     dtype: torch.dtype,
     head_first: bool,
     non_contiguous: bool = False,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[
+    torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
+]:
     device = flaggems_vllm.device
-    q_data = torch.randn(B, T, Hg, K, device=device, dtype=torch.float32).to(dtype)
+    q_data = torch.randn(B, T, Hg, K, device=device, dtype=torch.float32).to(
+        dtype
+    )
     k_data = F.normalize(
         torch.randn(B, T, Hg, K, device=device, dtype=torch.float32),
         p=2.0,
         dim=-1,
         eps=1e-6,
     ).to(dtype)
-    v_data = (0.125 * torch.randn(B, T, H, V, device=device, dtype=torch.float32)).to(
-        dtype
-    )
+    v_data = (
+        0.125 * torch.randn(B, T, H, V, device=device, dtype=torch.float32)
+    ).to(dtype)
     if non_contiguous:
         q = _strided_last_dim(q_data)
         k = _strided_last_dim(k_data)
@@ -172,7 +179,9 @@ def _reference_chunk_gated_delta_rule(
         spans = [(b, b, 0, T) for b in range(B)]
     else:
         cu_cpu = cu_seqlens.detach().cpu().tolist()
-        spans = [(0, n, cu_cpu[n], cu_cpu[n + 1]) for n in range(len(cu_cpu) - 1)]
+        spans = [
+            (0, n, cu_cpu[n], cu_cpu[n + 1]) for n in range(len(cu_cpu) - 1)
+        ]
 
     for batch_idx, state_idx, start, end in spans:
         if initial_state is None:
@@ -211,11 +220,17 @@ def _assert_close(
     else:
         atol, rtol = (3e-1, 3e-1) if final_state else (1.5e-1, 1.5e-1)
     torch.testing.assert_close(
-        actual.float(), expected.float(), atol=atol, rtol=rtol, check_dtype=False
+        actual.float(),
+        expected.float(),
+        atol=atol,
+        rtol=rtol,
+        check_dtype=False,
     )
 
 
-@pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16])
+@pytest.mark.parametrize(
+    "dtype", [torch.float32, torch.float16, torch.bfloat16]
+)
 @pytest.mark.parametrize("head_first", [True, False])
 def test_chunk_gated_delta_rule_matches_reference_without_final_state(
     dtype, head_first
@@ -289,7 +304,9 @@ def test_chunk_gated_delta_rule_supports_two_sequence_varlen_pack():
     q, k, v, beta, g = _make_inputs(
         B=1, T=80, Hg=2, H=4, K=64, V=32, dtype=dtype, head_first=False
     )
-    cu_seqlens = torch.tensor([0, 17, 80], device=flaggems_vllm.device, dtype=torch.long)
+    cu_seqlens = torch.tensor(
+        [0, 17, 80], device=flaggems_vllm.device, dtype=torch.long
+    )
 
     actual, actual_final = flaggems_vllm.chunk_gated_delta_rule(
         q,
@@ -543,7 +560,9 @@ def test_chunk_gated_delta_rule_direct_path_shape_variants(case):
 
     _assert_close(actual, expected, case["dtype"])
     if output_final_state:
-        _assert_close(actual_final, expected_final, case["dtype"], final_state=True)
+        _assert_close(
+            actual_final, expected_final, case["dtype"], final_state=True
+        )
     else:
         assert actual_final is None
         assert expected_final is None
@@ -610,7 +629,9 @@ def test_chunk_gated_delta_rule_zero_values_extreme_gates_return_zero_state():
         head_first=False,
     )
 
-    torch.testing.assert_close(actual, torch.zeros_like(actual), atol=0, rtol=0)
+    torch.testing.assert_close(
+        actual, torch.zeros_like(actual), atol=0, rtol=0
+    )
     torch.testing.assert_close(
         actual_final,
         torch.zeros_like(actual_final),
@@ -810,7 +831,9 @@ def test_chunk_gated_delta_rule_does_not_broadly_reject_iluvatar_chunk_path(
         return None, kwargs["v"].clone(), None, None, None, None, None
 
     monkeypatch.setattr(
-        chunk_gated_delta_rule_module, "chunk_gated_delta_rule_fwd", _fake_chunk_fwd
+        chunk_gated_delta_rule_module,
+        "chunk_gated_delta_rule_fwd",
+        _fake_chunk_fwd,
     )
 
     actual, actual_final = flaggems_vllm.chunk_gated_delta_rule(

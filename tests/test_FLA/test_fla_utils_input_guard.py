@@ -29,7 +29,9 @@ def _skip_if_no_device():
 
 def _skip_if_fewer_than(n):
     if DEVICE_COUNT < n:
-        pytest.skip(f"Need at least {n} {DEVICE_TYPE} devices, got {DEVICE_COUNT}")
+        pytest.skip(
+            f"Need at least {n} {DEVICE_TYPE} devices, got {DEVICE_COUNT}"
+        )
 
 
 _captured: dict = {}
@@ -91,7 +93,10 @@ class TestInputGuardContiguous:
 
     def test_multiple_non_contiguous_args(self):
         _skip_if_no_device()
-        _capture(_non_contiguous(_device()), _non_contiguous(_device(), shape=(3, 5)))
+        _capture(
+            _non_contiguous(_device()),
+            _non_contiguous(_device(), shape=(3, 5)),
+        )
         assert all(a.is_contiguous() for a in _captured["args"])
 
     def test_already_contiguous_arg_stays_contiguous(self):
@@ -107,7 +112,8 @@ class TestInputGuardContiguous:
     def test_multiple_non_contiguous_kwargs(self):
         _skip_if_no_device()
         _capture(
-            x=_non_contiguous(_device()), y=_non_contiguous(_device(), shape=(2, 6))
+            x=_non_contiguous(_device()),
+            y=_non_contiguous(_device(), shape=(2, 6)),
         )
         assert _captured["kwargs"]["x"].is_contiguous()
         assert _captured["kwargs"]["y"].is_contiguous()

@@ -62,8 +62,12 @@ def _torch_apply_rotary_pos_emb(
     return q_embed, k_embed
 
 
-def _get_rope_cos_sin(max_seq_len, dim, dtype, base=10000, device=flaggems_vllm.device):
-    inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float().to(device) / dim))
+def _get_rope_cos_sin(
+    max_seq_len, dim, dtype, base=10000, device=flaggems_vllm.device
+):
+    inv_freq = 1.0 / (
+        base ** (torch.arange(0, dim, 2).float().to(device) / dim)
+    )
     t = torch.arange(max_seq_len, device=device, dtype=inv_freq.dtype)
     freqs = torch.outer(t, inv_freq)
     cos = freqs.cos().to(dtype)
@@ -92,16 +96,22 @@ def test_apply_rotary_pos_emb(
 ):
     seq_len = torch.randint(1, max_seq_len, (1,)).item()
     q = torch.randn(
-        (batch_size, seq_len, q_heads, head_dim), dtype=dtype, device=flaggems_vllm.device
+        (batch_size, seq_len, q_heads, head_dim),
+        dtype=dtype,
+        device=flaggems_vllm.device,
     )
     k = torch.randn(
-        (batch_size, seq_len, k_heads, head_dim), dtype=dtype, device=flaggems_vllm.device
+        (batch_size, seq_len, k_heads, head_dim),
+        dtype=dtype,
+        device=flaggems_vllm.device,
     )
 
     position_ids = torch.randint(
         0, max_seq_len, (batch_size, seq_len), device=flaggems_vllm.device
     )
-    cos, sin = _get_rope_cos_sin(max_seq_len, head_dim, dtype, device=flaggems_vllm.device)
+    cos, sin = _get_rope_cos_sin(
+        max_seq_len, head_dim, dtype, device=flaggems_vllm.device
+    )
 
     ref_q = utils.to_reference(q, True)
     ref_k = utils.to_reference(k, True)

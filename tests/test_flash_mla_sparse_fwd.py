@@ -55,7 +55,9 @@ class FlashmlaSparseTestKit:
             return lse0
 
         return torch.logsumexp(
-            torch.stack([lse0.view(s_q, h_q), lse1.broadcast_to(s_q, h_q)], dim=0),
+            torch.stack(
+                [lse0.view(s_q, h_q), lse1.broadcast_to(s_q, h_q)], dim=0
+            ),
             dim=0,
         )
 
@@ -104,7 +106,9 @@ class FlashmlaSparseTestKit:
         orig_lse = torch.logsumexp(P, dim=-1)
         max_logits = P.max(dim=-1).values
 
-        lse_for_o = FlashmlaSparseTestKit._merge_two_lse(orig_lse, attn_sink, s_q, h_q)
+        lse_for_o = FlashmlaSparseTestKit._merge_two_lse(
+            orig_lse, attn_sink, s_q, h_q
+        )
         if not torch.is_inference_mode_enabled():
             lse_for_o = lse_for_o.clone()
         lse_for_o[lse_for_o == float("-inf")] = float(
@@ -151,14 +155,16 @@ class FlashmlaSparseTestKit:
 
         FlashmlaSparseTestKit._init_seed(42)
 
-        q = torch.randn((S, H, DQK), dtype=dtype, device=device).requires_grad_(
-            requires_grad
-        )
-        kv = torch.randn((SKV, HKV, DQK), dtype=dtype, device=device).requires_grad_(
-            requires_grad
-        )
+        q = torch.randn(
+            (S, H, DQK), dtype=dtype, device=device
+        ).requires_grad_(requires_grad)
+        kv = torch.randn(
+            (SKV, HKV, DQK), dtype=dtype, device=device
+        ).requires_grad_(requires_grad)
 
-        indices = torch.full((S, HKV, topk), SKV, dtype=torch.int32, device=device)
+        indices = torch.full(
+            (S, HKV, topk), SKV, dtype=torch.int32, device=device
+        )
         for t in range(S):
             for h in range(HKV):
                 i_i = torch.randperm(max(1, t))[:topk]
@@ -197,7 +203,10 @@ class FlashmlaSparseTestKit:
 
     @staticmethod
     def _randperm_batch(
-        batch_size: int, perm_range: torch.Tensor, perm_size: int, paddings: List[int]
+        batch_size: int,
+        perm_range: torch.Tensor,
+        perm_size: int,
+        paddings: List[int],
     ) -> torch.Tensor:
         """
         Generate random permutations in batch
@@ -212,7 +221,9 @@ class FlashmlaSparseTestKit:
         perm_range_max = max(int(torch.max(perm_range).item()), perm_size)
         rand = torch.rand(batch_size, perm_range_max, dtype=torch.float32)
         rand[
-            torch.arange(0, perm_range_max).broadcast_to(batch_size, perm_range_max)
+            torch.arange(0, perm_range_max).broadcast_to(
+                batch_size, perm_range_max
+            )
             >= perm_range.view(batch_size, 1)
         ] = float("-inf")
         res = rand.topk(perm_size, dim=-1, sorted=True).indices.to(torch.int32)
@@ -220,7 +231,10 @@ class FlashmlaSparseTestKit:
             res[res >= perm_range.view(batch_size, 1)] = paddings[0]
         else:
             fillers = torch.tensor(paddings, dtype=torch.int32).index_select(
-                0, torch.randint(0, len(paddings), (res.numel(),), dtype=torch.int32)
+                0,
+                torch.randint(
+                    0, len(paddings), (res.numel(),), dtype=torch.int32
+                ),
             )
             res.masked_scatter_(res >= perm_range.view(batch_size, 1), fillers)
         torch.use_deterministic_algorithms(False)
@@ -274,7 +288,9 @@ class FlashmlaSparseTestKit:
         if is_all_indices_invalid:
             all_indices_invalid_mask = torch.randn(s_q, device="cpu") < -2
             indices[
-                all_indices_invalid_mask[:, None, None].broadcast_to(indices.shape)
+                all_indices_invalid_mask[:, None, None].broadcast_to(
+                    indices.shape
+                )
             ] = random.choice(invalid_indices_candidate)
         indices = indices.to(device)
 
@@ -294,7 +310,9 @@ class FlashmlaSparseTestKit:
 
 
 @pytest.mark.flash_mla_sparse_fwd
-@pytest.mark.parametrize("param", FlashmlaSparseTestKit.get_correctness_test_params())
+@pytest.mark.parametrize(
+    "param", FlashmlaSparseTestKit.get_correctness_test_params()
+)
 def test_flashmla_sparse(param):
     """Sparse MLA forward propagation test"""
     # Skip FlashMLA unsupported cases
@@ -341,20 +359,26 @@ def test_flashmla_sparse(param):
         )
 
     # Your operator implementation
-    your_output, your_max_logbits, your_lse = flaggems_vllm.flash_mla_sparse_fwd(
-        q,
-        kv,
-        indices,
-        sm_scale,
-        param.d_v,
+    your_output, your_max_logbits, your_lse = (
+        flaggems_vllm.flash_mla_sparse_fwd(
+            q,
+            kv,
+            indices,
+            sm_scale,
+            param.d_v,
+        )
     )
 
     # Accuracy comparison
-    flaggems_vllm.testing.assert_close(your_output, ref_output, param.dtype, atol=1e-2)
+    flaggems_vllm.testing.assert_close(
+        your_output, ref_output, param.dtype, atol=1e-2
+    )
     flaggems_vllm.testing.assert_close(
         your_max_logbits, ref_max_logbits, torch.float32, atol=1e-4
     )
-    flaggems_vllm.testing.assert_close(your_lse, ref_lse, torch.float32, atol=1e-4)
+    flaggems_vllm.testing.assert_close(
+        your_lse, ref_lse, torch.float32, atol=1e-4
+    )
 
 
 @pytest.mark.flash_mla_sparse_fwd
@@ -364,8 +388,8 @@ def test_flashmla_sparse(param):
 def test_flash_mla_sparse_flashmla(param: Flashmla_Sparse_Test_Param):
     """Sparse MLA forward propagation test from FlashMLA"""
     # Create input
-    q, kv, indices, attn_sink, topk_length = FlashmlaSparseTestKit.make_input_flashmla(
-        param
+    q, kv, indices, attn_sink, topk_length = (
+        FlashmlaSparseTestKit.make_input_flashmla(param)
     )
     sm_scale = 0.5
 
@@ -395,8 +419,10 @@ def test_flash_mla_sparse_flashmla(param: Flashmla_Sparse_Test_Param):
         )
 
     # Your operator implementation
-    your_output, your_max_logbits, your_lse = flaggems_vllm.flash_mla_sparse_fwd(
-        q, kv, indices, sm_scale, param.d_v, attn_sink, topk_length
+    your_output, your_max_logbits, your_lse = (
+        flaggems_vllm.flash_mla_sparse_fwd(
+            q, kv, indices, sm_scale, param.d_v, attn_sink, topk_length
+        )
     )
 
     # Accuracy comparison
@@ -404,7 +430,11 @@ def test_flash_mla_sparse_flashmla(param: Flashmla_Sparse_Test_Param):
         your_output, ref_output, atol=8e-4, rtol=3.01 / 128, equal_nan=False
     )  # cos_diff_tol=7e-6
     torch.testing.assert_close(
-        your_max_logbits, ref_max_logbits, atol=1e-6, rtol=2.01 / 65536, equal_nan=False
+        your_max_logbits,
+        ref_max_logbits,
+        atol=1e-6,
+        rtol=2.01 / 65536,
+        equal_nan=False,
     )
     torch.testing.assert_close(
         your_lse, ref_lse, atol=1e-6, rtol=2.01 / 65536, equal_nan=False

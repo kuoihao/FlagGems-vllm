@@ -11,7 +11,11 @@ import triton.language as tl
 
 from flaggems_vllm.ops.FLA.index import prepare_chunk_indices
 from flaggems_vllm.ops.FLA.triton_ops_helper import exp
-from flaggems_vllm.ops.FLA.utils import FLA_GDN_FIX_BT, check_shared_mem, is_nvidia_hopper
+from flaggems_vllm.ops.FLA.utils import (
+    FLA_GDN_FIX_BT,
+    check_shared_mem,
+    is_nvidia_hopper,
+)
 from flaggems_vllm.utils import libentry, libtuner
 
 BKV_LIST = [64, 128] if check_shared_mem() else [32, 64]
@@ -27,7 +31,9 @@ NUM_WARPS = [2, 4] if is_nvidia_hopper else [2, 4, 8]
 )
 @libtuner(
     configs=[
-        triton.Config({"BK": BK, "BV": BV}, num_warps=num_warps, num_stages=num_stages)
+        triton.Config(
+            {"BK": BK, "BV": BV}, num_warps=num_warps, num_stages=num_stages
+        )
         for BK in BKV_LIST
         for BV in BKV_LIST
         for num_warps in NUM_WARPS
@@ -147,9 +153,15 @@ def chunk_fwd_o(
 ) -> torch.Tensor:
     B, T, Hg, K, V = *q.shape, v.shape[-1]
     H = v.shape[-2]
-    BT = 64 if FLA_GDN_FIX_BT else min(chunk_size, max(16, triton.next_power_of_2(T)))
+    BT = (
+        64
+        if FLA_GDN_FIX_BT
+        else min(chunk_size, max(16, triton.next_power_of_2(T)))
+    )
     chunk_indices = (
-        prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
+        prepare_chunk_indices(cu_seqlens, BT)
+        if cu_seqlens is not None
+        else None
     )
     NT = triton.cdiv(T, BT) if cu_seqlens is None else len(chunk_indices)
     if scale is None:
@@ -160,7 +172,11 @@ def chunk_fwd_o(
     def grid(meta):
         # In varlen mode chunk_indices owns the sequence mapping and the batch
         # id derived from i_bh is unused; use H programs to avoid duplicate work.
-        return (triton.cdiv(V, meta["BV"]), NT, H if cu_seqlens is not None else B * H)
+        return (
+            triton.cdiv(V, meta["BV"]),
+            NT,
+            H if cu_seqlens is not None else B * H,
+        )
 
     chunk_fwd_kernel_o[grid](
         q,

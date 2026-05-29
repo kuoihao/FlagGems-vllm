@@ -33,7 +33,9 @@ def _l2_normalize_last_dim_kernel(
     t = row_bt % n_rows
     b = row_bt // n_rows
     x_base = x + b * stride_x_b + t * stride_x_t + h * stride_x_h
-    values = tl.load(x_base + offs * stride_x_k, mask=mask, other=0.0).to(tl.float32)
+    values = tl.load(x_base + offs * stride_x_k, mask=mask, other=0.0).to(
+        tl.float32
+    )
     inv_norm = 1.0 / tl.maximum(tl.sqrt(tl.sum(values * values, axis=0)), 1e-6)
     tl.store(out + row * K + offs, values * inv_norm, mask=mask)
 
@@ -48,7 +50,9 @@ def _as_seq_first(
     if not isinstance(x, torch.Tensor):
         raise TypeError(f"{name} must be a torch.Tensor")
     if x.ndim != expected_ndim:
-        raise ValueError(f"{name} must be {expected_ndim}D, got shape {tuple(x.shape)}")
+        raise ValueError(
+            f"{name} must be {expected_ndim}D, got shape {tuple(x.shape)}"
+        )
     if head_first:
         return x.transpose(1, 2)
     return x
@@ -161,15 +165,21 @@ def chunk_gated_delta_rule(
     q/k may use fewer heads than v when the q/k head count divides the v head count.
     """
     if BT != 64:
-        raise ValueError("chunk_gated_delta_rule currently supports only BT=64")
+        raise ValueError(
+            "chunk_gated_delta_rule currently supports only BT=64"
+        )
 
     q_seq = _as_seq_first(q, name="q", head_first=head_first, expected_ndim=4)
     k_seq = _as_seq_first(k, name="k", head_first=head_first, expected_ndim=4)
     v_seq = _as_seq_first(v, name="v", head_first=head_first, expected_ndim=4)
-    beta_seq = _as_seq_first(beta, name="beta", head_first=head_first, expected_ndim=3)
+    beta_seq = _as_seq_first(
+        beta, name="beta", head_first=head_first, expected_ndim=3
+    )
     g_seq = _as_seq_first(g, name="g", head_first=head_first, expected_ndim=3)
 
-    _validate_inputs(q_seq, k_seq, v_seq, beta_seq, g_seq, initial_state, cu_seqlens)
+    _validate_inputs(
+        q_seq, k_seq, v_seq, beta_seq, g_seq, initial_state, cu_seqlens
+    )
 
     if scale is None:
         scale = k_seq.shape[-1] ** -0.5

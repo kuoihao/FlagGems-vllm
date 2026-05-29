@@ -44,7 +44,9 @@ is_tma_supported = is_nvidia_hopper and (
 )
 
 
-def tensor_cache(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
+def tensor_cache(
+    fn: Callable[..., torch.Tensor]
+) -> Callable[..., torch.Tensor]:
     """
     A decorator that caches the most recent results of a function with tensor inputs.
 
@@ -73,7 +75,8 @@ def tensor_cache(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]
                 and len(kwargs) == len(last_kwargs)
                 and all(a is b for a, b in zip(args, last_args))
                 and all(
-                    k in last_kwargs and v is last_kwargs[k] for k, v in kwargs.items()
+                    k in last_kwargs and v is last_kwargs[k]
+                    for k, v in kwargs.items()
                 )
             ):
                 cache_entries = (
@@ -93,7 +96,9 @@ def tensor_cache(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]
     return wrapper
 
 
-def input_guard(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
+def input_guard(
+    fn: Callable[..., torch.Tensor]
+) -> Callable[..., torch.Tensor]:
     """
     A decorator to make sure all input tensors are contiguous and set the device based on input tensors.
     """
@@ -101,7 +106,8 @@ def input_guard(fn: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         contiguous_args = (
-            i if not isinstance(i, torch.Tensor) else i.contiguous() for i in args
+            i if not isinstance(i, torch.Tensor) else i.contiguous()
+            for i in args
         )
         contiguous_kwargs = {
             k: (v if not isinstance(v, torch.Tensor) else v.contiguous())

@@ -8,7 +8,10 @@ import torch
 import triton
 import triton.language as tl
 
-from flaggems_vllm.ops.FLA.index import prepare_chunk_indices, prepare_chunk_offsets
+from flaggems_vllm.ops.FLA.index import (
+    prepare_chunk_indices,
+    prepare_chunk_offsets,
+)
 from flaggems_vllm.ops.FLA.triton_ops_helper import exp
 from flaggems_vllm.ops.FLA.utils import use_cuda_graph
 from flaggems_vllm.utils import libentry, libtuner
@@ -34,7 +37,15 @@ NUM_WARPS = [2, 4, 8, 16]
         for num_stages in [2, 3, 4]
         for BV in [32, 64]
     ],
-    key=["H", "K", "V", "BT", "IS_VARLEN", "USE_INITIAL_STATE", "STORE_FINAL_STATE"],
+    key=[
+        "H",
+        "K",
+        "V",
+        "BT",
+        "IS_VARLEN",
+        "USE_INITIAL_STATE",
+        "STORE_FINAL_STATE",
+    ],
     use_cuda_graph=use_cuda_graph,
 )
 @triton.jit(do_not_specialize=["T"])
@@ -106,7 +117,9 @@ def chunk_gated_delta_rule_fwd_kernel_h_blockdim64(
 
     # load initial state
     if USE_INITIAL_STATE:
-        p_h0_1 = tl.make_block_ptr(h0, (K, V), (V, 1), (0, i_v * BV), (64, BV), (1, 0))
+        p_h0_1 = tl.make_block_ptr(
+            h0, (K, V), (V, 1), (0, i_v * BV), (64, BV), (1, 0)
+        )
         b_h1 += tl.load(p_h0_1, boundary_check=(0, 1)).to(tl.float32)
         if K > 64:
             p_h0_2 = tl.make_block_ptr(
@@ -132,19 +145,40 @@ def chunk_gated_delta_rule_fwd_kernel_h_blockdim64(
         tl.store(p_h1, b_h1.to(p_h1.dtype.element_ty), boundary_check=(0, 1))
         if K > 64:
             p_h2 = tl.make_block_ptr(
-                h + i_t * stride_h, (K, V), (V, 1), (64, i_v * BV), (64, BV), (1, 0)
+                h + i_t * stride_h,
+                (K, V),
+                (V, 1),
+                (64, i_v * BV),
+                (64, BV),
+                (1, 0),
             )
-            tl.store(p_h2, b_h2.to(p_h2.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_h2, b_h2.to(p_h2.dtype.element_ty), boundary_check=(0, 1)
+            )
         if K > 128:
             p_h3 = tl.make_block_ptr(
-                h + i_t * stride_h, (K, V), (V, 1), (128, i_v * BV), (64, BV), (1, 0)
+                h + i_t * stride_h,
+                (K, V),
+                (V, 1),
+                (128, i_v * BV),
+                (64, BV),
+                (1, 0),
             )
-            tl.store(p_h3, b_h3.to(p_h3.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_h3, b_h3.to(p_h3.dtype.element_ty), boundary_check=(0, 1)
+            )
         if K > 192:
             p_h4 = tl.make_block_ptr(
-                h + i_t * stride_h, (K, V), (V, 1), (192, i_v * BV), (64, BV), (1, 0)
+                h + i_t * stride_h,
+                (K, V),
+                (V, 1),
+                (192, i_v * BV),
+                (64, BV),
+                (1, 0),
             )
-            tl.store(p_h4, b_h4.to(p_h4.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_h4, b_h4.to(p_h4.dtype.element_ty), boundary_check=(0, 1)
+            )
 
         p_w = tl.make_block_ptr(
             w, (T, K), (stride_w, 1), (i_t * BT, 0), (BT, 64), (1, 0)
@@ -176,7 +210,12 @@ def chunk_gated_delta_rule_fwd_kernel_h_blockdim64(
 
         if SAVE_NEW_VALUE:
             p_v = tl.make_block_ptr(
-                v_new, (T, V), (stride_v, 1), (i_t * BT, i_v * BV), (BT, BV), (1, 0)
+                v_new,
+                (T, V),
+                (stride_v, 1),
+                (i_t * BT, i_v * BV),
+                (BT, BV),
+                (1, 0),
             )
             tl.store(p_v, b_v.to(p_v.dtype.element_ty), boundary_check=(0, 1))
 
@@ -257,23 +296,31 @@ def chunk_gated_delta_rule_fwd_kernel_h_blockdim64(
             b_h4 += tl.dot(b_k, b_v)
     # epilogue
     if STORE_FINAL_STATE:
-        p_ht = tl.make_block_ptr(ht, (K, V), (V, 1), (0, i_v * BV), (64, BV), (1, 0))
+        p_ht = tl.make_block_ptr(
+            ht, (K, V), (V, 1), (0, i_v * BV), (64, BV), (1, 0)
+        )
         tl.store(p_ht, b_h1.to(p_ht.dtype.element_ty), boundary_check=(0, 1))
         if K > 64:
             p_ht = tl.make_block_ptr(
                 ht, (K, V), (V, 1), (64, i_v * BV), (64, BV), (1, 0)
             )
-            tl.store(p_ht, b_h2.to(p_ht.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_ht, b_h2.to(p_ht.dtype.element_ty), boundary_check=(0, 1)
+            )
         if K > 128:
             p_ht = tl.make_block_ptr(
                 ht, (K, V), (V, 1), (128, i_v * BV), (64, BV), (1, 0)
             )
-            tl.store(p_ht, b_h3.to(p_ht.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_ht, b_h3.to(p_ht.dtype.element_ty), boundary_check=(0, 1)
+            )
         if K > 192:
             p_ht = tl.make_block_ptr(
                 ht, (K, V), (V, 1), (192, i_v * BV), (64, BV), (1, 0)
             )
-            tl.store(p_ht, b_h4.to(p_ht.dtype.element_ty), boundary_check=(0, 1))
+            tl.store(
+                p_ht, b_h4.to(p_ht.dtype.element_ty), boundary_check=(0, 1)
+            )
 
 
 def chunk_gated_delta_rule_fwd_h(
@@ -308,11 +355,15 @@ def chunk_gated_delta_rule_fwd_h(
             len(chunk_indices),
             prepare_chunk_offsets(cu_seqlens, BT),
         )
-    assert K <= 256, "current kernel does not support head dimension larger than 256."
+    assert (
+        K <= 256
+    ), "current kernel does not support head dimension larger than 256."
 
     h = k.new_empty(B, NT, H, K, V)
     final_state = (
-        k.new_empty(N, H, K, V, dtype=torch.float32) if output_final_state else None
+        k.new_empty(N, H, K, V, dtype=torch.float32)
+        if output_final_state
+        else None
     )
 
     v_new = torch.empty_like(u) if save_new_value else None

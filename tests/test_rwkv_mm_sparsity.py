@@ -19,12 +19,14 @@ def test_rwkv_mmsparsity(dtype):
         # kunlunxin sparsity test require 90% sparsity
         sparsity_levels = [0.9]
         for target_sparsity in sparsity_levels:
-            threshold = torch.quantile(k.abs().to(torch.float32), target_sparsity).to(
-                dtype
-            )
+            threshold = torch.quantile(
+                k.abs().to(torch.float32), target_sparsity
+            ).to(dtype)
             k = torch.relu(k - threshold)
 
-    V_ = torch.randn(n, embedding_dim, dtype=dtype, device=flaggems_vllm.device)
+    V_ = torch.randn(
+        n, embedding_dim, dtype=dtype, device=flaggems_vllm.device
+    )
 
     with flaggems_vllm.use_gems():
         res = flaggems_vllm.rwkv_mm_sparsity(k, V_)

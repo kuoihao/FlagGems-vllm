@@ -25,14 +25,18 @@ def _input_fn(shape, dtype, device):
     topk_ids = torch.randint(
         0, num_experts, (shape[2], shape[3]), dtype=dtype, device=device
     )
-    max_num_tokens_padded = ((num_experts + WARP_SIZE - 1) // WARP_SIZE) * WARP_SIZE
+    max_num_tokens_padded = (
+        (num_experts + WARP_SIZE - 1) // WARP_SIZE
+    ) * WARP_SIZE
 
     # padded_num_experts in vllm._custom_ops.moe_align_block_size
     # must be less than 1024
     if max_num_tokens_padded >= 1024:
         return
 
-    sorted_ids = torch.empty((max_num_tokens_padded,), dtype=dtype, device=device)
+    sorted_ids = torch.empty(
+        (max_num_tokens_padded,), dtype=dtype, device=device
+    )
     max_num_m_blocks = max_num_tokens_padded // block_size
     expert_ids = torch.empty((max_num_m_blocks,), dtype=dtype, device=device)
     num_tokens_post_pad = torch.empty(1, dtype=dtype, device=device)

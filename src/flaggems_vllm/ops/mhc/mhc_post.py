@@ -93,11 +93,21 @@ def mhc_post_kernel_hc_mult_4(
     a33 = tl.load(a_ptr + a_base + 15).to(tl.float32)
 
     # ── load vectors (bf16 → f32) ──
-    d_vals = tl.load(d_ptr + d_base + h_off, mask=h_mask, other=0.0).to(tl.float32)
-    b0 = tl.load(b_ptr + b_base + 0 * H + h_off, mask=h_mask, other=0.0).to(tl.float32)
-    b1 = tl.load(b_ptr + b_base + 1 * H + h_off, mask=h_mask, other=0.0).to(tl.float32)
-    b2 = tl.load(b_ptr + b_base + 2 * H + h_off, mask=h_mask, other=0.0).to(tl.float32)
-    b3 = tl.load(b_ptr + b_base + 3 * H + h_off, mask=h_mask, other=0.0).to(tl.float32)
+    d_vals = tl.load(d_ptr + d_base + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
+    b0 = tl.load(b_ptr + b_base + 0 * H + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
+    b1 = tl.load(b_ptr + b_base + 1 * H + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
+    b2 = tl.load(b_ptr + b_base + 2 * H + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
+    b3 = tl.load(b_ptr + b_base + 3 * H + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
 
     # ── compute all 4 output streams ──
     acc0 = c0 * d_vals + a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3
@@ -106,10 +116,18 @@ def mhc_post_kernel_hc_mult_4(
     acc3 = c3 * d_vals + a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3
 
     # ── store all 4 outputs ──
-    tl.store(out_ptr + out_base + 0 * H + h_off, acc0.to(tl.bfloat16), mask=h_mask)
-    tl.store(out_ptr + out_base + 1 * H + h_off, acc1.to(tl.bfloat16), mask=h_mask)
-    tl.store(out_ptr + out_base + 2 * H + h_off, acc2.to(tl.bfloat16), mask=h_mask)
-    tl.store(out_ptr + out_base + 3 * H + h_off, acc3.to(tl.bfloat16), mask=h_mask)
+    tl.store(
+        out_ptr + out_base + 0 * H + h_off, acc0.to(tl.bfloat16), mask=h_mask
+    )
+    tl.store(
+        out_ptr + out_base + 1 * H + h_off, acc1.to(tl.bfloat16), mask=h_mask
+    )
+    tl.store(
+        out_ptr + out_base + 2 * H + h_off, acc2.to(tl.bfloat16), mask=h_mask
+    )
+    tl.store(
+        out_ptr + out_base + 3 * H + h_off, acc3.to(tl.bfloat16), mask=h_mask
+    )
 
 
 @triton.autotune(
@@ -152,15 +170,17 @@ def mhc_post_kernel_generic(
     d_base = pid_n * H
     out_base = pid_n * HC * H + pid_i * H
 
-    d_vals = tl.load(d_ptr + d_base + h_off, mask=h_mask, other=0.0).to(tl.float32)
+    d_vals = tl.load(d_ptr + d_base + h_off, mask=h_mask, other=0.0).to(
+        tl.float32
+    )
     c_i = tl.load(c_ptr + c_base + pid_i).to(tl.float32)
 
     acc = c_i * d_vals
     for j in tl.static_range(0, HC):
         a_ji = tl.load(a_ptr + a_base + j * HC + pid_i).to(tl.float32)
-        b_j = tl.load(b_ptr + b_base + j * H + h_off, mask=h_mask, other=0.0).to(
-            tl.float32
-        )
+        b_j = tl.load(
+            b_ptr + b_base + j * H + h_off, mask=h_mask, other=0.0
+        ).to(tl.float32)
         acc += a_ji * b_j
 
     tl.store(out_ptr + out_base + h_off, acc.to(tl.bfloat16), mask=h_mask)
@@ -241,5 +261,7 @@ def mhc_post_ref(
     comb_res_mix: torch.Tensor,
 ) -> torch.Tensor:
     """PyTorch reference implementation."""
-    y = x.unsqueeze(-2) * post_layer_mix + torch.bmm(comb_res_mix.mT, residual.float())
+    y = x.unsqueeze(-2) * post_layer_mix + torch.bmm(
+        comb_res_mix.mT, residual.float()
+    )
     return y.type_as(x)

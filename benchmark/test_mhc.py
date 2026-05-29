@@ -15,7 +15,11 @@ from flaggems_vllm.ops.mhc.hc_split_sinkhorn import (
     hc_split_sinkhorn,
     mhc_split_sinkhorn_torch_ref,
 )
-from flaggems_vllm.ops.mhc.mhc_bwd import mhc_bwd, mhc_bwd_ref, sinkhorn_forward
+from flaggems_vllm.ops.mhc.mhc_bwd import (
+    mhc_bwd,
+    mhc_bwd_ref,
+    sinkhorn_forward,
+)
 from flaggems_vllm.ops.mhc.mhc_post import mhc_post, mhc_post_ref
 from flaggems_vllm.ops.mhc.mhc_pre import mhc_pre, mhc_pre_ref
 
@@ -91,19 +95,38 @@ class MHCPreBenchmark(base.Benchmark):
 
             torch.manual_seed(42)
             residual = (
-                torch.randn((n, hc_mult, hidden_size), dtype=torch.float, device=device)
-                .mul(1 + torch.arange(hc_mult, device=device).mul(0.01).view(1, -1, 1))
+                torch.randn(
+                    (n, hc_mult, hidden_size), dtype=torch.float, device=device
+                )
+                .mul(
+                    1
+                    + torch.arange(hc_mult, device=device)
+                    .mul(0.01)
+                    .view(1, -1, 1)
+                )
                 .bfloat16()
             )
             fn = (
                 torch.randn(
-                    (hc_mult3, hc_mult, hidden_size), dtype=torch.float, device=device
+                    (hc_mult3, hc_mult, hidden_size),
+                    dtype=torch.float,
+                    device=device,
                 )
                 * 1e-4
-                * (1 + torch.arange(hc_mult, device=device).mul(0.01).view(1, -1, 1))
+                * (
+                    1
+                    + torch.arange(hc_mult, device=device)
+                    .mul(0.01)
+                    .view(1, -1, 1)
+                )
             ).flatten(1, 2)
-            hc_scale = torch.randn((3,), dtype=torch.float, device=device) * 0.1
-            hc_base = torch.randn((hc_mult3,), dtype=torch.float, device=device) * 0.1
+            hc_scale = (
+                torch.randn((3,), dtype=torch.float, device=device) * 0.1
+            )
+            hc_base = (
+                torch.randn((hc_mult3,), dtype=torch.float, device=device)
+                * 0.1
+            )
 
             yield (
                 residual,
@@ -132,7 +155,9 @@ def test_mhc_pre():
 class MHCSplitSinkhornBenchmark(base.Benchmark):
     DEFAULT_SHAPE_DESC = "batch, seqlen"
 
-    def __init__(self, *args, hc_mult=4, sinkhorn_iters=20, eps=1e-6, **kwargs):
+    def __init__(
+        self, *args, hc_mult=4, sinkhorn_iters=20, eps=1e-6, **kwargs
+    ):
         self.sinkhorn_iters = sinkhorn_iters
         self.eps = eps
         super().__init__(*args, **kwargs)
@@ -158,8 +183,13 @@ class MHCSplitSinkhornBenchmark(base.Benchmark):
             mixes = torch.randn(
                 (batch, seqlen, mix_hc), dtype=torch.float32, device=device
             )
-            hc_scale = torch.randn((3,), dtype=torch.float32, device=device) * 0.1
-            hc_base = torch.randn((mix_hc,), dtype=torch.float32, device=device) * 0.1
+            hc_scale = (
+                torch.randn((3,), dtype=torch.float32, device=device) * 0.1
+            )
+            hc_base = (
+                torch.randn((mix_hc,), dtype=torch.float32, device=device)
+                * 0.1
+            )
 
             yield mixes, hc_scale, hc_base, hc_mult, self.sinkhorn_iters, self.eps
 
@@ -244,12 +274,21 @@ class HCHeadFusedBenchmark(base.Benchmark):
         for n, hidden_size, hc_mult in self.shapes:
             device = self.device
             torch.manual_seed(42)
-            hs_flat = torch.randn((n, hc_mult, hidden_size), dtype=dtype, device=device)
-            fn = torch.randn(
-                (hc_mult, hc_mult * hidden_size), dtype=torch.float32, device=device
+            hs_flat = torch.randn(
+                (n, hc_mult, hidden_size), dtype=dtype, device=device
             )
-            hc_scale = torch.randn((1,), dtype=torch.float32, device=device) * 0.1
-            hc_base = torch.randn((hc_mult,), dtype=torch.float32, device=device) * 0.1
+            fn = torch.randn(
+                (hc_mult, hc_mult * hidden_size),
+                dtype=torch.float32,
+                device=device,
+            )
+            hc_scale = (
+                torch.randn((1,), dtype=torch.float32, device=device) * 0.1
+            )
+            hc_base = (
+                torch.randn((hc_mult,), dtype=torch.float32, device=device)
+                * 0.1
+            )
             out = torch.empty((n, hidden_size), dtype=dtype, device=device)
 
             yield hs_flat, fn, hc_scale, hc_base, out, hidden_size, 1e-6, 1e-6, hc_mult
@@ -259,7 +298,15 @@ def _hc_head_fused_kernel_ref(
     hs_flat, fn, hc_scale, hc_base, out, hidden_size, rms_eps, hc_eps, hc_mult
 ):
     _vllm_hc_head_fused(
-        hs_flat, fn, hc_scale, hc_base, out, hidden_size, rms_eps, hc_eps, hc_mult
+        hs_flat,
+        fn,
+        hc_scale,
+        hc_base,
+        out,
+        hidden_size,
+        rms_eps,
+        hc_eps,
+        hc_mult,
     )
     return out
 

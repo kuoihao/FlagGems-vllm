@@ -71,7 +71,10 @@ class CutlassScaledMMTestKit:
         ]
         scale_shape_types = ["scalar", "vector", "matrix"]
         if_use_bias = [True, False]
-        dtypes = [(torch.int8, torch.float16), (torch.float8_e4m3fn, torch.bfloat16)]
+        dtypes = [
+            (torch.int8, torch.float16),
+            (torch.float8_e4m3fn, torch.bfloat16),
+        ]
 
         combinations = product(
             mnk, scale_shape_types, scale_shape_types, if_use_bias, dtypes
@@ -151,7 +154,11 @@ class CutlassScaledMMTestKit:
                     assert s % t.shape[i] == 0
                     t = (
                         t.unsqueeze(i + 1)
-                        .expand(*t.shape[: i + 1], s // t.shape[i], *t.shape[i + 1 :])
+                        .expand(
+                            *t.shape[: i + 1],
+                            s // t.shape[i],
+                            *t.shape[i + 1 :],
+                        )
                         .flatten(i, i + 1)
                     )
             return t
@@ -191,17 +198,30 @@ def test_cutlass_scaled_mm(p):
     if in_dtype == torch.int8:
         a = to_int8(torch.randn((M, K), device=flaggems_vllm.device))
         b = to_int8(
-            torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t() * 5
+            torch.randn((K, N), device=flaggems_vllm.device)
+            .t()
+            .contiguous()
+            .t()
+            * 5
         )
     else:
         a = to_fp8(torch.randn((M, K), device=flaggems_vllm.device))
-        b = to_fp8(torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t())
+        b = to_fp8(
+            torch.randn((K, N), device=flaggems_vllm.device)
+            .t()
+            .contiguous()
+            .t()
+        )
 
     a_scale_shape = kit.get_scale_shape(M, N, K, a_scale_category)
     b_scale_shape = kit.get_scale_shape(M, N, K, b_scale_category, False)
 
-    scale_a = torch.randn(a_scale_shape, device=flaggems_vllm.device, dtype=torch.float32)
-    scale_b = torch.randn(b_scale_shape, device=flaggems_vllm.device, dtype=torch.float32)
+    scale_a = torch.randn(
+        a_scale_shape, device=flaggems_vllm.device, dtype=torch.float32
+    )
+    scale_b = torch.randn(
+        b_scale_shape, device=flaggems_vllm.device, dtype=torch.float32
+    )
 
     scale_a = scale_a.contiguous()
     # convert scale_b to col-major

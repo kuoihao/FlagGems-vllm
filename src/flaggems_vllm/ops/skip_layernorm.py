@@ -50,8 +50,12 @@ def skip_layer_norm_kernel(
     var = tl.sum(_var, axis=0) / N
     rstd = 1 / tl.sqrt(var + eps)
 
-    w = tl.load(W + tl.arange(0, BLOCK_SIZE), mask=mask, other=0.0).to(tl.float32)
-    b = tl.load(B + tl.arange(0, BLOCK_SIZE), mask=mask, other=0.0).to(tl.float32)
+    w = tl.load(W + tl.arange(0, BLOCK_SIZE), mask=mask, other=0.0).to(
+        tl.float32
+    )
+    b = tl.load(B + tl.arange(0, BLOCK_SIZE), mask=mask, other=0.0).to(
+        tl.float32
+    )
 
     x_hat = (x - mean) * rstd
     y = w * x_hat + b
@@ -76,10 +80,25 @@ class SkipLayerNorm(torch.autograd.Function):
 
         with torch_device_fn.device(x.device):
             skip_layer_norm_kernel[M,](
-                y, x, residual, weight, bias, N, 1, N, 1, N, 1, N, eps, BLOCK_SIZE
+                y,
+                x,
+                residual,
+                weight,
+                bias,
+                N,
+                1,
+                N,
+                1,
+                N,
+                1,
+                N,
+                eps,
+                BLOCK_SIZE,
             )
         return y
 
 
 def skip_layer_norm(x, residual, normalized_shape, weight, bias, eps=1e-5):
-    return SkipLayerNorm.apply(x, residual, normalized_shape, weight, bias, eps)
+    return SkipLayerNorm.apply(
+        x, residual, normalized_shape, weight, bias, eps
+    )

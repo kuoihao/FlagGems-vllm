@@ -46,7 +46,9 @@ def topk_gating_softmax_kernel(
         curr_max, curr_arg = tl.max(probs, axis=1, return_indices=True)
 
         tl.store(output_ptr + rows * k + ki, curr_max, mask=valid_rows)
-        tl.store(indices_ptr + rows * k + ki, curr_arg.to(INDEX_TY), mask=valid_rows)
+        tl.store(
+            indices_ptr + rows * k + ki, curr_arg.to(INDEX_TY), mask=valid_rows
+        )
         tl.store(
             source_rows_ptr + rows * k + ki,
             (ki * num_rows + rows).to(tl.int32),
@@ -56,7 +58,9 @@ def topk_gating_softmax_kernel(
             selected_sum += curr_max
 
         probs = tl.where(
-            cols[None, :] == (curr_arg[:, None] - start_expert), -float("inf"), probs
+            cols[None, :] == (curr_arg[:, None] - start_expert),
+            -float("inf"),
+            probs,
         )
 
     if renormalize:
@@ -89,7 +93,9 @@ def topk_softmax(
         raise TypeError("topk_indices must be int32/int64/uint32")
 
     max_total_threads = 1024
-    BLOCK_SIZE_EXPERTS = ((triton.next_power_of_2(num_experts) + 31) // 32) * 32
+    BLOCK_SIZE_EXPERTS = (
+        (triton.next_power_of_2(num_experts) + 31) // 32
+    ) * 32
     BLOCK_SIZE_EXPERTS = min(BLOCK_SIZE_EXPERTS, 1024)
     BLOCK_SIZE_ROWS = max_total_threads // BLOCK_SIZE_EXPERTS
     BLOCK_SIZE_ROWS = max(BLOCK_SIZE_ROWS, 1)

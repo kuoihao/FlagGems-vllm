@@ -39,7 +39,9 @@ def weight_norm_kernel_last(
     for base in range(0, M, BLOCK_ROW_SIZE):
         row_offset = base + ty
         mask = row_offset < M and col_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_block += v_value * v_value
 
     normalized = tl.sqrt(tl.sum(v_block, axis=1) + eps)
@@ -49,7 +51,9 @@ def weight_norm_kernel_last(
     for base in range(0, M, BLOCK_ROW_SIZE):
         row_offset = base + ty
         mask = row_offset < M and col_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_vec = v_value / normalized[:, None]
         out = v_vec * g_value
         tl.store(output + row_offset * N + col_offset, out, mask=mask)
@@ -57,7 +61,8 @@ def weight_norm_kernel_last(
 
 @libentry()
 @triton.autotune(
-    configs=runtime.get_tuned_config("weight_norm_kernel_first"), key=["M", "N"]
+    configs=runtime.get_tuned_config("weight_norm_kernel_first"),
+    key=["M", "N"],
 )
 @triton.jit(do_not_specialize=["eps"])
 def weight_norm_kernel_first(
@@ -81,7 +86,9 @@ def weight_norm_kernel_first(
     for base in range(0, N, BLOCK_COL_SIZE):
         col_offset = base + tx
         mask = col_offset < N and row_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_block += v_value * v_value
 
     normalized = tl.sqrt(tl.sum(v_block, axis=1) + eps)
@@ -91,7 +98,9 @@ def weight_norm_kernel_first(
     for base in range(0, N, BLOCK_COL_SIZE):
         col_offset = base + tx
         mask = col_offset < N and row_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_vec = v_value / normalized[:, None]
         out = v_vec * g_value
         tl.store(output + row_offset * N + col_offset, out, mask=mask)
@@ -131,16 +140,24 @@ def weight_norm_bwd_kernel_last(
     for base in range(0, M, BLOCK_ROW_SIZE):
         row_offset = base + ty
         mask = row_offset < M and col_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
-        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
+        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         vw_block += v_value * w_value
     vw_sum = tl.sum(vw_block, 1)[:, None]
 
     for base in range(0, M, BLOCK_ROW_SIZE):
         row_offset = base + ty
         mask = row_offset < M and col_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
-        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
+        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_grad_value = g_value * (w_value * norm_1 - v_value * norm_3 * vw_sum)
         tl.store(v_grad + row_offset * N + col_offset, v_grad_value, mask=mask)
 
@@ -150,7 +167,8 @@ def weight_norm_bwd_kernel_last(
 
 @libentry()
 @triton.autotune(
-    configs=runtime.get_tuned_config("weight_norm_kernel_first"), key=["M", "N"]
+    configs=runtime.get_tuned_config("weight_norm_kernel_first"),
+    key=["M", "N"],
 )
 @triton.jit(do_not_specialize=["eps"])
 def weight_norm_bwd_kernel_first(
@@ -182,16 +200,24 @@ def weight_norm_bwd_kernel_first(
     for base in range(0, N, BLOCK_COL_SIZE):
         col_offset = base + tx
         mask = col_offset < N and row_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
-        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
+        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_block += v_value * w_value
     vw_sum = tl.sum(v_block, 1)[:, None]
 
     for base in range(0, N, BLOCK_COL_SIZE):
         col_offset = base + tx
         mask = col_offset < N and row_mask
-        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(tl.float32)
-        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(tl.float32)
+        v_value = tl.load(v + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
+        w_value = tl.load(w + row_offset * N + col_offset, mask=mask).to(
+            tl.float32
+        )
         v_grad_value = g_value * (w_value * norm_1 - v_value * norm_3 * vw_sum)
         tl.store(v_grad + row_offset * N + col_offset, v_grad_value, mask=mask)
 

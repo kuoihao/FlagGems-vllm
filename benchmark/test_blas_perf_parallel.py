@@ -92,7 +92,9 @@ class BlasBenchmark(Benchmark):
 
         if Config.bench_level == BenchLevel.COMPREHENSIVE:
             for b, m, n, k in self.shapes:
-                yield from self.input_fn(b, m, n, k, cur_dtype, self.device, True)
+                yield from self.input_fn(
+                    b, m, n, k, cur_dtype, self.device, True
+                )
 
     def set_more_shapes(self):
         large_k_shapes = [
@@ -110,12 +112,16 @@ class BlasBenchmark(Benchmark):
         # shape(m,k)(k,n)
         # total_flops mxnx2k
         if self.op_name == "mm":
-            total_flops = args[0].shape[0] * args[0].shape[1] * args[1].shape[1] * 2
+            total_flops = (
+                args[0].shape[0] * args[0].shape[1] * args[1].shape[1] * 2
+            )
         # shape(m,n)(n,p)
         # total_flops mxpx(2n+1)
         elif self.op_name == "addmm":
             total_flops = (
-                args[0].shape[0] * args[1].shape[1] * (args[1].shape[0] * 2 + 1)
+                args[0].shape[0]
+                * args[1].shape[1]
+                * (args[1].shape[0] * 2 + 1)
             )
         # total_flops bxnxpx2m
         elif self.op_name == "bmm":
@@ -299,7 +305,9 @@ def bmm_input_fn(b, m, n, k, cur_dtype, device, b_column_major):
 
 
 def baddbmm_input_fn(b, m, n, k, cur_dtype, device, b_column_major):
-    inp1 = torch.randn([b, m, k], dtype=cur_dtype, device=device, requires_grad=True)
+    inp1 = torch.randn(
+        [b, m, k], dtype=cur_dtype, device=device, requires_grad=True
+    )
 
     if b_column_major:
         inp2 = torch.randn(
@@ -311,7 +319,9 @@ def baddbmm_input_fn(b, m, n, k, cur_dtype, device, b_column_major):
             [b, k, n], dtype=cur_dtype, device=device, requires_grad=True
         )
 
-    bias = torch.randn([b, m, n], dtype=cur_dtype, device=device, requires_grad=True)
+    bias = torch.randn(
+        [b, m, n], dtype=cur_dtype, device=device, requires_grad=True
+    )
 
     yield bias, inp1, inp2
 
@@ -350,7 +360,9 @@ def group_mm_input_fn(groups, N, K, cur_dtype, device):
     mat_a = torch.cat([x for x in group_A_list], dim=0)
     mat_b = torch.stack([x for x in group_B_list], dim=0)
     offs = torch.tensor(
-        [sum(M_list[: i + 1]) for i in range(groups)], dtype=torch.int32, device="cuda"
+        [sum(M_list[: i + 1]) for i in range(groups)],
+        dtype=torch.int32,
+        device="cuda",
     )
 
     yield mat_a, mat_b, offs
@@ -417,7 +429,9 @@ class W8A8BlockFP8MatmulBenchmark(Benchmark):
     def __init__(self, *args, block_size=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.block_size = (
-            W8A8_BLOCK_FP8_BLOCK_SIZE[:] if block_size is None else list(block_size)
+            W8A8_BLOCK_FP8_BLOCK_SIZE[:]
+            if block_size is None
+            else list(block_size)
         )
         self.shape_desc = "M, N, K"
 
@@ -435,7 +449,9 @@ class W8A8BlockFP8MatmulBenchmark(Benchmark):
             B = rand_fp8_tensor((n, k), self.device, cur_dtype).contiguous()
             As = (
                 0.01
-                * torch.rand((m, num_k_groups), dtype=torch.float32, device=self.device)
+                * torch.rand(
+                    (m, num_k_groups), dtype=torch.float32, device=self.device
+                )
                 + 0.005
             ).contiguous()
             Bs = (
@@ -502,9 +518,13 @@ class ParallelBenchmarkMixin:
 
     def _iter_expected_shapes(self):
         for shape in self.shapes:
-            group_size = max(1, int(self.get_parallel_metric_group_size(shape)))
+            group_size = max(
+                1, int(self.get_parallel_metric_group_size(shape))
+            )
             for _ in range(group_size):
-                yield tuple(shape) if isinstance(shape, (list, tuple)) else shape
+                yield (
+                    tuple(shape) if isinstance(shape, (list, tuple)) else shape
+                )
 
     def _get_error_shape_output_path(self):
         return os.path.abspath("FlagTune/error_shape.yaml")
@@ -513,7 +533,9 @@ class ParallelBenchmarkMixin:
         if shape is None:
             return
 
-        normalized_shape = list(shape) if isinstance(shape, (list, tuple)) else [shape]
+        normalized_shape = (
+            list(shape) if isinstance(shape, (list, tuple)) else [shape]
+        )
         error_shape_path = self._get_error_shape_output_path()
         output_dir = os.path.dirname(error_shape_path) or "."
         os.makedirs(output_dir, exist_ok=True)
@@ -563,10 +585,14 @@ class ParallelBenchmarkMixin:
         args, kwargs = self.unpack_to_args_kwargs(input_item)
         metric.shape_detail = self.record_shapes(*args, **kwargs)
         if "latency_base" in self.to_bench_metrics:
-            metric.latency_base = self.get_latency(self.torch_op, *args, **kwargs)
+            metric.latency_base = self.get_latency(
+                self.torch_op, *args, **kwargs
+            )
         if "latency" in self.to_bench_metrics:
             if self.gems_op:
-                metric.latency = self.get_latency(self.gems_op, *args, **kwargs)
+                metric.latency = self.get_latency(
+                    self.gems_op, *args, **kwargs
+                )
             else:
                 if self.op_name == "zero_":
                     with flaggems_vllm.use_gems():
@@ -649,8 +675,12 @@ class ParallelBenchmarkMixin:
                     return 1 + fixed_overhead
                 batch, seq_len, _, topk, heads, dim = shape
                 block = 64
-                topk_aligned = ((max(1, int(topk)) + block - 1) // block) * block
-                heads_padded = max(16, 1 << (max(1, int(heads)) - 1).bit_length())
+                topk_aligned = (
+                    (max(1, int(topk)) + block - 1) // block
+                ) * block
+                heads_padded = max(
+                    16, 1 << (max(1, int(heads)) - 1).bit_length()
+                )
                 return (
                     max(1, int(batch))
                     * max(1, int(seq_len))
@@ -716,7 +746,9 @@ class ParallelBenchmarkMixin:
             next_start_bucket = (target + 1) % num_buckets
             return target
 
-        heavy_prefix_count = min(len(sorted_items), max(num_buckets, num_buckets * 2))
+        heavy_prefix_count = min(
+            len(sorted_items), max(num_buckets, num_buckets * 2)
+        )
 
         for idx_shape in sorted_items[:heavy_prefix_count]:
             target = select_bucket_by_min_cost()
@@ -732,7 +764,9 @@ class ParallelBenchmarkMixin:
             bucket.sort(key=lambda x: x[0])
         return [bucket for bucket in chunks if bucket]
 
-    def _run_parallel_worker_subprocess(self, node_id, shape_chunk, gpu_id, dtype_name):
+    def _run_parallel_worker_subprocess(
+        self, node_id, shape_chunk, gpu_id, dtype_name
+    ):
         shape_chunk_only = [shape for _, shape in shape_chunk]
 
         with open(Config.shape_file, "r") as shape_file:
@@ -740,7 +774,9 @@ class ParallelBenchmarkMixin:
         shape_key = self._resolve_shape_config_key(yaml_config)
         shape_entry = yaml_config.get(shape_key, {})
         shape_entry["shapes"] = [list(shape) for shape in shape_chunk_only]
-        shape_entry["shape_desc"] = shape_entry.get("shape_desc", self.shape_desc)
+        shape_entry["shape_desc"] = shape_entry.get(
+            "shape_desc", self.shape_desc
+        )
         yaml_config[shape_key] = shape_entry
 
         tmp_shape_file = tempfile.NamedTemporaryFile(
@@ -762,7 +798,11 @@ class ParallelBenchmarkMixin:
         finally:
             tmp_result_file.close()
 
-        mode_arg = "--fg_mode" if flaggems_vllm.vendor_name == "kunlunxin" else "--mode"
+        mode_arg = (
+            "--fg_mode"
+            if flaggems_vllm.vendor_name == "kunlunxin"
+            else "--mode"
+        )
         cmd = [
             sys.executable,
             "-m",
@@ -795,11 +835,16 @@ class ParallelBenchmarkMixin:
         env[PARALLEL_WORKER_ENV] = "1"
         env[PARALLEL_RESULT_FILE_ENV] = tmp_result_path
 
-        completed = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        completed = subprocess.run(
+            cmd, capture_output=True, text=True, env=env
+        )
 
         try:
             result_payload = None
-            if completed.returncode == 0 and os.path.getsize(tmp_result_path) > 0:
+            if (
+                completed.returncode == 0
+                and os.path.getsize(tmp_result_path) > 0
+            ):
                 with open(tmp_result_path, "rb") as result_file:
                     result_payload = pickle.load(result_file)
         finally:
@@ -841,7 +886,9 @@ class ParallelBenchmarkMixin:
         dtype_name = str(dtype).split(".")[-1]
         merged_metrics = []
         future_to_chunk = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(shape_chunks)) as ex:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=len(shape_chunks)
+        ) as ex:
             for gpu_id, shape_chunk in enumerate(shape_chunks):
                 future = ex.submit(
                     self._run_parallel_worker_subprocess,
@@ -867,7 +914,9 @@ class ParallelBenchmarkMixin:
 
                 result_payload = completed["result_payload"]
                 if result_payload is None:
-                    pytest.fail("parallel benchmark worker did not produce result")
+                    pytest.fail(
+                        "parallel benchmark worker did not produce result"
+                    )
 
                 chunk_metrics = result_payload.result
                 cursor = 0
@@ -881,11 +930,15 @@ class ParallelBenchmarkMixin:
                     for metric_order, metric in enumerate(
                         chunk_metrics[cursor:next_cursor]
                     ):
-                        merged_metrics.append((shape_index, metric_order, metric))
+                        merged_metrics.append(
+                            (shape_index, metric_order, metric)
+                        )
                     cursor = next_cursor
 
                 if cursor != len(chunk_metrics):
-                    pytest.fail("parallel benchmark worker returned unexpected metrics")
+                    pytest.fail(
+                        "parallel benchmark worker returned unexpected metrics"
+                    )
 
         merged_metrics.sort(key=lambda item: (item[0], item[1]))
         return [metric for _, _, metric in merged_metrics]
@@ -919,7 +972,9 @@ class ParallelBenchmarkMixin:
             print(result)
             emit_record_logger(result.to_json())
             if os.environ.get(PARALLEL_RESULT_FILE_ENV):
-                with open(os.environ[PARALLEL_RESULT_FILE_ENV], "wb") as result_file:
+                with open(
+                    os.environ[PARALLEL_RESULT_FILE_ENV], "wb"
+                ) as result_file:
                     pickle.dump(result, result_file)
 
 
@@ -961,14 +1016,18 @@ class ParallelRouterGemmBenchmark(ParallelBenchmarkMixin, RouterGemmBenchmark):
 
     def set_shapes(self, shape_file_path=None):
         if not os.path.isfile(shape_file_path):
-            raise FileNotFoundError(f"Shape file '{shape_file_path}' does not exist.")
+            raise FileNotFoundError(
+                f"Shape file '{shape_file_path}' does not exist."
+            )
 
         with open(shape_file_path, "r") as shape_file:
             yaml_config = yaml.safe_load(shape_file) or {}
 
         for shape_key in self._get_shape_config_keys():
             if shape_key in yaml_config:
-                self.shapes = yaml_config[shape_key].get("shapes", ROUTER_GEMM_SHAPES)
+                self.shapes = yaml_config[shape_key].get(
+                    "shapes", ROUTER_GEMM_SHAPES
+                )
                 break
         else:
             self.shapes = ROUTER_GEMM_SHAPES[:]
@@ -1009,7 +1068,9 @@ class ParallelW8A8BlockFP8MatmulBenchmark(
 
     def set_shapes(self, shape_file_path=None):
         if not os.path.isfile(shape_file_path):
-            raise FileNotFoundError(f"Shape file '{shape_file_path}' does not exist.")
+            raise FileNotFoundError(
+                f"Shape file '{shape_file_path}' does not exist."
+            )
 
         with open(shape_file_path, "r") as shape_file:
             yaml_config = yaml.safe_load(shape_file) or {}
@@ -1031,7 +1092,9 @@ class ParallelW8A8BlockFP8MatmulBenchmark(
         ):
             additional_shapes = self.set_more_shapes()
             if additional_shapes:
-                self.shapes = list(dict.fromkeys(self.shapes + additional_shapes))
+                self.shapes = list(
+                    dict.fromkeys(self.shapes + additional_shapes)
+                )
 
         normalized_shapes = []
         for shape in self.shapes:
@@ -1055,7 +1118,9 @@ def _deepgemm_block_scaled_mm(A, B, As_dg, Bs_dg, output):
     return output
 
 
-class ParallelW8A8BlockFP8DeepGemmBenchmark(ParallelW8A8BlockFP8MatmulBenchmark):
+class ParallelW8A8BlockFP8DeepGemmBenchmark(
+    ParallelW8A8BlockFP8MatmulBenchmark
+):
     def __init__(self, *args, output_dtype=torch.bfloat16, **kwargs):
         super().__init__(*args, **kwargs)
         self.output_dtype = output_dtype
@@ -1080,7 +1145,9 @@ class ParallelW8A8BlockFP8DeepGemmBenchmark(ParallelW8A8BlockFP8MatmulBenchmark)
             B = rand_fp8_tensor((n, k), self.device, cur_dtype).contiguous()
             As = (
                 0.01
-                * torch.rand((m, num_k_groups), dtype=torch.float32, device=self.device)
+                * torch.rand(
+                    (m, num_k_groups), dtype=torch.float32, device=self.device
+                )
                 + 0.005
             ).contiguous()
             Bs = (
@@ -1109,7 +1176,9 @@ class ParallelW8A8BlockFP8DeepGemmBenchmark(ParallelW8A8BlockFP8MatmulBenchmark)
                 num_groups=1,
                 is_sfa=False,
             ).squeeze(0)
-            output = torch.empty((m, n), dtype=self.output_dtype, device=self.device)
+            output = torch.empty(
+                (m, n), dtype=self.output_dtype, device=self.device
+            )
 
             yield (
                 A,
@@ -1135,9 +1204,13 @@ class ParallelW8A8BlockFP8DeepGemmBenchmark(ParallelW8A8BlockFP8MatmulBenchmark)
         metric.shape_detail = self.record_shapes(*gems_args, **gems_kwargs)
 
         if "latency_base" in self.to_bench_metrics:
-            metric.latency_base = self.get_latency(self.torch_op, *dg_args, **dg_kwargs)
+            metric.latency_base = self.get_latency(
+                self.torch_op, *dg_args, **dg_kwargs
+            )
         if "latency" in self.to_bench_metrics:
-            metric.latency = self.get_latency(self.gems_op, *gems_args, **gems_kwargs)
+            metric.latency = self.get_latency(
+                self.gems_op, *gems_args, **gems_kwargs
+            )
         if "speedup" in self.to_bench_metrics:
             metric.speedup = metric.latency_base / metric.latency
         if "tflops" in self.to_bench_metrics:
@@ -1181,16 +1254,21 @@ def torch_sparse_attention(q, kv, attn_sink, topk_idxs, softmax_scale):
     topk = topk_idxs.shape[-1]
 
     kv_expanded = kv[:, None, :, :].expand(batch, seq_len, -1, dim)
-    idx_expanded = topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
+    idx_expanded = (
+        topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
+    )
     gathered_kv = torch.gather(kv_expanded, 2, idx_expanded)
 
     scores = (
-        torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float()) * softmax_scale
+        torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float())
+        * softmax_scale
     )
     sink = attn_sink[None, None, :, None].expand(batch, seq_len, heads, 1)
     attn = torch.softmax(torch.cat([scores, sink], dim=-1), dim=-1)
 
-    out = torch.einsum("bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float())
+    out = torch.einsum(
+        "bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float()
+    )
     return out.to(q.dtype)
 
 
@@ -1200,7 +1278,9 @@ class ParallelSparseAttentionBenchmark(ParallelBenchmarkMixin, Benchmark):
     DEFAULT_DTYPES = [torch.bfloat16]
     DEFAULT_SHAPES = SPARSE_ATTENTION_SHAPES[:]
     DEFAULT_SHAPE_DESC = "B, M, KV_LEN, TOPK, H, D"
-    DEFAULT_SHAPE_FILES = os.path.join(os.path.dirname(__file__), "core_shapes.yaml")
+    DEFAULT_SHAPE_FILES = os.path.join(
+        os.path.dirname(__file__), "core_shapes.yaml"
+    )
 
     def set_more_shapes(self):
         return []
@@ -1211,14 +1291,18 @@ class ParallelSparseAttentionBenchmark(ParallelBenchmarkMixin, Benchmark):
         self.shape_desc = self.DEFAULT_SHAPE_DESC
 
         if not os.path.isfile(shape_file_path):
-            raise FileNotFoundError(f"Shape file '{shape_file_path}' does not exist.")
+            raise FileNotFoundError(
+                f"Shape file '{shape_file_path}' does not exist."
+            )
 
         with open(shape_file_path, "r") as shape_file:
             yaml_config = yaml.safe_load(shape_file) or {}
 
         for shape_key in self.SHAPE_CONFIG_KEYS + (self.op_name,):
             if shape_key in yaml_config:
-                self.shapes = yaml_config[shape_key].get("shapes", self.DEFAULT_SHAPES)
+                self.shapes = yaml_config[shape_key].get(
+                    "shapes", self.DEFAULT_SHAPES
+                )
                 self.shape_desc = yaml_config[shape_key].get(
                     "shape_desc", self.DEFAULT_SHAPE_DESC
                 )
@@ -1233,7 +1317,9 @@ class ParallelSparseAttentionBenchmark(ParallelBenchmarkMixin, Benchmark):
                 )
 
     def get_input_iter(self, cur_dtype):
-        for seed, (batch, seq_len, kv_len, topk, heads, dim) in enumerate(self.shapes):
+        for seed, (batch, seq_len, kv_len, topk, heads, dim) in enumerate(
+            self.shapes
+        ):
             torch.manual_seed(2026 + seed)
             q = torch.randn(
                 (batch, seq_len, heads, dim),
@@ -1245,7 +1331,9 @@ class ParallelSparseAttentionBenchmark(ParallelBenchmarkMixin, Benchmark):
                 dtype=cur_dtype,
                 device=self.device,
             )
-            attn_sink = torch.zeros((heads,), dtype=torch.float32, device=self.device)
+            attn_sink = torch.zeros(
+                (heads,), dtype=torch.float32, device=self.device
+            )
             topk_idxs = torch.randint(
                 0,
                 kv_len,
@@ -1313,7 +1401,9 @@ def test_blas_benchmark(op_name, torch_op, input_fn, bench_cls):
 @pytest.mark.w8a8_block_fp8_matmul
 def test_perf_w8a8_block_fp8_matmul():
     if not VLLM_W8A8_BLOCK_FP8_AVAILABLE:
-        pytest.skip("w8a8_block_fp8_matmul benchmark requires vLLM baseline operator")
+        pytest.skip(
+            "w8a8_block_fp8_matmul benchmark requires vLLM baseline operator"
+        )
     if len(consts.FP8_DTYPES) == 0:
         pytest.skip(
             "w8a8_block_fp8_matmul benchmark requires CUDA device with FP8 support"

@@ -85,7 +85,9 @@ def fill_cache_with_valid_fp8(k_cache, fp8_dtype, head_dim, quant_block_size):
 
 
 def make_gather_metadata(batch_size, seq_len, block_size, device):
-    seq_lens = torch.full((batch_size,), seq_len, dtype=torch.int32, device=device)
+    seq_lens = torch.full(
+        (batch_size,), seq_len, dtype=torch.int32, device=device
+    )
     cu_seqlen = torch.zeros(batch_size + 1, dtype=torch.int32, device=device)
     cu_seqlen[1:] = torch.cumsum(seq_lens, dim=0)
 
@@ -108,7 +110,9 @@ class CpGatherIndexerKQuantCacheBenchmark(base.Benchmark):
         )
         self.set_gems(cp_gather_indexer_k_quant_cache)
         self.fp8_dtype = fp8_dtype
-        self.shape_desc = "batch_size, seq_len, block_size, head_dim, quant_block_size"
+        self.shape_desc = (
+            "batch_size, seq_len, block_size, head_dim, quant_block_size"
+        )
 
     def set_shapes(self, shape_file_path=None):
         self.shapes = [
@@ -120,7 +124,13 @@ class CpGatherIndexerKQuantCacheBenchmark(base.Benchmark):
 
     def get_input_iter(self, dtype):
         del dtype
-        for batch_size, seq_len, block_size, head_dim, quant_block_size in self.shapes:
+        for (
+            batch_size,
+            seq_len,
+            block_size,
+            head_dim,
+            quant_block_size,
+        ) in self.shapes:
             block_table, cu_seqlen = make_gather_metadata(
                 batch_size,
                 seq_len,

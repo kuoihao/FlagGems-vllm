@@ -27,7 +27,8 @@ except ImportError:
 def _make_cos_sin_cache(max_pos, rope_dim, device):
     half = rope_dim // 2
     inv_freq = 1.0 / (
-        10000.0 ** (torch.arange(0, half, device=device, dtype=torch.float32) / half)
+        10000.0
+        ** (torch.arange(0, half, device=device, dtype=torch.float32) / half)
     )
     t = torch.arange(max_pos, device=device, dtype=torch.float32)
     freqs = torch.outer(t, inv_freq)
@@ -39,11 +40,15 @@ def _input_fn(shape, dtype, device):
     heads_per_group = num_heads // n_groups
     max_pos = max(4096, num_tokens * 2)
 
-    o = torch.randn(num_tokens, num_heads, HEAD_DIM, dtype=dtype, device=device)
+    o = torch.randn(
+        num_tokens, num_heads, HEAD_DIM, dtype=dtype, device=device
+    )
     positions = torch.randint(
         0, max_pos, (num_tokens,), dtype=torch.long, device=device
     )
-    cos_sin_cache = _make_cos_sin_cache(max_pos, ROPE_DIM, torch.device(device))
+    cos_sin_cache = _make_cos_sin_cache(
+        max_pos, ROPE_DIM, torch.device(device)
+    )
 
     yield (
         o,
@@ -83,7 +88,9 @@ def _gems_fused_inv_rope_fp8_quant(
 
 
 @pytest.mark.fused_inv_rope_fp8_quant
-@pytest.mark.skipif(not HAS_NATIVE_FP8, reason="requires native float8_e4m3fn support")
+@pytest.mark.skipif(
+    not HAS_NATIVE_FP8, reason="requires native float8_e4m3fn support"
+)
 @pytest.mark.skipif(
     not HAS_VLLM_FUSED_INV_ROPE_FP8_QUANT,
     reason="vLLM fused_inv_rope_fp8_quant not installed",

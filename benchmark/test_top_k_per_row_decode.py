@@ -38,7 +38,14 @@ try:
         logits, next_n, seq_lens, indices, num_rows, stride0, stride1, top_k
     ):
         torch.ops._C.top_k_per_row_decode(
-            logits, next_n, seq_lens, indices, num_rows, stride0, stride1, top_k
+            logits,
+            next_n,
+            seq_lens,
+            indices,
+            num_rows,
+            stride0,
+            stride1,
+            top_k,
         )
 
     HAS_VLLM = True
@@ -53,7 +60,9 @@ def _torch_topk_ref(
     """Pure-PyTorch fallback reference using torch.topk."""
     seq_len = seq_lens[0].item()
     valid_logits = logits[:, :seq_len]
-    _, top_idx = torch.topk(valid_logits, top_k, dim=1, largest=True, sorted=False)
+    _, top_idx = torch.topk(
+        valid_logits, top_k, dim=1, largest=True, sorted=False
+    )
     indices.copy_(top_idx.to(torch.int32))
 
 
@@ -78,8 +87,12 @@ class TopKPerRowDecodeBenchmark(base.Benchmark):
             logits = torch.randn(
                 (1, vocab_size), dtype=torch.float32, device=self.device
             )
-            seq_lens = torch.tensor([vocab_size], dtype=torch.int32, device=self.device)
-            indices = torch.zeros((1, top_k), dtype=torch.int32, device=self.device)
+            seq_lens = torch.tensor(
+                [vocab_size], dtype=torch.int32, device=self.device
+            )
+            indices = torch.zeros(
+                (1, top_k), dtype=torch.int32, device=self.device
+            )
             num_rows = 1
             next_n = 1
             stride0 = logits.stride(0)

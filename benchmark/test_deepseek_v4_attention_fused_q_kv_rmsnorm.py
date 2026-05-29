@@ -1,7 +1,9 @@
 import pytest
 import torch
 
-from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import fused_q_kv_rmsnorm
+from flaggems_vllm.ops.deepseek_v4_attention_fused_q_kv_rmsnorm import (
+    fused_q_kv_rmsnorm,
+)
 
 try:
     from vllm.v1.attention.ops.deepseek_v4_ops import (

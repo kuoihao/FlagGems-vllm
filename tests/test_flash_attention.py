@@ -43,7 +43,14 @@ def make_input(
 
 
 def torch_flash_fwd(
-    q, k, v, scale, is_causal, dropout_p=0, return_debug_mask=False, **extra_kwargs
+    q,
+    k,
+    v,
+    scale,
+    is_causal,
+    dropout_p=0,
+    return_debug_mask=False,
+    **extra_kwargs,
 ):
     q = q.transpose(1, 2)
     k = k.transpose(1, 2)
@@ -74,7 +81,14 @@ def torch_flash_fwd(
 
 
 def gems_flash_fwd(
-    q, k, v, scale, is_causal, dropout_p=0, return_debug_mask=False, **extra_kwargs
+    q,
+    k,
+    v,
+    scale,
+    is_causal,
+    dropout_p=0,
+    return_debug_mask=False,
+    **extra_kwargs,
 ):
     q = q.transpose(1, 2)
     k = k.transpose(1, 2)
@@ -108,14 +122,20 @@ def sparse_attention_ref(q, kv, attn_sink, topk_idxs, scale):
     topk = topk_idxs.shape[-1]
 
     kv_expanded = kv[:, None, :, :].expand(batch, seq_len, -1, dim)
-    idx_expanded = topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
+    idx_expanded = (
+        topk_idxs[:, :, :, None].expand(batch, seq_len, topk, dim).long()
+    )
     gathered_kv = torch.gather(kv_expanded, 2, idx_expanded)
 
-    scores = torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float()) * scale
+    scores = (
+        torch.einsum("bmhd,bmtd->bmht", q.float(), gathered_kv.float()) * scale
+    )
     sink = attn_sink[None, None, :, None].expand(batch, seq_len, heads, 1)
     attn = torch.softmax(torch.cat([scores, sink], dim=-1), dim=-1)
 
-    out = torch.einsum("bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float())
+    out = torch.einsum(
+        "bmht,bmtd->bmhd", attn[:, :, :, :-1], gathered_kv.float()
+    )
     return out.to(q.dtype)
 
 
@@ -141,7 +161,9 @@ def test_sparse_attention(batch, seq_len, kv_len, topk, heads, dim, seed):
     device = torch_device_fn.current_device()
     utils.init_seed(seed)
 
-    q = torch.empty((batch, seq_len, heads, dim), device=device, dtype=torch.bfloat16)
+    q = torch.empty(
+        (batch, seq_len, heads, dim), device=device, dtype=torch.bfloat16
+    )
     q.uniform_(-0.05, 0.05)
     kv = torch.empty((batch, kv_len, dim), device=device, dtype=torch.bfloat16)
     kv.uniform_(-0.05, 0.05)
@@ -164,9 +186,13 @@ def test_sparse_attention(batch, seq_len, kv_len, topk, heads, dim, seed):
     torch_result = sparse_attention_ref(
         ref_q, ref_kv, ref_attn_sink, ref_topk_idxs, scale
     )
-    gems_result = flaggems_vllm.sparse_attn_triton(q, kv, attn_sink, topk_idxs, scale)
+    gems_result = flaggems_vllm.sparse_attn_triton(
+        q, kv, attn_sink, topk_idxs, scale
+    )
 
-    utils.gems_assert_close(gems_result, torch_result, torch.bfloat16, atol=1e-3)
+    utils.gems_assert_close(
+        gems_result, torch_result, torch.bfloat16, atol=1e-3
+    )
 
 
 def attn_bias_from_alibi_slopes(slopes, seqlen_q, seqlen_k, causal=False):
@@ -175,10 +201,13 @@ def attn_bias_from_alibi_slopes(slopes, seqlen_q, seqlen_k, causal=False):
     slopes = slopes.unsqueeze(-1).unsqueeze(-1)
     if causal:
         return (
-            torch.arange(-seqlen_k + 1, 1, device=device, dtype=torch.float32) * slopes
+            torch.arange(-seqlen_k + 1, 1, device=device, dtype=torch.float32)
+            * slopes
         )
 
-    row_idx = torch.arange(seqlen_q, device=device, dtype=torch.long).unsqueeze(-1)
+    row_idx = torch.arange(
+        seqlen_q, device=device, dtype=torch.long
+    ).unsqueeze(-1)
     col_idx = torch.arange(seqlen_k, device=device, dtype=torch.long)
     relative_pos = torch.abs(row_idx + seqlen_k - seqlen_q - col_idx)
     return -slopes * relative_pos.to(dtype=slopes.dtype)
@@ -189,9 +218,13 @@ def attn_bias_from_alibi_slopes(slopes, seqlen_q, seqlen_k, causal=False):
     reason="Issue #2809: The operator fails this test on Nvidia at least."
 )
 @pytest.mark.skipif(cfg.TO_CPU, reason="Unsupported in CPU mode")
-@pytest.mark.skipif(vendor_name == "metax", reason="Issue #2811: Not supported")
+@pytest.mark.skipif(
+    vendor_name == "metax", reason="Issue #2811: Not supported"
+)
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2810: RuntimeError")
-@pytest.mark.skipif(vendor_name == "mthreads", reason="Issue #2812: Not working")
+@pytest.mark.skipif(
+    vendor_name == "mthreads", reason="Issue #2812: Not working"
+)
 @pytest.mark.parametrize(
     ["batch", "num_head", "q_seq_len", "kv_seq_len"],
     [(1, 1, 128, 2048), (4, 8, 1024, 128), (4, 8, 17, 1030)],
@@ -204,7 +237,14 @@ def test_flash_attention_foward_nonsquare_qk(
 ):
     device = torch_device_fn.current_device()
     q, k, v = make_input(
-        batch, num_head, num_head, q_seq_len, kv_seq_len, head_size, dtype, device
+        batch,
+        num_head,
+        num_head,
+        q_seq_len,
+        kv_seq_len,
+        head_size,
+        dtype,
+        device,
     )
     ref_q = utils.to_reference(q, False)
     ref_k = utils.to_reference(k, False)
@@ -241,7 +281,9 @@ def construct_local_mask(
         key_leftpad = key_leftpad[:, None, None, None]
         # col_idx = repeat(col_idx, "s -> b 1 1 s", b=key_leftpad.shape[0])
         col_idx = col_idx.repeat(key_leftpad.shape[0], 1, 1, 1)
-        col_idx = torch.where(col_idx >= key_leftpad, col_idx - key_leftpad, 2**32)
+        col_idx = torch.where(
+            col_idx >= key_leftpad, col_idx - key_leftpad, 2**32
+        )
     sk = (
         seqlen_k
         if key_padding_mask is None
@@ -257,7 +299,11 @@ def construct_local_mask(
     if window_size[0] < 0:
         return col_idx > row_idx + sk - sq + window_size[1]
     else:
-        sk = torch.full_like(col_idx, seqlen_k) if key_padding_mask is None else sk
+        sk = (
+            torch.full_like(col_idx, seqlen_k)
+            if key_padding_mask is None
+            else sk
+        )
         return torch.logical_or(
             col_idx > torch.minimum(row_idx + sk - sq + window_size[1], sk),
             col_idx < row_idx + sk - sq - window_size[0],
@@ -333,7 +379,9 @@ def attention_ref(
         scores = scores * softcap
 
     if key_padding_mask is not None:
-        scores.masked_fill_((~key_padding_mask)[:, None, None, :], float("-inf"))
+        scores.masked_fill_(
+            (~key_padding_mask)[:, None, None, :], float("-inf")
+        )
 
     if window_size[0] >= 0 or window_size[1] >= 0:
         local_mask = construct_local_mask(
@@ -367,7 +415,9 @@ def attention_ref(
         attention_drop = attention.masked_fill(~dropout_mask, 0.0)
     else:
         attention_drop = attention
-    output = torch.einsum("bhts,bshd->bthd", attention_drop, v * dropout_scaling)
+    output = torch.einsum(
+        "bhts,bshd->bthd", attention_drop, v * dropout_scaling
+    )
     if query_padding_mask is not None:
         output.masked_fill_((~query_padding_mask)[:, :, None, None], 0.0)
     return output.to(dtype=dtype_og), attention.to(dtype=dtype_og)
@@ -375,8 +425,12 @@ def attention_ref(
 
 @pytest.mark.skipif(cfg.TO_CPU, reason="Unsupported in CPU mode")
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2810: RuntimeError")
-@pytest.mark.skipif(vendor_name == "mthreads", reason="Issue #2812: Not supported")
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2814: Not supported")
+@pytest.mark.skipif(
+    vendor_name == "mthreads", reason="Issue #2812: Not supported"
+)
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2814: Not supported"
+)
 @pytest.mark.flash_attention_forward
 @pytest.mark.parametrize(
     ["batch", "num_head", "num_head_k", "q_seq_len", "kv_seq_len"],
@@ -401,7 +455,14 @@ def test_flash_attention_forward_gqa_alibi_softcap(
 ):
     device = torch_device_fn.current_device()
     q, k, v = make_input(
-        batch, num_head, num_head_k, q_seq_len, kv_seq_len, head_size, dtype, device
+        batch,
+        num_head,
+        num_head_k,
+        q_seq_len,
+        kv_seq_len,
+        head_size,
+        dtype,
+        device,
     )
     ref_q = utils.to_reference(q, False)
     ref_k = utils.to_reference(k, False)
@@ -411,7 +472,8 @@ def test_flash_attention_forward_gqa_alibi_softcap(
     if alibi:
         # alibi_slopes = torch.rand(batch, num_head, device=device, dtype=torch.float32) * 0.3
         alibi_slopes = (
-            torch.ones(batch, num_head, device=device, dtype=torch.float32) * 0.3
+            torch.ones(batch, num_head, device=device, dtype=torch.float32)
+            * 0.3
         )
         attn_bias = attn_bias_from_alibi_slopes(
             alibi_slopes, q_seq_len, kv_seq_len, causal=is_causal
@@ -451,8 +513,12 @@ def test_flash_attention_forward_gqa_alibi_softcap(
 @pytest.mark.skipif(cfg.TO_CPU, reason="Unsupported in CPU mode")
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2810: RuntimeError")
 @pytest.mark.skipif(vendor_name == "metax", reason="Issue #2811: Not working")
-@pytest.mark.skipif(vendor_name == "mthreads", reason="Issue #2812: Not working")
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2814: Not working")
+@pytest.mark.skipif(
+    vendor_name == "mthreads", reason="Issue #2812: Not working"
+)
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2814: Not working"
+)
 @pytest.mark.flash_attention_forward
 @pytest.mark.parametrize(
     ["batch", "num_head", "num_head_k", "q_seq_len", "kv_seq_len"],
@@ -477,7 +543,14 @@ def test_flash_attention_foward_splitkv(
 ):
     device = torch_device_fn.current_device()
     q, k, v = make_input(
-        batch, num_head, num_head_k, q_seq_len, kv_seq_len, head_size, dtype, device
+        batch,
+        num_head,
+        num_head_k,
+        q_seq_len,
+        kv_seq_len,
+        head_size,
+        dtype,
+        device,
     )
     ref_q = utils.to_reference(q, False)
     ref_k = utils.to_reference(k, False)
@@ -487,7 +560,8 @@ def test_flash_attention_foward_splitkv(
     if alibi:
         # alibi_slopes = torch.rand(batch, num_head, device=device, dtype=torch.float32) * 0.3
         alibi_slopes = (
-            torch.ones(batch, num_head, device=device, dtype=torch.float32) * 0.3
+            torch.ones(batch, num_head, device=device, dtype=torch.float32)
+            * 0.3
         )
         attn_bias = attn_bias_from_alibi_slopes(
             alibi_slopes, q_seq_len, kv_seq_len, causal=is_causal
@@ -526,12 +600,21 @@ def test_flash_attention_foward_splitkv(
 @pytest.mark.skipif(cfg.TO_CPU, reason="Unsupported in CPU mode")
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2810: RuntimeError")
 @pytest.mark.skipif(vendor_name == "metax", reason="Issue #2811: Not working")
-@pytest.mark.skipif(vendor_name == "mthreads", reason="Issue #2812: Not working")
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2814: Not working")
+@pytest.mark.skipif(
+    vendor_name == "mthreads", reason="Issue #2812: Not working"
+)
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2814: Not working"
+)
 @pytest.mark.flash_attention_forward
 @pytest.mark.parametrize(
     ["batch", "num_head", "q_seq_len", "kv_seq_len"],
-    [(1, 1, 128, 2048), (8, 32, 1024, 1024), (8, 32, 1024, 128), (8, 32, 17, 1030)],
+    [
+        (1, 1, 128, 2048),
+        (8, 32, 1024, 1024),
+        (8, 32, 1024, 128),
+        (8, 32, 17, 1030),
+    ],
 )
 @pytest.mark.parametrize("head_size", [128, 192])
 @pytest.mark.parametrize(
@@ -552,7 +635,14 @@ def test_flash_attention_foward_swa(
 ):
     device = torch_device_fn.current_device()
     q, k, v = make_input(
-        batch, num_head, num_head, q_seq_len, kv_seq_len, head_size, dtype, device
+        batch,
+        num_head,
+        num_head,
+        q_seq_len,
+        kv_seq_len,
+        head_size,
+        dtype,
+        device,
     )
     ref_q = utils.to_reference(q, False)
     ref_k = utils.to_reference(k, False)
@@ -592,8 +682,12 @@ def test_flash_attention_foward_swa(
 @pytest.mark.skipif(cfg.TO_CPU, reason="Unsupported in CPU mode")
 @pytest.mark.skipif(triton.__version__ < "3.1", reason="RequiresTriton >= 3.1")
 @pytest.mark.skipif(vendor_name == "hygon", reason="Issue #2810: RuntimeError")
-@pytest.mark.skipif(vendor_name == "mthreads", reason="Issue #2812: Not supported")
-@pytest.mark.skipif(vendor_name == "kunlunxin", reason="Issue #2814: Not supported")
+@pytest.mark.skipif(
+    vendor_name == "mthreads", reason="Issue #2812: Not supported"
+)
+@pytest.mark.skipif(
+    vendor_name == "kunlunxin", reason="Issue #2814: Not supported"
+)
 @pytest.mark.flash_attention_forward
 @pytest.mark.parametrize(
     ["batch", "num_head", "q_seq_len", "kv_seq_len"],
@@ -609,7 +703,14 @@ def test_flash_fwd_dropout(
 ):
     device = torch_device_fn.current_device()
     q, k, v = make_input(
-        batch, num_head, num_head, q_seq_len, kv_seq_len, head_size, dtype, device
+        batch,
+        num_head,
+        num_head,
+        q_seq_len,
+        kv_seq_len,
+        head_size,
+        dtype,
+        device,
     )
     scale = float(1.0 / np.sqrt(head_size))
     dropout_p = 0.2
@@ -617,5 +718,7 @@ def test_flash_fwd_dropout(
         q, k, v, scale, is_causal, dropout_p=dropout_p, return_debug_mask=True
     )
 
-    dropout_ratio = torch.sum(debug_softmax < 0) / torch.sum(debug_softmax != 0)
+    dropout_ratio = torch.sum(debug_softmax < 0) / torch.sum(
+        debug_softmax != 0
+    )
     np.testing.assert_allclose(dropout_ratio.to("cpu"), dropout_p, rtol=5e-2)

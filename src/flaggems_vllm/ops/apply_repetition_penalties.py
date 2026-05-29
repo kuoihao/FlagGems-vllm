@@ -32,8 +32,12 @@ def _repetition_penalty_kernel(
     logits_idx = seq_idx * vocab_size + vocab_idx
     mask_idx = logits_idx
 
-    prompt_mask = tl.load(prompt_mask_ptr + mask_idx, mask=valid_vocab, other=False)
-    output_mask = tl.load(output_mask_ptr + mask_idx, mask=valid_vocab, other=False)
+    prompt_mask = tl.load(
+        prompt_mask_ptr + mask_idx, mask=valid_vocab, other=False
+    )
+    output_mask = tl.load(
+        output_mask_ptr + mask_idx, mask=valid_vocab, other=False
+    )
     logits = tl.load(logits_ptr + logits_idx, mask=valid_vocab, other=0.0)
 
     is_repeated = prompt_mask | output_mask
@@ -44,7 +48,9 @@ def _repetition_penalty_kernel(
     tl.store(logits_ptr + logits_idx, logits, mask=valid_vocab)
 
 
-def apply_repetition_penalties(logits, prompt_mask, output_mask, repetition_penalties):
+def apply_repetition_penalties(
+    logits, prompt_mask, output_mask, repetition_penalties
+):
     logger.debug("GEMS APPLY REPETITION PENALTIES")
     assert logits.is_contiguous(), "logits must be contiguous"
     assert (

@@ -15,7 +15,9 @@ def mul_func(x, y):
     return x * y
 
 
-@pointwise_dynamic(is_tensor=[True, False], promotion_methods=[(0, 1, "DEFAULT")])
+@pointwise_dynamic(
+    is_tensor=[True, False], promotion_methods=[(0, 1, "DEFAULT")]
+)
 @triton.jit
 def mul_func_scalar(x, y):
     return x * y
@@ -34,7 +36,9 @@ def mul_complex_kernel(ar, ai, br, bi):
 
 
 # Register complex support
-mul_func.register_complex(mode=ComplexMode.CROSS, cross_kernel=mul_complex_kernel)
+mul_func.register_complex(
+    mode=ComplexMode.CROSS, cross_kernel=mul_complex_kernel
+)
 mul_func_scalar.register_complex(
     mode=ComplexMode.CROSS, tensorize_scalars=True, fallback_target=mul_func
 )

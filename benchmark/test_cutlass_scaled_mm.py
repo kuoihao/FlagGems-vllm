@@ -77,7 +77,10 @@ class CutlassScaledMMPerfKit:
         ]
         scale_shape_types = ["scalar", "vector", "matrix"]
         if_use_bias = [True, False]
-        dtypes = [(torch.int8, torch.float16), (torch.float8_e4m3fn, torch.bfloat16)]
+        dtypes = [
+            (torch.int8, torch.float16),
+            (torch.float8_e4m3fn, torch.bfloat16),
+        ]
 
         combinations = product(
             mnk, scale_shape_types, scale_shape_types, if_use_bias, dtypes
@@ -172,9 +175,16 @@ class CutlassScaledMMPerfKit:
 
 class CutlassScaledMMBenchmark(base.Benchmark):
     def __init__(self):
-        extended_dtypes = ["scalar_only", "vector_only", "scalar_and_vector", "block"]
+        extended_dtypes = [
+            "scalar_only",
+            "vector_only",
+            "scalar_and_vector",
+            "block",
+        ]
         super().__init__(
-            "cutlass_scaled_mm", torch.ops._C.cutlass_scaled_mm, extended_dtypes
+            "cutlass_scaled_mm",
+            torch.ops._C.cutlass_scaled_mm,
+            extended_dtypes,
         )
         self.set_gems(flaggems_vllm.cutlass_scaled_mm)
         self.kit = CutlassScaledMMPerfKit
@@ -196,17 +206,25 @@ class CutlassScaledMMBenchmark(base.Benchmark):
             if in_dtype == torch.int8:
                 a = to_int8(torch.randn((M, K), device=flaggems_vllm.device))
                 b = to_int8(
-                    torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t()
+                    torch.randn((K, N), device=flaggems_vllm.device)
+                    .t()
+                    .contiguous()
+                    .t()
                     * 5
                 )
             else:
                 a = to_fp8(torch.randn((M, K), device=flaggems_vllm.device))
                 b = to_fp8(
-                    torch.randn((K, N), device=flaggems_vllm.device).t().contiguous().t()
+                    torch.randn((K, N), device=flaggems_vllm.device)
+                    .t()
+                    .contiguous()
+                    .t()
                 )
 
             a_scale_shape = self.kit.get_scale_shape(M, N, K, a_scale_category)
-            b_scale_shape = self.kit.get_scale_shape(M, N, K, b_scale_category, False)
+            b_scale_shape = self.kit.get_scale_shape(
+                M, N, K, b_scale_category, False
+            )
 
             scale_a = torch.randn(
                 a_scale_shape, device=flaggems_vllm.device, dtype=torch.float32
@@ -222,9 +240,13 @@ class CutlassScaledMMBenchmark(base.Benchmark):
 
             bias = None
             if p["use_bias"]:
-                bias = torch.randn((N,), device=flaggems_vllm.device, dtype=out_dtype)
+                bias = torch.randn(
+                    (N,), device=flaggems_vllm.device, dtype=out_dtype
+                )
 
-            c = torch.empty((M, N), device=flaggems_vllm.device, dtype=out_dtype)
+            c = torch.empty(
+                (M, N), device=flaggems_vllm.device, dtype=out_dtype
+            )
 
             yield (c, a, b, scale_a, scale_b, bias)
 

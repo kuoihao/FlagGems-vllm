@@ -55,7 +55,9 @@ class FusedMoEINT4W4A16Benchmark(base.Benchmark):
         num_tokens, num_experts, hidden_size, intermediate_size, topk = config
         device = flaggems_vllm.device
 
-        hidden_states = torch.randn(num_tokens, hidden_size, device=device, dtype=dtype)
+        hidden_states = torch.randn(
+            num_tokens, hidden_size, device=device, dtype=dtype
+        )
 
         # Generate INT4 weights (stored in INT8) one expert at a time.
         w1_int4 = torch.empty(
@@ -91,13 +93,18 @@ class FusedMoEINT4W4A16Benchmark(base.Benchmark):
         # Per-channel scales [E, output_dim]
         w1_scale = (
             torch.rand(
-                num_experts, intermediate_size * 2, device=device, dtype=torch.float32
+                num_experts,
+                intermediate_size * 2,
+                device=device,
+                dtype=torch.float32,
             )
             * 0.01
             + 0.001
         )
         w2_scale = (
-            torch.rand(num_experts, hidden_size, device=device, dtype=torch.float32)
+            torch.rand(
+                num_experts, hidden_size, device=device, dtype=torch.float32
+            )
             * 0.01
             + 0.001
         )
@@ -106,7 +113,9 @@ class FusedMoEINT4W4A16Benchmark(base.Benchmark):
         gating = torch.randn(
             num_tokens, num_experts, device=device, dtype=torch.float32
         )
-        topk_weights, topk_ids = torch.topk(torch.softmax(gating, dim=-1), topk, dim=-1)
+        topk_weights, topk_ids = torch.topk(
+            torch.softmax(gating, dim=-1), topk, dim=-1
+        )
         topk_weights = topk_weights / topk_weights.sum(dim=-1, keepdim=True)
         topk_weights = topk_weights.to(dtype)
 
@@ -133,8 +142,12 @@ def _vllm_fused_moe_int4_w4a16_wrapper(
     baseline here.
     """
     # Dequantize to bf16 and run standard bf16 path as baseline
-    w1_deq = w1.to(hidden_states.dtype) * w1_scale.unsqueeze(-1).to(hidden_states.dtype)
-    w2_deq = w2.to(hidden_states.dtype) * w2_scale.unsqueeze(-1).to(hidden_states.dtype)
+    w1_deq = w1.to(hidden_states.dtype) * w1_scale.unsqueeze(-1).to(
+        hidden_states.dtype
+    )
+    w2_deq = w2.to(hidden_states.dtype) * w2_scale.unsqueeze(-1).to(
+        hidden_states.dtype
+    )
     return flaggems_vllm.ops_experts_impl(
         hidden_states.clone(),
         w1_deq,
@@ -162,7 +175,9 @@ def _gems_fused_moe_int4_w4a16_wrapper(
 
 
 @pytest.mark.fused_experts_impl
-@pytest.mark.skipif(not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture")
+@pytest.mark.skipif(
+    not CUDA_AVAILABLE, reason="requires NVIDIA Hopper architecture"
+)
 def test_fused_moe_int4_w4a16():
     """
     Benchmark FlagGems fused_experts_impl with INT4 W4A16 quantization.

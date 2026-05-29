@@ -102,9 +102,9 @@ def instance_norm_persistent_kernel_multiline(
     n_mask = n_offsets < N
     mask = m_mask[:, None] & n_mask
 
-    x = tl.load(in_ptr + m_offsets[:, None] * N + n_offsets, mask, other=0.0).to(
-        tl.float32
-    )
+    x = tl.load(
+        in_ptr + m_offsets[:, None] * N + n_offsets, mask, other=0.0
+    ).to(tl.float32)
     m = tl.sum(x, axis=1) / N
     d = x - m[:, None]  # deviation
     s = tl.where(mask, d * d, 0)
@@ -210,9 +210,9 @@ def instance_norm_loop_kernel(
 
     for start_n in range(TILE_N, N, TILE_N):
         n_offsets = (prev_multiple - start_n) + tl.arange(0, TILE_N)
-        x = tl.load(in_ptr + pid * N + n_offsets, eviction_policy="evict_first").to(
-            tl.float32
-        )
+        x = tl.load(
+            in_ptr + pid * N + n_offsets, eviction_policy="evict_first"
+        ).to(tl.float32)
         out = w * (x - m) * rstd + b
         tl.store(out_ptr + pid * N + n_offsets, out)
 
@@ -280,9 +280,13 @@ def update_running_stats_kernel(
     BLOCK_BATCH_SIZE: tl.constexpr = 1,
     BLOCK_CHANNEL_SIZE: tl.constexpr = 2048,
 ):
-    cid = tl.program_id(0) * BLOCK_CHANNEL_SIZE + tl.arange(0, BLOCK_CHANNEL_SIZE)
+    cid = tl.program_id(0) * BLOCK_CHANNEL_SIZE + tl.arange(
+        0, BLOCK_CHANNEL_SIZE
+    )
     col_mask = cid < C
-    running_mean = tl.load(running_mean_ptr + cid, mask=col_mask).to(tl.float32)
+    running_mean = tl.load(running_mean_ptr + cid, mask=col_mask).to(
+        tl.float32
+    )
     running_var = tl.load(running_var_ptr + cid, mask=col_mask).to(tl.float32)
 
     new_mean = tl.zeros((BLOCK_CHANNEL_SIZE,), dtype=tl.float32)
@@ -291,12 +295,12 @@ def update_running_stats_kernel(
         bid = b * BLOCK_BATCH_SIZE + tl.arange(0, BLOCK_BATCH_SIZE)[:, None]
         row_mask = bid < B
         mask = row_mask and col_mask[None, :]
-        mean = tl.load(mean_ptr + bid * C + cid[None, :], mask=mask, other=0.0).to(
-            tl.float32
-        )
-        rstd = tl.load(rstd_ptr + bid * C + cid[None, :], mask=mask, other=0.0).to(
-            tl.float32
-        )
+        mean = tl.load(
+            mean_ptr + bid * C + cid[None, :], mask=mask, other=0.0
+        ).to(tl.float32)
+        rstd = tl.load(
+            rstd_ptr + bid * C + cid[None, :], mask=mask, other=0.0
+        ).to(tl.float32)
         var = (
             (1 / (rstd * rstd) + eps) * N / (N - 1)
         )  # NOTE: use unbiased var to update running_var
@@ -331,7 +335,10 @@ def instance_norm_backward_kernel(
     BLOCK_COL_SIZE: tl.constexpr,
     HAS_WEIGHT_BIAS: tl.constexpr,
 ):
-    pid = tl.program_id(0) * BLOCK_ROW_SIZE + tl.arange(0, BLOCK_ROW_SIZE)[:, None]
+    pid = (
+        tl.program_id(0) * BLOCK_ROW_SIZE
+        + tl.arange(0, BLOCK_ROW_SIZE)[:, None]
+    )
     c_offsets = pid % C
     row_mask = pid < M
     dY += pid * N
@@ -471,7 +478,8 @@ class InstanceNorm(torch.autograd.Function):
                 running_mean is not None and running_var is not None
             ), "running_mean and running_var should not both be None"
             assert (
-                running_mean.shape == running_var.shape and running_mean.shape[0] == C
+                running_mean.shape == running_var.shape
+                and running_mean.shape[0] == C
             ), f"running_mean and running_var should have shape as {[C,]}"
             assert (
                 running_mean.dtype == running_var.dtype
@@ -540,7 +548,9 @@ class InstanceNorm(torch.autograd.Function):
                         eps,
                         HAS_WEIGHT_BIAS=has_weight_bias,
                     )
-                if has_running_stats and use_input_stats:  # update running stats
+                if (
+                    has_running_stats and use_input_stats
+                ):  # update running stats
                     grid = lambda meta: (
                         triton.cdiv(C, meta["BLOCK_CHANNEL_SIZE"]),
                         1,
@@ -620,7 +630,17 @@ class InstanceNorm(torch.autograd.Function):
             else:
                 weight_grad = None
                 bias_grad = None
-        return in_grad, weight_grad, bias_grad, None, None, None, None, None, None
+        return (
+            in_grad,
+            weight_grad,
+            bias_grad,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
 
 def instance_norm(
@@ -651,5 +671,12 @@ def instance_norm(
     """
 
     return InstanceNorm.apply(
-        input, weight, bias, running_mean, running_var, use_input_stats, momentum, eps
+        input,
+        weight,
+        bias,
+        running_mean,
+        running_var,
+        use_input_stats,
+        momentum,
+        eps,
     )

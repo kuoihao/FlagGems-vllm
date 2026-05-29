@@ -71,7 +71,9 @@ def test_reshape_and_cache_flash(
         # Create a random slot mapping.
         num_slots = block_size * num_blocks
         slot_mapping_lst = random.sample(range(num_slots), num_tokens)
-        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
+        slot_mapping = torch.tensor(
+            slot_mapping_lst, dtype=torch.long, device=device
+        )
         qkv = torch.randn(
             num_tokens, 3, num_heads, head_size, dtype=dtype, device=device
         )
@@ -116,7 +118,9 @@ def test_reshape_and_cache_flash(
         )
 
         # Run the reference implementation.
-        block_indicies = torch.div(slot_mapping, block_size, rounding_mode="floor")
+        block_indicies = torch.div(
+            slot_mapping, block_size, rounding_mode="floor"
+        )
         block_indicies_lst = block_indicies.cpu().tolist()
         block_offsets = slot_mapping % block_size
         block_offsets_lst = block_offsets.cpu().tolist()

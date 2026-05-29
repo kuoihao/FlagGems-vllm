@@ -35,13 +35,17 @@ class TopKSoftmaxBenchmark(base.Benchmark):
         """
         num_tokens, num_experts, k = config
 
-        gating_output = torch.randn(num_tokens, num_experts, device=device, dtype=dtype)
+        gating_output = torch.randn(
+            num_tokens, num_experts, device=device, dtype=dtype
+        )
 
         for renormalize in (False, True):
             topk_weights = torch.empty(
                 num_tokens, k, device=device, dtype=torch.float32
             )
-            topk_indices = torch.empty(num_tokens, k, device=device, dtype=torch.int32)
+            topk_indices = torch.empty(
+                num_tokens, k, device=device, dtype=torch.int32
+            )
             token_expert_indices = torch.empty(
                 num_tokens, k, device=device, dtype=torch.int32
             )

@@ -34,7 +34,16 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
             ([128], [512], [256], 32, 128, 4, 42240, 40960),
             ([512, 256], [2048, 1024], [1024, 512], 64, 256, 4, 45056, 40960),
             ([4096], [4096], [4096], 128, 256, 4, 45056, 40960),
-            ([1024, 1024], [8192, 4096], [2048, 1024], 128, 256, 4, 45056, 40960),
+            (
+                [1024, 1024],
+                [8192, 4096],
+                [2048, 1024],
+                128,
+                256,
+                4,
+                45056,
+                40960,
+            ),
             ([128], [4096], [512], 32, 256, 128, 5632, 1280),
             ([4096], [4096], [4096], 128, 256, 128, 8448, 1280),
         ]
@@ -53,7 +62,11 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
         ) in self.shapes:
             num_tokens = sum(query_lens)
             topk_indices = torch.randint(
-                -1, max(N, 1), (num_tokens, topk), device="cuda", dtype=torch.int32
+                -1,
+                max(N, 1),
+                (num_tokens, topk),
+                device="cuda",
+                dtype=torch.int32,
             )
             query_start_values = [0]
             for query_len in query_lens:
@@ -61,7 +74,9 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
             query_start_loc = torch.tensor(
                 query_start_values, device="cuda", dtype=torch.int32
             )
-            seq_lens = torch.tensor(seq_lens_values, device="cuda", dtype=torch.int32)
+            seq_lens = torch.tensor(
+                seq_lens_values, device="cuda", dtype=torch.int32
+            )
             gather_lens = torch.tensor(
                 gather_lens_values, device="cuda", dtype=torch.int32
             )
@@ -79,7 +94,8 @@ class CombineTopkSwaIndicesBenchmark(base.Benchmark):
 
 
 @pytest.mark.skipif(
-    (not torch.cuda.is_available()) or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
+    (not torch.cuda.is_available())
+    or (not _HAS_VLLM_COMBINE_TOPK_SWA_INDICES),
     reason="requires cuda and vllm deepseek_v4_ops.combine_topk_swa_indices",
 )
 def test_combine_topk_swa_indices_benchmark():

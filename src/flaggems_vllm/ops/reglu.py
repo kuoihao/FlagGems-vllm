@@ -37,13 +37,18 @@ def dreglu_kernel(
     offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
     offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
     grad_output_ptr += (
-        offs_m[:, None] * stride_grad_out_m + offs_n[None, :] * stride_grad_out_n
+        offs_m[:, None] * stride_grad_out_m
+        + offs_n[None, :] * stride_grad_out_n
     )
     input_ptr_a = (
-        input_ptr + offs_m[:, None] * stride_in_m + offs_n[None, :] * stride_in_n
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + offs_n[None, :] * stride_in_n
     )
     input_ptr_b = (
-        input_ptr + offs_m[:, None] * stride_in_m + (offs_n[None, :] + N) * stride_in_n
+        input_ptr
+        + offs_m[:, None] * stride_in_m
+        + (offs_n[None, :] + N) * stride_in_n
     )
     grad_input_ptr_a = (
         grad_input_ptr
@@ -89,9 +94,13 @@ def reglu_kernel(
     pid_n = tl.program_id(axis=1)
     offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
     offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
-    x_ptr_a = x_ptr + offs_m[:, None] * stride_x_m + offs_n[None, :] * stride_x_n
+    x_ptr_a = (
+        x_ptr + offs_m[:, None] * stride_x_m + offs_n[None, :] * stride_x_n
+    )
     x_ptr_b = (
-        x_ptr + offs_m[:, None] * stride_x_m + (offs_n[None, :] + N_OUT) * stride_x_n
+        x_ptr
+        + offs_m[:, None] * stride_x_m
+        + (offs_n[None, :] + N_OUT) * stride_x_n
     )
     y_ptr = y_ptr + offs_m[:, None] * stride_y_m + offs_n[None, :] * stride_y_n
     mask = (offs_m[:, None] < M) & (offs_n[None, :] < N_OUT)
@@ -102,7 +111,9 @@ def reglu_kernel(
     tl.store(y_ptr, output, mask=mask)
 
 
-def reglu(input_tensor: torch.Tensor, quantizer: Optional[Any] = None) -> torch.Tensor:
+def reglu(
+    input_tensor: torch.Tensor, quantizer: Optional[Any] = None
+) -> torch.Tensor:
     logger.debug("GEMS REGLU")
     shape = input_tensor.shape
     if input_tensor.dim() < 1:
@@ -148,7 +159,10 @@ def dreglu(
 ) -> torch.Tensor:
     logger.debug("GEMS DREGLU")
     shape = input_tensor.shape
-    if shape[:-1] != grad_output.shape[:-1] or shape[-1] != 2 * grad_output.shape[-1]:
+    if (
+        shape[:-1] != grad_output.shape[:-1]
+        or shape[-1] != 2 * grad_output.shape[-1]
+    ):
         raise ValueError(
             f"Shape mismatch: input {shape} vs grad_output {grad_output.shape}"
         )

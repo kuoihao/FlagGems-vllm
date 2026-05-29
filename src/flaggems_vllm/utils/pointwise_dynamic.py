@@ -10,7 +10,10 @@ from triton.runtime.jit import JITFunction
 
 from flaggems_vllm.utils.code_cache import code_cache_dir
 from flaggems_vllm.utils.code_utils import IndentedBuffer, write_atomic
-from flaggems_vllm.utils.codegen_config_utils import CodeGenConfig, get_codegen_config
+from flaggems_vllm.utils.codegen_config_utils import (
+    CodeGenConfig,
+    get_codegen_config,
+)
 from flaggems_vllm.utils.device_info import get_device_capability
 from flaggems_vllm.utils.shape_utils import (
     MemOverlap,
@@ -23,7 +26,10 @@ from flaggems_vllm.utils.shape_utils import (
     has_internal_overlapping,
 )
 from flaggems_vllm.utils.tensor_wrapper import StridedBuffer
-from flaggems_vllm.utils.type_utils import ELEMENTWISE_TYPE_PROMOTION_KIND, type_promotion
+from flaggems_vllm.utils.type_utils import (
+    ELEMENTWISE_TYPE_PROMOTION_KIND,
+    type_promotion,
+)
 
 
 # ------------------ Operation Description ---------------------------
@@ -141,7 +147,9 @@ class FunctionSchema:
         assert self._num_outputs >= 1
 
         self._num_input_tensors = sum(self._is_tensor)
-        self._num_non_tensor_inputs = self._num_inputs - self._num_input_tensors
+        self._num_non_tensor_inputs = (
+            self._num_inputs - self._num_input_tensors
+        )
         self._input_id = self._compute_input_id()
 
     @staticmethod
@@ -199,7 +207,9 @@ class FunctionSchema:
         else:
             for _ in range(self.num_outputs()):
                 output_types.append("StridedBuffer")
-        sig = f'Pointwise: {", ".join(input_types)} -> {", ".join(output_types)}'
+        sig = (
+            f'Pointwise: {", ".join(input_types)} -> {", ".join(output_types)}'
+        )
         return sig
 
     def _compute_input_id(self):
@@ -251,8 +261,12 @@ class KernelGenerator:
         if num_non_tensor_args > 0:
             # we do not specialize non tensor args since they are passed into the inlined function
             # which means that their values may not deserve specialization
-            non_specialize_arg_names = [f"val{i}" for i in range(num_non_tensor_args)]
-            code.writeline(f"@triton.jit(do_not_specialize={non_specialize_arg_names})")
+            non_specialize_arg_names = [
+                f"val{i}" for i in range(num_non_tensor_args)
+            ]
+            code.writeline(
+                f"@triton.jit(do_not_specialize={non_specialize_arg_names})"
+            )
         else:
             code.writeline("@triton.jit")
 
@@ -301,21 +315,29 @@ class KernelGenerator:
             if ndim > 0:
                 # strides for inputs
                 for i in range(schema.num_input_tensors()):
-                    stride_args = _cs(f"in{i}_stride{j}: int" for j in range(ndim))
+                    stride_args = _cs(
+                        f"in{i}_stride{j}: int" for j in range(ndim)
+                    )
                     code.writeline(f"{stride_args}, # strides for in{i}")
                     if with_block_pointer:
                         stride_order_args = _cs(
-                            f"in{i}_stride_order{j}: tl.constexpr" for j in range(ndim)
+                            f"in{i}_stride_order{j}: tl.constexpr"
+                            for j in range(ndim)
                         )
-                        code.writeline(f"{stride_order_args}, # stride order for in{i}")
+                        code.writeline(
+                            f"{stride_order_args}, # stride order for in{i}"
+                        )
 
                 # strides for outputs
                 for i in range(schema.num_output_tensors()):
-                    stride_args = _cs(f"out{i}_stride{j}: int" for j in range(ndim))
+                    stride_args = _cs(
+                        f"out{i}_stride{j}: int" for j in range(ndim)
+                    )
                     code.writeline(f"{stride_args}, # strides for out{i}")
                     if with_block_pointer:
                         stride_order_args = _cs(
-                            f"out{i}_stride_order{j}: tl.constexpr" for j in range(ndim)
+                            f"out{i}_stride_order{j}: tl.constexpr"
+                            for j in range(ndim)
                         )
                         code.writeline(
                             f"{stride_order_args}, # stride order for out{i}"
@@ -331,7 +353,9 @@ class KernelGenerator:
             # tile size & tiles_per_cta, gsl style
             if ndim > 0:
                 code.writeline("tiles_per_cta: int,")
-                tile_sizes = _cs(f"tile_size{i}: tl.constexpr" for i in range(ndim))
+                tile_sizes = _cs(
+                    f"tile_size{i}: tl.constexpr" for i in range(ndim)
+                )
                 code.writeline(f"{tile_sizes},")
                 code.writeline("one_tile_per_cta: tl.constexpr,")
         code.writeline("):")
@@ -372,12 +396,16 @@ class KernelGenerator:
             if ndim > 0:
                 # strides for inputs
                 for i in range(schema.num_input_tensors()):
-                    stride_args = _cs(f"in{i}_stride{j}: int" for j in range(ndim))
+                    stride_args = _cs(
+                        f"in{i}_stride{j}: int" for j in range(ndim)
+                    )
                     code.writeline(f"{stride_args}, # strides for in{i}")
 
                 # strides for outputs
                 for i in range(schema.num_output_tensors()):
-                    stride_args = _cs(f"out{i}_stride{j}: int" for j in range(ndim))
+                    stride_args = _cs(
+                        f"out{i}_stride{j}: int" for j in range(ndim)
+                    )
                     code.writeline(f"{stride_args}, # strides for out{i}")
 
                 # task space, used to reconstruct multi index
@@ -403,7 +431,9 @@ class KernelGenerator:
 
     def gen_body_for_0d(self, code):
         schema = self.fx
-        inputs_to_scalar_fn = [self.input_name(i) for i in range(schema.num_inputs())]
+        inputs_to_scalar_fn = [
+            self.input_name(i) for i in range(schema.num_inputs())
+        ]
         outputs_to_scalar_fn = [
             self.output_name(i) for i in range(schema.num_output_tensors())
         ]
@@ -440,7 +470,9 @@ class KernelGenerator:
         # block pointer for each operand
         shape = _tuple_content(tuple(f"s{i}" for i in range(ndim)))
         offsets = _tuple_content(tuple(f"offset{i}" for i in range(ndim)))
-        tile_sizes = _tuple_content(tuple(f"tile_size{i}" for i in range(ndim)))
+        tile_sizes = _tuple_content(
+            tuple(f"tile_size{i}" for i in range(ndim))
+        )
 
         # reconstruct pid multi index
         code.writeline(
@@ -460,16 +492,22 @@ class KernelGenerator:
             # Or else: AssertionError: Block pointers only support 32 bit
             # `offsets/block_shape`, add a `.to(tl.int32)` or use regular indexing
             # for 64 bit support
-            code.writeline(f"offset{i} = (tile_id{i} * tile_size{i}).to(tl.int32)")
+            code.writeline(
+                f"offset{i} = (tile_id{i} * tile_size{i}).to(tl.int32)"
+            )
 
         # loads
         code.writeline("# loads")
         for i in range(schema.num_input_tensors()):
-            strides = _tuple_content(tuple(f"in{i}_stride{j}" for j in range(ndim)))
+            strides = _tuple_content(
+                tuple(f"in{i}_stride{j}" for j in range(ndim))
+            )
             import flaggems_vllm
 
             if flaggems_vllm.vendor_name == "spacemit":
-                order = _tuple_content(tuple(f"{ndim - j - 1}" for j in range(ndim)))
+                order = _tuple_content(
+                    tuple(f"{ndim - j - 1}" for j in range(ndim))
+                )
             else:
                 order = _tuple_content(
                     tuple(f"in{i}_stride_order{j}" for j in range(ndim))
@@ -486,7 +524,9 @@ class KernelGenerator:
 
         # compute
         # TODO: sepearate this part
-        inputs_to_scalar_fn = [self.input_name(i) for i in range(schema.num_inputs())]
+        inputs_to_scalar_fn = [
+            self.input_name(i) for i in range(schema.num_inputs())
+        ]
         outputs_to_scalar_fn = [
             self.output_name(i) for i in range(schema.num_output_tensors())
         ]
@@ -504,7 +544,9 @@ class KernelGenerator:
             "# stores, note that store to block pointer does not automatically cast the value to the pointer's dtype"
         )
         for i in range(schema.num_output_tensors()):
-            strides = _tuple_content(tuple(f"out{i}_stride{j}" for j in range(ndim)))
+            strides = _tuple_content(
+                tuple(f"out{i}_stride{j}" for j in range(ndim))
+            )
             order = _tuple_content(
                 tuple(f"out{i}_stride_order{j}" for j in range(ndim))
             )
@@ -568,7 +610,9 @@ class KernelGenerator:
 
         # compute
         # TODO: sepearate this part
-        inputs_to_scalar_fn = [self.input_name(i) for i in range(schema.num_inputs())]
+        inputs_to_scalar_fn = [
+            self.input_name(i) for i in range(schema.num_inputs())
+        ]
         outputs_to_scalar_fn = [
             self.output_name(i) for i in range(schema.num_output_tensors())
         ]
@@ -690,7 +734,9 @@ class KernelGenerator:
 
         # compute
         # TODO: sepearate this part
-        inputs_to_scalar_fn = [self.input_name(i) for i in range(schema.num_inputs())]
+        inputs_to_scalar_fn = [
+            self.input_name(i) for i in range(schema.num_inputs())
+        ]
         outputs_to_scalar_fn = [
             self.output_name(i) for i in range(schema.num_output_tensors())
         ]
@@ -782,7 +828,9 @@ class WrapperGenerator:
             else:
                 arg_type = schema.input_type(i)
                 if arg_type is not None:
-                    params.append(f"{self.input_name(i)}: {_type_name(arg_type)}")
+                    params.append(
+                        f"{self.input_name(i)}: {_type_name(arg_type)}"
+                    )
                 else:
                     params.append(f"{self.input_name(i)}")
         # NOTE: [the wrapper's signature and rules for passing parameters ]
@@ -802,7 +850,9 @@ class WrapperGenerator:
         params.append("*")  # output params must be passed by keyword
 
         for i in range(schema.num_output_tensors()):
-            params.append(f"{self.output_name(i)}: Union[torch.Tensor, StridedBuffer]")
+            params.append(
+                f"{self.output_name(i)}: Union[torch.Tensor, StridedBuffer]"
+            )
         code.writeline(f"def {self.name}({_cs(params)}): ")
 
     def gen_docstring(self, code: IndentedBuffer):
@@ -812,9 +862,9 @@ class WrapperGenerator:
 
     def gen_same_shape_check(self, code: IndentedBuffer):
         schema: FunctionSchema = self.fx
-        params = [f"in{i}.shape" for i in range(schema.num_input_tensors())] + [
-            f"out{i}.shape" for i in range(schema.num_output_tensors())
-        ]
+        params = [
+            f"in{i}.shape" for i in range(schema.num_input_tensors())
+        ] + [f"out{i}.shape" for i in range(schema.num_output_tensors())]
         check: str = " == ".join(params)
         code.writeline(f"assert {check}, 'operand shapes mismatch'")
 
@@ -930,8 +980,12 @@ class WrapperGenerator:
             code.writeline(f"in{i}_strides = in{i}.stride()")
             if not with_block_pointer:
                 continue
-            if ndim >= 2:  # where ndim is 1, we don't need to compute stride order
-                code.writeline(f"in{i}_stride_order = stride_order(in{i}_strides)")
+            if (
+                ndim >= 2
+            ):  # where ndim is 1, we don't need to compute stride order
+                code.writeline(
+                    f"in{i}_stride_order = stride_order(in{i}_strides)"
+                )
             else:
                 code.writeline(f"in{i}_stride_order = (0,)")
         for i in range(schema.num_output_tensors()):
@@ -939,7 +993,9 @@ class WrapperGenerator:
             if not with_block_pointer:
                 continue
             if ndim >= 2:
-                code.writeline(f"out{i}_stride_order = stride_order(out{i}_strides)")
+                code.writeline(
+                    f"out{i}_stride_order = stride_order(out{i}_strides)"
+                )
             else:
                 code.writeline(f"out{i}_stride_order = (0,)")
 
@@ -961,7 +1017,9 @@ class WrapperGenerator:
 
                 if ndim > 0:
                     for i in range(schema.num_input_tensors()):
-                        s = ", ".join(f"in{i}_strides[{j}]" for j in range(ndim))
+                        s = ", ".join(
+                            f"in{i}_strides[{j}]" for j in range(ndim)
+                        )
                         code.writeline(f"{s}, # stride for in{i}")
                         if not with_block_pointer:
                             continue
@@ -971,7 +1029,9 @@ class WrapperGenerator:
                         code.writeline(f"{order}, # stride order for in{i}")
 
                     for i in range(schema.num_output_tensors()):
-                        s = ", ".join(f"out{i}_strides[{j}]" for j in range(ndim))
+                        s = ", ".join(
+                            f"out{i}_strides[{j}]" for j in range(ndim)
+                        )
                         code.writeline(f"{s}, # stride for out{i}")
                         if not with_block_pointer:
                             continue
@@ -980,10 +1040,14 @@ class WrapperGenerator:
                         )
                         code.writeline(f"{order}, # stride orderfor out{i}")
 
-                    shape_args: str = ", ".join(f"shape[{i}]" for i in range(ndim))
+                    shape_args: str = ", ".join(
+                        f"shape[{i}]" for i in range(ndim)
+                    )
                     code.writeline(f"{shape_args}, # task indexing space")
                     code.writeline("num_tasks, # num tasks")
-                    code.writeline("tiles_per_cta=tiles_per_cta, # tiles_per_cta")
+                    code.writeline(
+                        "tiles_per_cta=tiles_per_cta, # tiles_per_cta"
+                    )
                     for i in range(ndim):
                         code.writeline(f"tile_size{i}=tile_sizes[{i}],")
                     code.writeline("one_tile_per_cta=one_tile_per_cta,")
@@ -1021,23 +1085,33 @@ class WrapperGenerator:
 
                 if ndim > 0:
                     for i in range(schema.num_input_tensors()):
-                        s = ", ".join(f"in{i}_strides[{j}]" for j in range(ndim))
+                        s = ", ".join(
+                            f"in{i}_strides[{j}]" for j in range(ndim)
+                        )
                         code.writeline(f"{s}, # stride for in{i}")
                     for i in range(schema.num_output_tensors()):
-                        s = ", ".join(f"out{i}_strides[{j}]" for j in range(ndim))
+                        s = ", ".join(
+                            f"out{i}_strides[{j}]" for j in range(ndim)
+                        )
                         code.writeline(f"{s}, # stride for out{i}")
 
-                    shape_args: str = ", ".join(f"shape[{i}]" for i in range(ndim))
+                    shape_args: str = ", ".join(
+                        f"shape[{i}]" for i in range(ndim)
+                    )
                     code.writeline(f"{shape_args}, # task indexing space")
                     code.writeline("num_tasks, # num tasks")
-                    code.writeline("tiles_per_cta=tiles_per_cta, # tiles_per_cta")
+                    code.writeline(
+                        "tiles_per_cta=tiles_per_cta, # tiles_per_cta"
+                    )
                     code.writeline("tile_size=tile_size,")
                     code.writeline("one_tile_per_cta=one_tile_per_cta,")
                 code.writeline("num_warps=num_warps,")
             code.writeline(")")
 
     def gen_return(self, code: IndentedBuffer):
-        return_exprs = _cs(f"out{i}" for i in range(self.fx.num_output_tensors()))
+        return_exprs = _cs(
+            f"out{i}" for i in range(self.fx.num_output_tensors())
+        )
         code.writeline(f"return {return_exprs}")
 
     def codegen_nd_tile(self, code):
@@ -1177,13 +1251,19 @@ class ModuleGenerator:
         code.writeline("    heuristics_for_num_warps,")
         code.writeline("    stride_order,")
         code.writeline(")")
-        code.writeline("from flaggems_vllm.utils.tensor_wrapper import StridedBuffer")
+        code.writeline(
+            "from flaggems_vllm.utils.tensor_wrapper import StridedBuffer"
+        )
         code.writeline("from flaggems_vllm.utils.libentry import libentry")
-        code.writeline("from flaggems_vllm.utils import triton_lang_extension as ext")
+        code.writeline(
+            "from flaggems_vllm.utils import triton_lang_extension as ext"
+        )
         code.writeline("from flaggems_vllm.runtime import torch_device_fn")
 
         # Generate extra imports and local JIT deps of the scalar function
-        jit_dep_imports, local_jit_sources = self._collect_jit_deps(self.scalar_fn)
+        jit_dep_imports, local_jit_sources = self._collect_jit_deps(
+            self.scalar_fn
+        )
         for module_path, names in sorted(jit_dep_imports.items()):
             sorted_names = ", ".join(sorted(names))
             code.writeline(f"from {module_path} import {sorted_names}")
@@ -1222,7 +1302,9 @@ class KernelInfo:
 
 class ComplexMode(Enum):
     NONE = auto()
-    ELEMENTWISE = auto()  # add/sub: view_as_real → same kernel → view_as_complex
+    ELEMENTWISE = (
+        auto()
+    )  # add/sub: view_as_real → same kernel → view_as_complex
     CROSS = auto()  # mul/div: split ar/ai/br/bi → cross_kernel
 
 
@@ -1248,7 +1330,9 @@ class PointwiseDynamicFunction:
     The generated code are written out to the cache directory (defaults to ~/.flaggems).
     """
 
-    def __init__(self, op_desc: FunctionSchema, scalar_fn: JITFunction, config=None):
+    def __init__(
+        self, op_desc: FunctionSchema, scalar_fn: JITFunction, config=None
+    ):
         self.fx = op_desc
 
         assert isinstance(scalar_fn, JITFunction)
@@ -1280,7 +1364,11 @@ class PointwiseDynamicFunction:
     # -------------------- register_complex --------------------
 
     def register_complex(
-        self, mode, cross_kernel=None, tensorize_scalars=False, fallback_target=None
+        self,
+        mode,
+        cross_kernel=None,
+        tensorize_scalars=False,
+        fallback_target=None,
     ):
         """Register complex number support for this kernel.
 
@@ -1354,7 +1442,9 @@ class PointwiseDynamicFunction:
 
     def _classify_complex_inputs(self, operands):
         """Classify operands as 'all_complex', 'mixed', or 'real'."""
-        complex_count = sum(1 for v in operands.values() if self._is_complex_arg(v))
+        complex_count = sum(
+            1 for v in operands.values() if self._is_complex_arg(v)
+        )
         if complex_count == len(operands):
             return "all_complex"
         elif complex_count > 0:
@@ -1378,9 +1468,13 @@ class PointwiseDynamicFunction:
                 if isinstance(v, complex):
                     result[i] = torch.tensor(v, dtype=dtype, device=device)
                 elif isinstance(v, float):
-                    result[i] = torch.tensor(v, dtype=torch.float32, device=device)
+                    result[i] = torch.tensor(
+                        v, dtype=torch.float32, device=device
+                    )
                 elif isinstance(v, (int, bool)):
-                    result[i] = torch.tensor(v, dtype=torch.int64, device=device)
+                    result[i] = torch.tensor(
+                        v, dtype=torch.int64, device=device
+                    )
                 else:
                     result[i] = v
             else:
@@ -1401,7 +1495,9 @@ class PointwiseDynamicFunction:
         elif isinstance(a, complex):
             return torch.tensor(a, dtype=target_dtype, device=device)
         elif isinstance(a, (int, float)):
-            return torch.tensor(complex(a, 0), dtype=target_dtype, device=device)
+            return torch.tensor(
+                complex(a, 0), dtype=target_dtype, device=device
+            )
         return a
 
     # -------------------- complex dispatch --------------------
@@ -1416,13 +1512,17 @@ class PointwiseDynamicFunction:
 
         # tensorize scalar operands and delegate to fallback_target
         if strategy.tensorize_scalars and strategy.fallback_target is not None:
-            operands = self._tensorize_scalar_operands(operands, result_dtype, device)
+            operands = self._tensorize_scalar_operands(
+                operands, result_dtype, device
+            )
             new_args = self._merge_args(operands, others)
             return strategy.fallback_target(*new_args, **kwargs)
 
         # convert all operands to complex tensors
         for i in list(operands.keys()):
-            operands[i] = self._to_complex_tensor(operands[i], result_dtype, device)
+            operands[i] = self._to_complex_tensor(
+                operands[i], result_dtype, device
+            )
 
         # broadcast complex tensor operands
         complex_tensors = [operands[i] for i in sorted(operands.keys())]
@@ -1432,7 +1532,10 @@ class PointwiseDynamicFunction:
 
         classification = self._classify_complex_inputs(operands)
 
-        if strategy.mode == ComplexMode.CROSS and classification == "all_complex":
+        if (
+            strategy.mode == ComplexMode.CROSS
+            and classification == "all_complex"
+        ):
             return self._call_complex_cross(operands, result_dtype)
         elif classification in ("all_complex", "mixed"):
             return self._call_complex_elementwise(
@@ -1442,7 +1545,9 @@ class PointwiseDynamicFunction:
             new_args = self._merge_args(operands, others)
             return self._call_real_impl(*new_args, **kwargs)
 
-    def _call_complex_elementwise(self, operands, others, result_dtype, kwargs):
+    def _call_complex_elementwise(
+        self, operands, others, result_dtype, kwargs
+    ):
         """Elementwise: view_as_real -> call real kernel -> view_as_complex."""
         real_tensors = {i: torch.view_as_real(t) for i, t in operands.items()}
 
@@ -1503,7 +1608,9 @@ class PointwiseDynamicFunction:
                 raise ValueError(
                     "Input arguments must be passed by position, and the corresponding dtype must be specified."
                 )
-        in_tensors = [item for i, item in enumerate(args) if schema.is_tensor(i)]
+        in_tensors = [
+            item for i, item in enumerate(args) if schema.is_tensor(i)
+        ]
 
         # output dtype promotions
         outputs_dtypes_for_allocation = []
@@ -1517,7 +1624,9 @@ class PointwiseDynamicFunction:
         INT32_MAX = torch.iinfo(torch.int32).max
         if tensors[0].numel() > INT32_MAX:
             self.config.prefer_block_pointer = False
-        if self.use_fast_path(tensors):  # dimension collapse & use physical ordering
+        if self.use_fast_path(
+            tensors
+        ):  # dimension collapse & use physical ordering
             allocated_outputs = [
                 torch.empty_like(tensors[0], dtype=dtype)
                 for dtype in outputs_dtypes_for_allocation
@@ -1580,7 +1689,9 @@ class PointwiseDynamicFunction:
                     StridedBuffer(
                         item,
                         task_shape,
-                        broadcasted_stride(item.shape, item.stride(), task_shape),
+                        broadcasted_stride(
+                            item.shape, item.stride(), task_shape
+                        ),
                     )
                     if schema.is_tensor(i)
                     else item

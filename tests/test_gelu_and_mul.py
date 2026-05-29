@@ -11,8 +11,12 @@ from . import accuracy_utils as utils
 @pytest.mark.parametrize("dtype", utils.FLOAT_DTYPES)
 @pytest.mark.parametrize("approximate", ["none", "tanh"])
 def test_gelu_and_mul(shape, approximate, dtype):
-    inp1 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
-    inp2 = torch.randn(shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True)
+    inp1 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
+    inp2 = torch.randn(
+        shape, dtype=dtype, device=flaggems_vllm.device, requires_grad=True
+    )
     ref_inp1 = utils.to_reference(inp1, True)
     ref_inp2 = utils.to_reference(inp2, True)
 
@@ -29,7 +33,9 @@ def test_gelu_and_mul(shape, approximate, dtype):
         ref_out, (ref_inp1, ref_inp2), ref_grad
     )
 
-    res_inp1_grad, res_inp2_grad = torch.autograd.grad(res_out, (inp1, inp2), out_grad)
+    res_inp1_grad, res_inp2_grad = torch.autograd.grad(
+        res_out, (inp1, inp2), out_grad
+    )
 
     utils.gems_assert_close(res_out, ref_out, dtype)
     utils.gems_assert_close(res_inp1_grad, ref_inp1_grad, dtype)

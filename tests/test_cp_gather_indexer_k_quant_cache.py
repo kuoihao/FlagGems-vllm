@@ -23,7 +23,9 @@ def _default_fp8_dtype():
         return torch.float8_e4m3fnuz
     if hasattr(torch, "float8_e4m3fn"):
         return torch.float8_e4m3fn
-    pytest.skip("float8_e4m3fn is required for cp_gather_indexer_k_quant_cache")
+    pytest.skip(
+        "float8_e4m3fn is required for cp_gather_indexer_k_quant_cache"
+    )
 
 
 def _check_target_vllm_version(vllm):
@@ -100,7 +102,9 @@ def torch_gather(kv_cache, dst_k, dst_scale, block_table, cu_seq_lens):
             )
 
 
-def _make_cache(num_blocks, block_size, head_dim, quant_block_size, fp8_dtype, device):
+def _make_cache(
+    num_blocks, block_size, head_dim, quant_block_size, fp8_dtype, device
+):
     cache_stride = head_dim + head_dim * 4 // quant_block_size
     k_cache = torch.empty(
         (num_blocks, block_size, cache_stride),
@@ -126,7 +130,9 @@ def _make_cache(num_blocks, block_size, head_dim, quant_block_size, fp8_dtype, d
 
 def _make_gather_metadata(seq_lens, block_size, device):
     seq_lens_tensor = torch.tensor(seq_lens, dtype=torch.int32, device=device)
-    cu_seqlen = torch.zeros(len(seq_lens) + 1, dtype=torch.int32, device=device)
+    cu_seqlen = torch.zeros(
+        len(seq_lens) + 1, dtype=torch.int32, device=device
+    )
     cu_seqlen[1:] = torch.cumsum(seq_lens_tensor, dim=0)
 
     max_blocks = max(math.ceil(seq_len / block_size) for seq_len in seq_lens)

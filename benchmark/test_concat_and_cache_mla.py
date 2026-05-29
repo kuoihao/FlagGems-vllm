@@ -23,7 +23,9 @@ def torch_concat_and_cache_mla_ref(
 ) -> None:
     kv_lora_rank = kv_c.size(1)
     block_size = kv_cache.size(1)
-    temp_cache = torch.zeros(kv_cache.shape, dtype=kv_c.dtype, device=kv_cache.device)
+    temp_cache = torch.zeros(
+        kv_cache.shape, dtype=kv_c.dtype, device=kv_cache.device
+    )
 
     for token_idx in range(slot_mapping.numel()):
         slot = slot_mapping[token_idx].item()
@@ -41,7 +43,9 @@ def torch_concat_and_cache_mla_ref(
         kv_cache.copy_(temp_cache)
 
 
-@pytest.mark.skipif(flaggems_vllm.vendor_name == "hygon", reason="#2885: RuntimeError")
+@pytest.mark.skipif(
+    flaggems_vllm.vendor_name == "hygon", reason="#2885: RuntimeError"
+)
 @pytest.mark.concat_and_cache_mla
 def test_concat_and_cache_mla():
     def input_kwargs(shape, dtype, device):
@@ -54,10 +58,16 @@ def test_concat_and_cache_mla():
         ) = shape
         total_slots = num_blocks * block_size
         slot_mapping_lst = random.sample(range(total_slots), num_tokens)
-        slot_mapping = torch.tensor(slot_mapping_lst, dtype=torch.long, device=device)
+        slot_mapping = torch.tensor(
+            slot_mapping_lst, dtype=torch.long, device=device
+        )
 
-        kv_c = torch.randn(num_tokens, kv_lora_rank, dtype=dtype, device=device)
-        k_pe = torch.randn(num_tokens, qk_rope_head_dim, dtype=dtype, device=device)
+        kv_c = torch.randn(
+            num_tokens, kv_lora_rank, dtype=dtype, device=device
+        )
+        k_pe = torch.randn(
+            num_tokens, qk_rope_head_dim, dtype=dtype, device=device
+        )
         entry_size = kv_lora_rank + qk_rope_head_dim
 
         scale = torch.tensor(0.1, dtype=torch.float32, device=device)

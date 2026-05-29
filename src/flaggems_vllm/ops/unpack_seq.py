@@ -39,7 +39,9 @@ def _unpack_seq_triton_kernel(
 
     # Pointers
     # packed_ptr: row-major [B, Lmax, D]
-    packed_row_ptr = packed_ptr + (pid_b * Lmax + off_t)[:, None] * D + off_d[None, :]
+    packed_row_ptr = (
+        packed_ptr + (pid_b * Lmax + off_t)[:, None] * D + off_d[None, :]
+    )
 
     # out_ptr: row-major [N, D]
     out_row_ptr = out_ptr + out_row[:, None] * D + off_d[None, :]
@@ -68,7 +70,9 @@ def unpack_seq_triton(
 
     N = int(lengths.sum().item())
 
-    out = torch.empty((N, D), device=packed_tensor.device, dtype=packed_tensor.dtype)
+    out = torch.empty(
+        (N, D), device=packed_tensor.device, dtype=packed_tensor.dtype
+    )
 
     grid = (B, triton.cdiv(Lmax, block_t), triton.cdiv(D, block_d))
     _unpack_seq_triton_kernel[grid](

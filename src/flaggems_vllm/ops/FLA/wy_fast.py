@@ -61,9 +61,16 @@ def recompute_w_u_fwd_kernel(
     p_beta = tl.make_block_ptr(
         beta + bos * H + i_h, (T,), (H,), (i_t * BT,), (BT,), (0,)
     )
-    p_g = tl.make_block_ptr(g + (bos * H + i_h), (T,), (H,), (i_t * BT,), (BT,), (0,))
+    p_g = tl.make_block_ptr(
+        g + (bos * H + i_h), (T,), (H,), (i_t * BT,), (BT,), (0,)
+    )
     p_A = tl.make_block_ptr(
-        A + (bos * H + i_h) * BT, (T, BT), (H * BT, 1), (i_t * BT, 0), (BT, BT), (1, 0)
+        A + (bos * H + i_h) * BT,
+        (T, BT),
+        (H * BT, 1),
+        (i_t * BT, 0),
+        (BT, BT),
+        (1, 0),
     )
     b_beta = tl.load(p_beta, boundary_check=(0,))
     b_A = tl.load(p_A, boundary_check=(0, 1))
@@ -127,7 +134,9 @@ def recompute_w_u_fwd(
     BT = A.shape[-1]
 
     chunk_indices = (
-        prepare_chunk_indices(cu_seqlens, BT) if cu_seqlens is not None else None
+        prepare_chunk_indices(cu_seqlens, BT)
+        if cu_seqlens is not None
+        else None
     )
     NT = triton.cdiv(T, BT) if cu_seqlens is None else len(chunk_indices)
     BK = 64

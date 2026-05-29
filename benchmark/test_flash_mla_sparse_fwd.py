@@ -56,7 +56,9 @@ class FlashmlaSparseBenchmark(base.Benchmark):
 
     def get_input_iter(self, dtype):
         _ = dtype
-        for param in FlashmlaSparseBenchmark.get_performance_test_params_flashmla():
+        for (
+            param
+        ) in FlashmlaSparseBenchmark.get_performance_test_params_flashmla():
             yield from FlashmlaSparseBenchmark.make_input_flashmla(param)
 
     @staticmethod
@@ -68,15 +70,21 @@ class FlashmlaSparseBenchmark(base.Benchmark):
     def get_performance_test_params_flashmla():
         cases = (
             [
-                TestParam(4096, s_kv, 2048, h_q=128, d_qk=576, have_attn_sink=True)
+                TestParam(
+                    4096, s_kv, 2048, h_q=128, d_qk=576, have_attn_sink=True
+                )
                 for s_kv in [8192, 32768, 65536, 98304, 131072]
             ]
             + [
-                TestParam(4096, s_kv, 512, h_q=64, d_qk=512, have_attn_sink=True)
+                TestParam(
+                    4096, s_kv, 512, h_q=64, d_qk=512, have_attn_sink=True
+                )
                 for s_kv in [8192, 32768, 49152, 65536]
             ]
             + [
-                TestParam(4096, s_kv, 1024, h_q=128, d_qk=512, have_attn_sink=True)
+                TestParam(
+                    4096, s_kv, 1024, h_q=128, d_qk=512, have_attn_sink=True
+                )
                 for s_kv in [8192, 32768, 49152, 65536]
             ]
         )
@@ -84,7 +92,10 @@ class FlashmlaSparseBenchmark(base.Benchmark):
 
     @staticmethod
     def _randperm_batch(
-        batch_size: int, perm_range: torch.Tensor, perm_size: int, paddings: List[int]
+        batch_size: int,
+        perm_range: torch.Tensor,
+        perm_size: int,
+        paddings: List[int],
     ) -> torch.Tensor:
         """
         Generate random permutations in batch
@@ -101,7 +112,9 @@ class FlashmlaSparseBenchmark(base.Benchmark):
         perm_range_max = max(int(torch.max(perm_range).item()), perm_size)
         rand = torch.rand(batch_size, perm_range_max, dtype=torch.float32)
         rand[
-            torch.arange(0, perm_range_max).broadcast_to(batch_size, perm_range_max)
+            torch.arange(0, perm_range_max).broadcast_to(
+                batch_size, perm_range_max
+            )
             >= perm_range.view(batch_size, 1)
         ] = float("-inf")
         res = rand.topk(perm_size, dim=-1, sorted=True).indices.to(torch.int32)
@@ -109,7 +122,10 @@ class FlashmlaSparseBenchmark(base.Benchmark):
             res[res >= perm_range.view(batch_size, 1)] = paddings[0]
         else:
             fillers = torch.tensor(paddings, dtype=torch.int32).index_select(
-                0, torch.randint(0, len(paddings), (res.numel(),), dtype=torch.int32)
+                0,
+                torch.randint(
+                    0, len(paddings), (res.numel(),), dtype=torch.int32
+                ),
             )
             res.masked_scatter_(res >= perm_range.view(batch_size, 1), fillers)
         torch.use_deterministic_algorithms(False)
@@ -164,7 +180,9 @@ class FlashmlaSparseBenchmark(base.Benchmark):
         if is_all_indices_invalid:
             all_indices_invalid_mask = torch.randn(s_q, device="cpu") < -2
             indices[
-                all_indices_invalid_mask[:, None, None].broadcast_to(indices.shape)
+                all_indices_invalid_mask[:, None, None].broadcast_to(
+                    indices.shape
+                )
             ] = random.choice(invalid_indices_candidate)
         indices = indices.to(device)
 

@@ -108,9 +108,7 @@ class IndexerKQuantAndCacheBenchmark(base.Benchmark):
             slot_mapping = torch.randperm(
                 num_blocks * block_size,
                 device=self.device,
-            )[
-                :num_tokens
-            ].to(torch.long)
+            )[:num_tokens].to(torch.long)
             cache_stride = head_dim + head_dim * 4 // quant_block_size
             kv_cache = torch.empty(
                 num_blocks,
@@ -119,7 +117,9 @@ class IndexerKQuantAndCacheBenchmark(base.Benchmark):
                 dtype=torch.uint8,
                 device=self.device,
             )
-            yield k, kv_cache, slot_mapping, quant_block_size, {"scale_fmt": "ue8m0"}
+            yield k, kv_cache, slot_mapping, quant_block_size, {
+                "scale_fmt": "ue8m0"
+            }
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
