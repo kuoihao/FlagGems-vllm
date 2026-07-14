@@ -21,11 +21,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-2-8-3]": {
     "params": {
@@ -37,11 +37,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-2-8-8]": {
     "params": {
@@ -53,11 +53,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-2-16-1]": {
     "params": {
@@ -69,11 +69,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-2-16-3]": {
     "params": {
@@ -85,11 +85,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-2-16-8]": {
     "params": {
@@ -101,11 +101,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-8-1]": {
     "params": {
@@ -117,11 +117,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-8-3]": {
     "params": {
@@ -133,11 +133,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-8-8]": {
     "params": {
@@ -149,11 +149,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-16-1]": {
     "params": {
@@ -165,11 +165,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-16-3]": {
     "params": {
@@ -181,11 +181,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-1-4-16-8]": {
     "params": {
@@ -197,11 +197,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-8-1]": {
     "params": {
@@ -213,11 +213,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-8-3]": {
     "params": {
@@ -229,11 +229,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-8-8]": {
     "params": {
@@ -245,11 +245,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-16-1]": {
     "params": {
@@ -261,11 +261,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-16-3]": {
     "params": {
@@ -277,11 +277,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-2-16-8]": {
     "params": {
@@ -293,11 +293,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-8-1]": {
     "params": {
@@ -309,11 +309,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-8-3]": {
     "params": {
@@ -325,11 +325,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-8-8]": {
     "params": {
@@ -341,11 +341,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-16-1]": {
     "params": {
@@ -357,11 +357,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-16-3]": {
     "params": {
@@ -373,11 +373,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-True-2-4-16-8]": {
     "params": {
@@ -389,11 +389,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-8-1]": {
     "params": {
@@ -405,11 +405,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-8-3]": {
     "params": {
@@ -421,11 +421,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-8-8]": {
     "params": {
@@ -437,11 +437,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-16-1]": {
     "params": {
@@ -453,11 +453,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-16-3]": {
     "params": {
@@ -469,11 +469,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-2-16-8]": {
     "params": {
@@ -485,11 +485,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-8-1]": {
     "params": {
@@ -501,11 +501,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-8-3]": {
     "params": {
@@ -517,11 +517,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-8-8]": {
     "params": {
@@ -533,11 +533,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-16-1]": {
     "params": {
@@ -549,11 +549,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-16-3]": {
     "params": {
@@ -565,11 +565,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-1-4-16-8]": {
     "params": {
@@ -581,11 +581,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-8-1]": {
     "params": {
@@ -597,11 +597,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-8-3]": {
     "params": {
@@ -613,11 +613,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-8-8]": {
     "params": {
@@ -629,11 +629,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-16-1]": {
     "params": {
@@ -645,11 +645,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-16-3]": {
     "params": {
@@ -661,11 +661,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-2-16-8]": {
     "params": {
@@ -677,11 +677,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-8-1]": {
     "params": {
@@ -693,11 +693,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-8-3]": {
     "params": {
@@ -709,11 +709,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-8-8]": {
     "params": {
@@ -725,11 +725,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-16-1]": {
     "params": {
@@ -741,11 +741,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-16-3]": {
     "params": {
@@ -757,11 +757,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-0-False-2-4-16-8]": {
     "params": {
@@ -773,11 +773,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-8-1]": {
     "params": {
@@ -789,11 +789,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-8-3]": {
     "params": {
@@ -805,11 +805,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-8-8]": {
     "params": {
@@ -821,11 +821,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-16-1]": {
     "params": {
@@ -837,11 +837,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-16-3]": {
     "params": {
@@ -853,11 +853,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-2-16-8]": {
     "params": {
@@ -869,11 +869,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-8-1]": {
     "params": {
@@ -885,11 +885,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-8-3]": {
     "params": {
@@ -901,11 +901,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-8-8]": {
     "params": {
@@ -917,11 +917,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-16-1]": {
     "params": {
@@ -933,11 +933,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-16-3]": {
     "params": {
@@ -949,11 +949,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-1-4-16-8]": {
     "params": {
@@ -965,11 +965,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-8-1]": {
     "params": {
@@ -981,11 +981,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-8-3]": {
     "params": {
@@ -997,11 +997,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-8-8]": {
     "params": {
@@ -1013,11 +1013,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-16-1]": {
     "params": {
@@ -1029,11 +1029,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-16-3]": {
     "params": {
@@ -1045,11 +1045,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-2-16-8]": {
     "params": {
@@ -1061,11 +1061,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-8-1]": {
     "params": {
@@ -1077,11 +1077,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-8-3]": {
     "params": {
@@ -1093,11 +1093,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-8-8]": {
     "params": {
@@ -1109,11 +1109,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-16-1]": {
     "params": {
@@ -1125,11 +1125,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-16-3]": {
     "params": {
@@ -1141,11 +1141,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-True-2-4-16-8]": {
     "params": {
@@ -1157,11 +1157,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-8-1]": {
     "params": {
@@ -1173,11 +1173,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-8-3]": {
     "params": {
@@ -1189,11 +1189,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-8-8]": {
     "params": {
@@ -1205,11 +1205,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-16-1]": {
     "params": {
@@ -1221,11 +1221,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-16-3]": {
     "params": {
@@ -1237,11 +1237,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-2-16-8]": {
     "params": {
@@ -1253,11 +1253,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-8-1]": {
     "params": {
@@ -1269,11 +1269,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-8-3]": {
     "params": {
@@ -1285,11 +1285,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-8-8]": {
     "params": {
@@ -1301,11 +1301,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-16-1]": {
     "params": {
@@ -1317,11 +1317,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-16-3]": {
     "params": {
@@ -1333,11 +1333,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-1-4-16-8]": {
     "params": {
@@ -1349,11 +1349,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-8-1]": {
     "params": {
@@ -1365,11 +1365,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-8-3]": {
     "params": {
@@ -1381,11 +1381,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-8-8]": {
     "params": {
@@ -1397,11 +1397,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-16-1]": {
     "params": {
@@ -1413,11 +1413,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-16-3]": {
     "params": {
@@ -1429,11 +1429,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-2-16-8]": {
     "params": {
@@ -1445,11 +1445,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-8-1]": {
     "params": {
@@ -1461,11 +1461,11 @@
       "n_expert": 8,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-8-3]": {
     "params": {
@@ -1477,11 +1477,11 @@
       "n_expert": 8,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-8-8]": {
     "params": {
@@ -1493,11 +1493,11 @@
       "n_expert": 8,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-16-1]": {
     "params": {
@@ -1509,11 +1509,11 @@
       "n_expert": 16,
       "n_token": 1
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-16-3]": {
     "params": {
@@ -1525,11 +1525,11 @@
       "n_expert": 16,
       "n_token": 3
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype0-1-False-2-4-16-8]": {
     "params": {
@@ -1541,11 +1541,11 @@
       "n_expert": 16,
       "n_token": 8
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk[dtype1-0-True-1-2-8-1]": {
     "params": {
@@ -3094,11 +3094,11 @@
       "n_expert": 64,
       "n_token": 32
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-0-True-2-8-8-64-64]": {
     "params": {
@@ -3111,11 +3111,11 @@
       "n_expert": 64,
       "n_token": 64
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-0-False-2-8-8-64-32]": {
     "params": {
@@ -3128,11 +3128,11 @@
       "n_expert": 64,
       "n_token": 32
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-0-False-2-8-8-64-64]": {
     "params": {
@@ -3145,11 +3145,11 @@
       "n_expert": 64,
       "n_token": 64
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-1-True-2-8-8-64-32]": {
     "params": {
@@ -3162,11 +3162,11 @@
       "n_expert": 64,
       "n_token": 32
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-1-True-2-8-8-64-64]": {
     "params": {
@@ -3179,11 +3179,11 @@
       "n_expert": 64,
       "n_token": 64
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-1-False-2-8-8-64-32]": {
     "params": {
@@ -3196,11 +3196,11 @@
       "n_expert": 64,
       "n_token": 32
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype0-1-False-2-8-8-64-64]": {
     "params": {
@@ -3213,11 +3213,11 @@
       "n_expert": 64,
       "n_token": 64
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_large_scale[dtype1-0-True-2-8-8-64-32]": {
     "params": {
@@ -3360,108 +3360,108 @@
       "renormalize": true,
       "routed_scaling_factor": 1.0
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_scaling_factor[True-2.5]": {
     "params": {
       "renormalize": true,
       "routed_scaling_factor": 2.5
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_scaling_factor[False-1.0]": {
     "params": {
       "renormalize": false,
       "routed_scaling_factor": 1.0
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_scaling_factor[False-2.5]": {
     "params": {
       "renormalize": false,
       "routed_scaling_factor": 2.5
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_single_token[0-True]": {
     "params": {
       "scoring_func": 0,
       "renormalize": true
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_single_token[0-False]": {
     "params": {
       "scoring_func": 0,
       "renormalize": false
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_single_token[1-True]": {
     "params": {
       "scoring_func": 1,
       "renormalize": true
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_single_token[1-False]": {
     "params": {
       "scoring_func": 1,
       "renormalize": false
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_sigmoid[True]": {
     "params": {
       "renormalize": true
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_grouped_topk.py::test_grouped_topk_sigmoid[False]": {
     "params": {
       "renormalize": false
     },
-    "result": "passed",
+    "result": "skipped",
     "opname": [
       "grouped_topk"
     ],
-    "reason": null
+    "reason": "Skipped: vLLM is not installed"
   },
   "tests/test_flash_mla_sparse_fwd.py::test_flashmla_sparse[param0]": {
     "params": {
