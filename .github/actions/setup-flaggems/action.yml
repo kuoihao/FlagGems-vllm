@@ -30,7 +30,7 @@ runs:
         path: .ci/flaggems
         persist-credentials: false
 
-    - name: prepare writable job-local environment
+    - name: prepare writable runner environment
       shell: bash
       env:
         BACKEND: ${{ inputs.backend }}
@@ -53,21 +53,45 @@ runs:
         echo "FlagGems checkout: ${FLAGGEMS_DIR}"
         echo "FlagGems venv: ${FLAGGEMS_VENV}"
         echo "HOME: ${HOME}"
-        echo "UV cache: ${UV_CACHE_DIR}"
-        echo "UV managed Python: ${UV_PYTHON_INSTALL_DIR}"
+        echo "UV cache override: ${UV_CACHE_DIR:-<uv default>}"
+        echo "UV managed Python override: ${UV_PYTHON_INSTALL_DIR:-<uv default>}"
+
+        # Reuse the same runner-local uv and managed Python as FlagGems CI.
+        # These probes are diagnostic only: setup.sh installs uv/Python when
+        # they are absent, so a missing cache must not fail the job here.
+        export PATH="${HOME}/.local/bin:${PATH}"
+        backend_python="$(
+          awk "/^  ${BACKEND}:/{found=1} found && /python:/{print \$2; exit}" \
+            "${FLAGGEMS_DIR}/src/flag_gems/backends.yaml" | tr -d '"'
+        )"
+        echo "FlagGems Python: ${backend_python:-<unknown>}"
+        if command -v uv >/dev/null 2>&1; then
+          echo "Pre-setup uv: $(command -v uv)"
+          uv cache dir || echo "::warning::Unable to inspect the uv cache"
+          uv python dir || echo "::warning::Unable to inspect managed Python"
+          if [[ -n "${backend_python}" ]] && cached_python="$(
+            uv python find "${backend_python}" \
+              --managed-python --no-python-downloads 2>/dev/null
+          )"; then
+            echo "Cached managed Python ${backend_python}: ${cached_python}"
+          else
+            echo "No matching cached managed Python; setup.sh will install it"
+          fi
+        else
+          echo "uv is not cached; setup.sh will install it"
+        fi
 
         cd "${FLAGGEMS_DIR}"
         ./setup.sh "${BACKEND}"
 
         test -x "${FLAGGEMS_VENV}/bin/python"
-        # setup.sh may have installed uv in the child process. GITHUB_PATH is
-        # applied only to the next Actions step, so expose that path here too.
-        export PATH="${HOME}/.local/bin:${PATH}"
         source "${FLAGGEMS_VENV}/bin/activate"
         set -u
         echo "uv: $(command -v uv)"
-        echo "uv cache: $(uv cache dir)"
-        echo "uv managed Python: $(uv python dir)"
+        echo "uv cache: $(uv cache dir 2>/dev/null || echo '<unavailable>')"
+        echo "uv managed Python: $(
+          uv python dir 2>/dev/null || echo '<unavailable>'
+        )"
         python - <<'PY'
         import os
         import sys

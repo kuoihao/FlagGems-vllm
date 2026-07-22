@@ -31,53 +31,65 @@ run_id="${GITHUB_RUN_ID:-local}"
 run_attempt="${GITHUB_RUN_ATTEMPT:-1}"
 state_root="${RUNNER_TEMP}/flaggems-vllm-${run_id}-${run_attempt}-${BACKEND}"
 
-# Some self-hosted runners execute as an unprivileged account while retaining
-# HOME=/root. Keep uv's cache, downloaded Python, and fallback binary install
-# in writable job-local storage. This also avoids sharing mutable uv state
-# between unrelated fork pull requests on a persistent runner.
-home_dir="${state_root}/home"
-xdg_cache_dir="${state_root}/xdg-cache"
-xdg_data_dir="${state_root}/xdg-data"
-uv_cache_dir="${state_root}/uv-cache"
-uv_python_dir="${state_root}/uv-python"
 flaggems_dir="${workspace}/.ci/flaggems"
 flaggems_venv="${flaggems_dir}/.venv"
 
-mkdir -p \
-  "${home_dir}/.local/bin" \
-  "${xdg_cache_dir}" \
-  "${xdg_data_dir}" \
-  "${uv_cache_dir}" \
-  "${uv_python_dir}"
+# Match FlagGems' own CI by retaining the runner's normal HOME and uv caches.
+# Some misconfigured self-hosted runners execute as an unprivileged account
+# while inheriting HOME=/root, so fall back first to the account database and
+# finally to job-local state only when the normal locations are unusable.
+probe_directory() {
+  local directory="${1:?}"
+  local probe
 
-for directory in \
-  "${home_dir}" \
-  "${xdg_cache_dir}" \
-  "${xdg_data_dir}" \
-  "${uv_cache_dir}" \
-  "${uv_python_dir}"; do
-  if [[ ! -w "${directory}" ]]; then
-    echo "CI runtime directory is not writable: ${directory}" >&2
+  mkdir -p "${directory}" 2>/dev/null || return 1
+  [[ -d "${directory}" && -w "${directory}" && -x "${directory}" ]] \
+    || return 1
+  probe="$(mktemp "${directory}/.flaggems-ci-write.XXXXXX" 2>/dev/null)" \
+    || return 1
+  rm -f -- "${probe}" || return 1
+}
+
+usable_home() {
+  local candidate="${1:-}"
+
+  [[ -n "${candidate}" && -d "${candidate}" ]] || return 1
+  [[ -w "${candidate}" && -x "${candidate}" ]] || return 1
+  probe_directory "${candidate}" || return 1
+  probe_directory "${candidate}/.local/bin" || return 1
+  probe_directory "${candidate}/.cache/uv" || return 1
+  probe_directory "${candidate}/.local/share/uv/python" || return 1
+}
+
+home_source="inherited"
+home_dir="${HOME:-}"
+if ! usable_home "${home_dir}"; then
+  passwd_home="$({ getent passwd "$(id -u)" 2>/dev/null || true; } \
+    | awk -F: 'NR == 1 { print $6 }')"
+  home_source="passwd"
+  home_dir="${passwd_home}"
+fi
+
+if ! usable_home "${home_dir}"; then
+  home_source="job-local fallback"
+  home_dir="${state_root}/home"
+  mkdir -p "${home_dir}/.local/bin"
+  usable_home "${home_dir}" || {
+    echo "Unable to prepare a writable HOME: ${home_dir}" >&2
     exit 1
-  fi
-done
+  }
+fi
+
+home_dir="$(cd "${home_dir}" && pwd -P)"
 
 export HOME="${home_dir}"
-export XDG_CACHE_HOME="${xdg_cache_dir}"
-export XDG_DATA_HOME="${xdg_data_dir}"
-export UV_CACHE_DIR="${uv_cache_dir}"
-export UV_PYTHON_INSTALL_DIR="${uv_python_dir}"
 export FLAGGEMS_DIR="${flaggems_dir}"
 export FLAGGEMS_VENV="${flaggems_venv}"
 
 {
   printf 'HOME=%s\n' "${HOME}"
-  printf 'XDG_CACHE_HOME=%s\n' "${XDG_CACHE_HOME}"
-  printf 'XDG_DATA_HOME=%s\n' "${XDG_DATA_HOME}"
-  printf 'UV_CACHE_DIR=%s\n' "${UV_CACHE_DIR}"
-  printf 'UV_PYTHON_INSTALL_DIR=%s\n' "${UV_PYTHON_INSTALL_DIR}"
   printf 'FLAGGEMS_DIR=%s\n' "${FLAGGEMS_DIR}"
   printf 'FLAGGEMS_VENV=%s\n' "${FLAGGEMS_VENV}"
 } >> "${GITHUB_ENV}"
 
-echo "Prepared isolated FlagGems CI state: ${state_root}"
+echo "Using ${home_source} FlagGems CI HOME: ${HOME}"

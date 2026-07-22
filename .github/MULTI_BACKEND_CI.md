@@ -157,7 +157,8 @@ SDK, and device query utility, plus `bash`, `git`, `curl`, and `tar`. Ensure:
 - Actions Runner is v2.327.1 or newer for the pinned Node 24 actions;
 - outbound HTTPS/DNS can reach GitHub, FlagOS resources, vendor package
   indexes, Astral/uv, and the configured Python mirror;
-- the runner work directory and `$RUNNER_TEMP` are writable and executable;
+- the runner work directory, home directory, and uv cache are writable, and
+  any location holding uv-managed Python is executable;
 - no long-lived SSH key, cloud credential, or production secret remains on
   the machine; and
 - the runner is isolated from unrelated production networks and state.
@@ -166,11 +167,17 @@ Prefer an ephemeral/JIT VM, container, or host image. If the runner is
 persistent, retain the workflow cleanup and verify the machine after cancelled
 jobs.
 
-The caller adapter deliberately replaces an inherited `HOME` (including the
-common `HOME=/root` under an unprivileged runner account) with job-local state
-under `$RUNNER_TEMP`. It also places the XDG cache/data directories, uv cache,
-and uv-managed Python there. Do not preconfigure the workflow to use a shared
-root-owned uv cache; the setup log prints the effective paths for diagnosis.
+To match FlagGems' own CI, the caller adapter preserves a writable inherited
+`HOME` and its existing uv cache and managed Python. If `HOME` is unusable
+(for example, an unprivileged runner inherited `HOME=/root`), it tries the
+account database home and only then uses a job-local fallback under
+`$RUNNER_TEMP`. The setup log prints the selected home and effective uv paths
+for diagnosis. Do not configure a root-owned home or uv cache for an
+unprivileged runner account.
+
+Because fork code can write to this reused home and cache, treat all cached
+content as untrusted. Public fork jobs require ephemeral runners or a reliable
+machine reset between jobs; changing `HOME` alone is not a security boundary.
 
 ### 3. Register the organization runner
 

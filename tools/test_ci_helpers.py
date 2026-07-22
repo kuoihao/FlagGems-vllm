@@ -321,7 +321,13 @@ class PrepareFlagGemsCiEnvironmentTest(unittest.TestCase):
         cls.repo_root = Path(__file__).resolve().parents[1]
         cls.helper = cls.repo_root / "tools/prepare-flaggems-ci-env.sh"
 
-    def run_helper(self, backend: str):
+    def run_helper(
+        self,
+        backend: str,
+        *,
+        inherited_home_is_valid: bool = True,
+        passwd_home_is_valid: bool = True,
+    ):
         temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(temporary_directory.cleanup)
         root = Path(temporary_directory.name)
@@ -330,19 +336,41 @@ class PrepareFlagGemsCiEnvironmentTest(unittest.TestCase):
         github_env = root / "github-env"
         workspace.mkdir()
         runner_temp.mkdir()
+        inherited_home = root / "runner-home"
+        if inherited_home_is_valid:
+            inherited_home.mkdir()
+        else:
+            inherited_home.write_text("not a directory", encoding="utf-8")
+
+        passwd_home = root / "passwd-home"
+        if passwd_home_is_valid:
+            passwd_home.mkdir()
+
+        fake_bin = root / "fake-bin"
+        fake_bin.mkdir()
+        fake_getent = fake_bin / "getent"
+        fake_getent.write_text(
+            "#!/usr/bin/env bash\n"
+            f"printf '%s\\n' 'runner:x:1000:1000::{passwd_home}:/bin/bash'\n",
+            encoding="utf-8",
+        )
+        fake_getent.chmod(0o755)
+
+        environment = {
+            **os.environ,
+            "HOME": str(inherited_home),
+            "PATH": f"{fake_bin}:{os.environ['PATH']}",
+            "GITHUB_WORKSPACE": str(workspace),
+            "RUNNER_TEMP": str(runner_temp),
+            "GITHUB_ENV": str(github_env),
+            "GITHUB_RUN_ID": "12345",
+            "GITHUB_RUN_ATTEMPT": "2",
+        }
 
         result = subprocess.run(
             ["bash", str(self.helper), backend],
             cwd=self.repo_root,
-            env={
-                **os.environ,
-                "HOME": "/root",
-                "GITHUB_WORKSPACE": str(workspace),
-                "RUNNER_TEMP": str(runner_temp),
-                "GITHUB_ENV": str(github_env),
-                "GITHUB_RUN_ID": "12345",
-                "GITHUB_RUN_ATTEMPT": "2",
-            },
+            env=environment,
             text=True,
             capture_output=True,
             check=False,
@@ -352,37 +380,57 @@ class PrepareFlagGemsCiEnvironmentTest(unittest.TestCase):
             for line in github_env.read_text(encoding="utf-8").splitlines():
                 key, value = line.split("=", maxsplit=1)
                 values[key] = value
-        return result, values, workspace.resolve(), runner_temp.resolve()
+        return (
+            result,
+            values,
+            workspace.resolve(),
+            runner_temp.resolve(),
+            inherited_home.resolve(),
+            passwd_home.resolve(),
+        )
 
-    def test_isolates_uv_state_from_an_inherited_unwritable_home(self):
-        result, values, workspace, runner_temp = self.run_helper("iluvatar")
+    def test_preserves_a_writable_runner_home_and_uv_defaults(self):
+        result, values, workspace, _, inherited_home, _ = self.run_helper("iluvatar")
         self.assertEqual(result.returncode, 0, result.stderr)
 
-        state_root = runner_temp / "flaggems-vllm-12345-2-iluvatar"
         expected = {
-            "HOME": state_root / "home",
-            "XDG_CACHE_HOME": state_root / "xdg-cache",
-            "XDG_DATA_HOME": state_root / "xdg-data",
-            "UV_CACHE_DIR": state_root / "uv-cache",
-            "UV_PYTHON_INSTALL_DIR": state_root / "uv-python",
+            "HOME": inherited_home,
             "FLAGGEMS_DIR": workspace / ".ci/flaggems",
             "FLAGGEMS_VENV": workspace / ".ci/flaggems/.venv",
         }
         self.assertEqual(set(values), set(expected))
         for name, path in expected.items():
             self.assertEqual(Path(values[name]), path)
-        for name in (
-            "HOME",
-            "XDG_CACHE_HOME",
-            "XDG_DATA_HOME",
-            "UV_CACHE_DIR",
-            "UV_PYTHON_INSTALL_DIR",
-        ):
-            self.assertTrue(Path(values[name]).is_dir())
-        self.assertNotIn("/root", values.values())
+        self.assertTrue((inherited_home / ".local/bin").is_dir())
+        self.assertTrue((inherited_home / ".cache/uv").is_dir())
+        self.assertTrue((inherited_home / ".local/share/uv/python").is_dir())
+        self.assertEqual(list(inherited_home.rglob(".flaggems-ci-write.*")), [])
+        self.assertNotIn("UV_CACHE_DIR", values)
+        self.assertNotIn("UV_PYTHON_INSTALL_DIR", values)
+
+    def test_uses_passwd_home_when_inherited_home_is_invalid(self):
+        result, values, _, _, _, passwd_home = self.run_helper(
+            "iluvatar", inherited_home_is_valid=False
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(Path(values["HOME"]), passwd_home)
+        self.assertIn("Using passwd FlagGems CI HOME", result.stdout)
+        self.assertNotIn("UV_CACHE_DIR", values)
+        self.assertNotIn("UV_PYTHON_INSTALL_DIR", values)
+
+    def test_uses_job_local_home_only_as_last_resort(self):
+        result, values, _, runner_temp, _, _ = self.run_helper(
+            "iluvatar",
+            inherited_home_is_valid=False,
+            passwd_home_is_valid=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        expected_home = runner_temp / "flaggems-vllm-12345-2-iluvatar" / "home"
+        self.assertEqual(Path(values["HOME"]), expected_home)
+        self.assertIn("Using job-local fallback FlagGems CI HOME", result.stdout)
 
     def test_rejects_an_unsafe_backend_path(self):
-        result, values, _, _ = self.run_helper("../../iluvatar")
+        result, values, _, _, _, _ = self.run_helper("../../iluvatar")
         self.assertEqual(result.returncode, 2)
         self.assertIn("Invalid FlagGems backend profile", result.stderr)
         self.assertEqual(values, {})
@@ -411,6 +459,11 @@ class SetupFlagGemsActionContractTest(unittest.TestCase):
     def test_backend_test_prefers_the_physical_vendor_venv(self):
         self.assertIn('VENV_PATH="${FLAGGEMS_VENV:-.venv}"', self.test_script)
         self.assertIn('source "${VENV_PATH}/bin/activate"', self.test_script)
+
+    def test_uv_diagnostic_uses_the_selected_backend_python(self):
+        self.assertIn('uv python find "${backend_python}"', self.action)
+        self.assertIn("--managed-python --no-python-downloads", self.action)
+        self.assertNotIn("uv python find 3.10", self.action)
 
 
 class CiWorkflowPolicyTest(unittest.TestCase):
