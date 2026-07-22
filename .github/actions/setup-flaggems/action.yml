@@ -1,0 +1,117 @@
+name: "Setup FlagGems-vllm backend"
+description: "Reuse FlagGems' vendor environment for FlagGems-vllm tests"
+
+inputs:
+  backend:
+    description: "FlagGems backend label"
+    required: true
+  gpu_check_script:
+    description: "GPU check script path inside the FlagGems repository"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: clean generated state from persistent runners
+      shell: bash
+      run: |
+        set -euo pipefail
+        rm -rf -- .venv .ci/flaggems build dist
+        find . -maxdepth 2 -type d -name '*.egg-info' -exec rm -rf -- {} +
+
+    # Keep this checkout pinned to the same FlagGems revision as basic-ci.yml.
+    - name: check out FlagGems CI support
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        repository: flagos-ai/FlagGems
+        ref: 358368a02603789f56323aaa38f02c1ccc5f78e9
+        path: .ci/flaggems
+        persist-credentials: false
+
+    - name: create vendor environment with FlagGems
+      shell: bash
+      env:
+        BACKEND: ${{ inputs.backend }}
+      run: |
+        set -euo pipefail
+        cd .ci/flaggems
+        ./setup.sh "${BACKEND}"
+
+    - name: install FlagGems-vllm without replacing vendor packages
+      shell: bash
+      env:
+        BACKEND: ${{ inputs.backend }}
+      run: |
+        set -eo pipefail
+
+        if [[ -e .venv || -L .venv ]]; then
+          echo "::error::.venv already exists before the multi-backend setup"
+          exit 1
+        fi
+        ln -s .ci/flaggems/.venv .venv
+        # Vendor activation snippets may reference an unset LD_LIBRARY_PATH.
+        # Enable nounset only after the environment has been activated.
+        source .venv/bin/activate
+        set -u
+
+        # FlagGems already installed the matching vendor torch, compiler and
+        # test dependencies. --no-deps prevents this project's generic torch
+        # and CUDA-only cupy requirements from replacing that environment.
+        uv pip install --no-build-isolation --no-deps -e .
+        # This test-only pure Python dependency is not provided by FlagGems.
+        # Keep dependency resolution disabled so the vendor environment's
+        # pinned packages are not upgraded or replaced.
+        uv pip install --no-deps "einops>=0.6" \
+          --default-index https://mirrors.aliyun.com/pypi/simple
+
+        vendor="${BACKEND%%-*}"
+        export FLAGGEMS_VENDOR="${vendor}"
+        export PYTHONPATH="${GITHUB_WORKSPACE}/src${PYTHONPATH:+:${PYTHONPATH}}"
+
+        echo "FLAGGEMS_VENDOR=${FLAGGEMS_VENDOR}" >> "${GITHUB_ENV}"
+        echo "PYTHONPATH=${PYTHONPATH}" >> "${GITHUB_ENV}"
+        echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> "${GITHUB_ENV}"
+        echo "${VIRTUAL_ENV}/bin" >> "${GITHUB_PATH}"
+        python --version
+
+    - name: check accelerator availability
+      if: inputs.gpu_check_script != ''
+      shell: bash
+      env:
+        GPU_CHECK_SCRIPT: ${{ inputs.gpu_check_script }}
+      run: |
+        set -eo pipefail
+        source .venv/bin/activate
+        set -u
+
+        script=".ci/flaggems/${GPU_CHECK_SCRIPT}"
+        if [[ ! -f "${script}" ]]; then
+          echo "::error::FlagGems GPU check script not found: ${GPU_CHECK_SCRIPT}"
+          exit 1
+        fi
+
+        gpu_output="$(bash "${script}")"
+        echo "${gpu_output}"
+        available_gpus="$(
+          awk -F: '/^Available GPUs:/ {gsub(/[[:space:]]/, "", $2); print $2; exit}' \
+            <<< "${gpu_output}"
+        )"
+        if [[ -z "${available_gpus}" ]]; then
+          echo "::error::GPU check did not report any available accelerators"
+          exit 1
+        fi
+        echo "AVAILABLE_GPUS=${available_gpus}" >> "${GITHUB_ENV}"
+
+    - name: run portable backend preflight
+      shell: bash
+      env:
+        BACKEND: ${{ inputs.backend }}
+      run: |
+        set -eo pipefail
+        source .venv/bin/activate
+        set -u
+        vendor="${BACKEND%%-*}"
+        python tools/check_backend_env.py \
+          --expected-vendor "${vendor}" \
+          --require-flaggems
