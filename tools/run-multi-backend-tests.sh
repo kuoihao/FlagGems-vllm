@@ -18,8 +18,9 @@ set -eo pipefail
 
 BACKEND="${1:?usage: $0 <backend> [pr-id]}"
 PR_ID="${2:-}"
+VENV_PATH="${FLAGGEMS_VENV:-.venv}"
 
-source .venv/bin/activate
+source "${VENV_PATH}/bin/activate"
 
 # DeviceDetector consumes a vendor name rather than the full setup profile.
 export FLAGGEMS_VENDOR="${BACKEND%%-*}"

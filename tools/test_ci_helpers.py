@@ -57,6 +57,14 @@ class SelectTestsTest(TemporaryRepositoryTestCase):
         self.assertEqual(tests, ["tests/test_mul.py"])
         self.assertEqual(benchmarks, [])
 
+    def test_flaggems_environment_helper_triggers_preflight(self):
+        self.assertEqual(
+            select_tests.select_targets(
+                self.repo_root, ["tools/prepare-flaggems-ci-env.sh"]
+            ),
+            ("smoke", [], []),
+        )
+
     def test_unknown_operator_change_selects_all_tests(self):
         self.make_file("tests/test_first.py")
         self.make_file("tests/deep/nested/test_second.py")
@@ -305,6 +313,104 @@ class CiPinsTest(unittest.TestCase):
         pins = check_ci_pins.extract_pins(repo_root)
         self.assertEqual(len(pins), 3)
         self.assertEqual(len(set(pins)), 1)
+
+
+class PrepareFlagGemsCiEnvironmentTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.repo_root = Path(__file__).resolve().parents[1]
+        cls.helper = cls.repo_root / "tools/prepare-flaggems-ci-env.sh"
+
+    def run_helper(self, backend: str):
+        temporary_directory = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary_directory.cleanup)
+        root = Path(temporary_directory.name)
+        workspace = root / "FlagGems-vllm"
+        runner_temp = root / "runner-temp"
+        github_env = root / "github-env"
+        workspace.mkdir()
+        runner_temp.mkdir()
+
+        result = subprocess.run(
+            ["bash", str(self.helper), backend],
+            cwd=self.repo_root,
+            env={
+                **os.environ,
+                "HOME": "/root",
+                "GITHUB_WORKSPACE": str(workspace),
+                "RUNNER_TEMP": str(runner_temp),
+                "GITHUB_ENV": str(github_env),
+                "GITHUB_RUN_ID": "12345",
+                "GITHUB_RUN_ATTEMPT": "2",
+            },
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        values = {}
+        if github_env.exists():
+            for line in github_env.read_text(encoding="utf-8").splitlines():
+                key, value = line.split("=", maxsplit=1)
+                values[key] = value
+        return result, values, workspace.resolve(), runner_temp.resolve()
+
+    def test_isolates_uv_state_from_an_inherited_unwritable_home(self):
+        result, values, workspace, runner_temp = self.run_helper("iluvatar")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+        state_root = runner_temp / "flaggems-vllm-12345-2-iluvatar"
+        expected = {
+            "HOME": state_root / "home",
+            "XDG_CACHE_HOME": state_root / "xdg-cache",
+            "XDG_DATA_HOME": state_root / "xdg-data",
+            "UV_CACHE_DIR": state_root / "uv-cache",
+            "UV_PYTHON_INSTALL_DIR": state_root / "uv-python",
+            "FLAGGEMS_DIR": workspace / ".ci/flaggems",
+            "FLAGGEMS_VENV": workspace / ".ci/flaggems/.venv",
+        }
+        self.assertEqual(set(values), set(expected))
+        for name, path in expected.items():
+            self.assertEqual(Path(values[name]), path)
+        for name in (
+            "HOME",
+            "XDG_CACHE_HOME",
+            "XDG_DATA_HOME",
+            "UV_CACHE_DIR",
+            "UV_PYTHON_INSTALL_DIR",
+        ):
+            self.assertTrue(Path(values[name]).is_dir())
+        self.assertNotIn("/root", values.values())
+
+    def test_rejects_an_unsafe_backend_path(self):
+        result, values, _, _ = self.run_helper("../../iluvatar")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Invalid FlagGems backend profile", result.stderr)
+        self.assertEqual(values, {})
+
+
+class SetupFlagGemsActionContractTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        repo_root = Path(__file__).resolve().parents[1]
+        cls.action = (
+            repo_root / ".github/actions/setup-flaggems/action.yml"
+        ).read_text(encoding="utf-8")
+        cls.test_script = (repo_root / "tools/run-multi-backend-tests.sh").read_text(
+            encoding="utf-8"
+        )
+
+    def test_uses_explicit_caller_checkout_and_vendor_venv_paths(self):
+        self.assertIn("tools/prepare-flaggems-ci-env.sh", self.action)
+        self.assertIn('cd "${FLAGGEMS_DIR}"', self.action)
+        self.assertIn('source "${FLAGGEMS_VENV}/bin/activate"', self.action)
+        self.assertIn('-e "${GITHUB_WORKSPACE}"', self.action)
+        self.assertIn('script="${FLAGGEMS_DIR}/${GPU_CHECK_SCRIPT}"', self.action)
+        self.assertIn('ln -s "${FLAGGEMS_VENV}" .venv', self.action)
+        self.assertNotIn("cd .ci/flaggems", self.action)
+
+    def test_backend_test_prefers_the_physical_vendor_venv(self):
+        self.assertIn('VENV_PATH="${FLAGGEMS_VENV:-.venv}"', self.test_script)
+        self.assertIn('source "${VENV_PATH}/bin/activate"', self.test_script)
 
 
 class CiWorkflowPolicyTest(unittest.TestCase):

@@ -17,6 +17,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        cd "${GITHUB_WORKSPACE:?}"
         rm -rf -- .venv .ci/flaggems build dist
         find . -maxdepth 2 -type d -name '*.egg-info' -exec rm -rf -- {} +
 
@@ -25,18 +26,60 @@ runs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       with:
         repository: flagos-ai/FlagGems
-        ref: 358368a02603789f56323aaa38f02c1ccc5f78e9
+        ref: b10f1d47401b2df7166ac0aff8958128338ed237
         path: .ci/flaggems
         persist-credentials: false
+
+    - name: prepare writable job-local environment
+      shell: bash
+      env:
+        BACKEND: ${{ inputs.backend }}
+      run: |
+        set -euo pipefail
+        bash "${GITHUB_WORKSPACE}/tools/prepare-flaggems-ci-env.sh" "${BACKEND}"
 
     - name: create vendor environment with FlagGems
       shell: bash
       env:
         BACKEND: ${{ inputs.backend }}
       run: |
-        set -euo pipefail
-        cd .ci/flaggems
+        # Vendor activation snippets may reference optional variables before
+        # defining them, so enable nounset only after activation.
+        set -eo pipefail
+        : "${FLAGGEMS_DIR:?}"
+        : "${FLAGGEMS_VENV:?}"
+
+        echo "Runner identity: $(id)"
+        echo "FlagGems checkout: ${FLAGGEMS_DIR}"
+        echo "FlagGems venv: ${FLAGGEMS_VENV}"
+        echo "HOME: ${HOME}"
+        echo "UV cache: ${UV_CACHE_DIR}"
+        echo "UV managed Python: ${UV_PYTHON_INSTALL_DIR}"
+
+        cd "${FLAGGEMS_DIR}"
         ./setup.sh "${BACKEND}"
+
+        test -x "${FLAGGEMS_VENV}/bin/python"
+        # setup.sh may have installed uv in the child process. GITHUB_PATH is
+        # applied only to the next Actions step, so expose that path here too.
+        export PATH="${HOME}/.local/bin:${PATH}"
+        source "${FLAGGEMS_VENV}/bin/activate"
+        set -u
+        echo "uv: $(command -v uv)"
+        echo "uv cache: $(uv cache dir)"
+        echo "uv managed Python: $(uv python dir)"
+        python - <<'PY'
+        import os
+        import sys
+        from pathlib import Path
+
+        print("python executable:", sys.executable)
+        print("python prefix:", sys.prefix)
+        expected = Path(os.environ["FLAGGEMS_VENV"]).resolve()
+        actual = Path(sys.prefix).resolve()
+        if actual != expected:
+            raise SystemExit(f"unexpected Python prefix: {actual} != {expected}")
+        PY
 
     - name: install FlagGems-vllm without replacing vendor packages
       shell: bash
@@ -44,25 +87,36 @@ runs:
         BACKEND: ${{ inputs.backend }}
       run: |
         set -eo pipefail
+        : "${FLAGGEMS_VENV:?}"
+        cd "${GITHUB_WORKSPACE:?}"
 
         if [[ -e .venv || -L .venv ]]; then
           echo "::error::.venv already exists before the multi-backend setup"
           exit 1
         fi
-        ln -s .ci/flaggems/.venv .venv
+        # Keep the root path expected by FlagGems' reusable workflow, while
+        # using the physical vendor venv path everywhere in this adapter.
+        ln -s "${FLAGGEMS_VENV}" .venv
         # Vendor activation snippets may reference an unset LD_LIBRARY_PATH.
         # Enable nounset only after the environment has been activated.
-        source .venv/bin/activate
+        source "${FLAGGEMS_VENV}/bin/activate"
         set -u
 
         # FlagGems already installed the matching vendor torch, compiler and
         # test dependencies. --no-deps prevents this project's generic torch
         # and CUDA-only cupy requirements from replacing that environment.
-        uv pip install --no-build-isolation --no-deps -e .
+        uv pip install \
+          --python "${FLAGGEMS_VENV}/bin/python" \
+          --no-build-isolation \
+          --no-deps \
+          -e "${GITHUB_WORKSPACE}"
         # This test-only pure Python dependency is not provided by FlagGems.
         # Keep dependency resolution disabled so the vendor environment's
         # pinned packages are not upgraded or replaced.
-        uv pip install --no-deps "einops>=0.6" \
+        uv pip install \
+          --python "${FLAGGEMS_VENV}/bin/python" \
+          --no-deps \
+          "einops>=0.6" \
           --default-index https://mirrors.aliyun.com/pypi/simple
 
         vendor="${BACKEND%%-*}"
@@ -71,8 +125,8 @@ runs:
 
         echo "FLAGGEMS_VENDOR=${FLAGGEMS_VENDOR}" >> "${GITHUB_ENV}"
         echo "PYTHONPATH=${PYTHONPATH}" >> "${GITHUB_ENV}"
-        echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> "${GITHUB_ENV}"
-        echo "${VIRTUAL_ENV}/bin" >> "${GITHUB_PATH}"
+        echo "VIRTUAL_ENV=${FLAGGEMS_VENV}" >> "${GITHUB_ENV}"
+        echo "${FLAGGEMS_VENV}/bin" >> "${GITHUB_PATH}"
         python --version
 
     - name: check accelerator availability
@@ -82,10 +136,12 @@ runs:
         GPU_CHECK_SCRIPT: ${{ inputs.gpu_check_script }}
       run: |
         set -eo pipefail
-        source .venv/bin/activate
+        : "${FLAGGEMS_DIR:?}"
+        : "${FLAGGEMS_VENV:?}"
+        source "${FLAGGEMS_VENV}/bin/activate"
         set -u
 
-        script=".ci/flaggems/${GPU_CHECK_SCRIPT}"
+        script="${FLAGGEMS_DIR}/${GPU_CHECK_SCRIPT}"
         if [[ ! -f "${script}" ]]; then
           echo "::error::FlagGems GPU check script not found: ${GPU_CHECK_SCRIPT}"
           exit 1
@@ -109,9 +165,11 @@ runs:
         BACKEND: ${{ inputs.backend }}
       run: |
         set -eo pipefail
-        source .venv/bin/activate
+        : "${FLAGGEMS_VENV:?}"
+        source "${FLAGGEMS_VENV}/bin/activate"
         set -u
         vendor="${BACKEND%%-*}"
+        cd "${GITHUB_WORKSPACE:?}"
         python tools/check_backend_env.py \
           --expected-vendor "${vendor}" \
           --require-flaggems

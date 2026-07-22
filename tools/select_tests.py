@@ -44,6 +44,7 @@ ENV_SMOKE_TRIGGER_FILES = {
     "tests/conftest.py",
     "tools/check_backend_env.py",
     "tools/check_ci_pins.py",
+    "tools/prepare-flaggems-ci-env.sh",
     "tools/run-multi-backend-tests.sh",
     "tools/run_ci_targets.py",
     "tools/select_backends.py",

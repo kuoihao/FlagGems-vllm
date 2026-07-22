@@ -89,13 +89,23 @@ FlagGems remains the source of truth for backend profiles and runner routing:
    job and bootstraps the caller repository.
 3. FlagGems-vllm's `.github/actions/setup-flaggems/action.yml` asks the pinned
    FlagGems checkout to create the vendor environment, then installs only this
-   repository into that environment.
+   repository into that environment. The adapter keeps the caller checkout at
+   `$GITHUB_WORKSPACE`, the FlagGems checkout at
+   `$GITHUB_WORKSPACE/.ci/flaggems`, and the physical vendor environment at
+   `$GITHUB_WORKSPACE/.ci/flaggems/.venv`; a root `.venv` symlink exists only
+   for compatibility with the reusable workflow.
 4. `.github/backend-capabilities.json` records only the FlagGems-vllm tests
    proven on each backend. It is not a second backend registry.
 
 Do not add a hand-maintained vendor matrix or copy vendor setup scripts into
 FlagGems-vllm. Add or change a backend in FlagGems first, then advance all
 three pinned FlagGems references together.
+
+The current pin includes FlagGems' split of optional native extensions from
+the default pure-Python package and its compatible setuptools-scm constraint.
+Do not roll the pin back before those changes: even with C++ extensions
+disabled, the older scikit-build package path still configured a C++ compiler
+on every vendor host.
 
 GitHub documents that a called workflow can use only self-hosted runners made
 available in the caller repository's context. Sharing an organization alone
@@ -147,8 +157,7 @@ SDK, and device query utility, plus `bash`, `git`, `curl`, and `tar`. Ensure:
 - Actions Runner is v2.327.1 or newer for the pinned Node 24 actions;
 - outbound HTTPS/DNS can reach GitHub, FlagOS resources, vendor package
   indexes, Astral/uv, and the configured Python mirror;
-- the runner work directory, uv cache, and user-local binary directory are
-  writable;
+- the runner work directory and `$RUNNER_TEMP` are writable and executable;
 - no long-lived SSH key, cloud credential, or production secret remains on
   the machine; and
 - the runner is isolated from unrelated production networks and state.
@@ -156,6 +165,12 @@ SDK, and device query utility, plus `bash`, `git`, `curl`, and `tar`. Ensure:
 Prefer an ephemeral/JIT VM, container, or host image. If the runner is
 persistent, retain the workflow cleanup and verify the machine after cancelled
 jobs.
+
+The caller adapter deliberately replaces an inherited `HOME` (including the
+common `HOME=/root` under an unprivileged runner account) with job-local state
+under `$RUNNER_TEMP`. It also places the XDG cache/data directories, uv cache,
+and uv-managed Python there. Do not preconfigure the workflow to use a shared
+root-owned uv cache; the setup log prints the effective paths for diagnosis.
 
 ### 3. Register the organization runner
 
@@ -312,6 +327,11 @@ The existing `.github/actions/setup-flaggems/action.yml` already owns shared
 cleanup, FlagGems setup, FlagGems-vllm installation, GPU checks, and the
 portable preflight. Extend that action for behavior shared by all backends;
 do not create one setup action per vendor.
+
+`tools/prepare-flaggems-ci-env.sh` owns the job-local HOME/uv paths used by the
+action. Keep the FlagGems directory, physical venv, caller installation target,
+and GPU-check path explicit; a shell step must not depend on the working
+directory left behind by a previous composite step.
 
 If another repeated caller-side step needs a composite action, place
 `action.yml` under `.github/actions/<name>/`, pass untrusted values through

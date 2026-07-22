@@ -183,7 +183,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           repository: flagos-ai/FlagGems
-          ref: 358368a02603789f56323aaa38f02c1ccc5f78e9
+          ref: b10f1d47401b2df7166ac0aff8958128338ed237
           sparse-checkout: .github/backends.json
           sparse-checkout-cone-mode: false
           path: .ci/flaggems-registry
@@ -295,7 +295,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.select-targets.outputs.non_nvidia_matrix) }}
-    uses: flagos-ai/FlagGems/.github/workflows/backend-test.yaml@358368a02603789f56323aaa38f02c1ccc5f78e9
+    uses: flagos-ai/FlagGems/.github/workflows/backend-test.yaml@b10f1d47401b2df7166ac0aff8958128338ed237
     with:
       backend: ${{ matrix.backend }}
       runner_label: ${{ matrix.runner_label }}
